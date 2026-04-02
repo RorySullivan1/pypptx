@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+from pptx.exc import PackageError
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.constants import RELATIONSHIP_TARGET_MODE as RTM
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -740,7 +741,7 @@ class Describe_Relationships:
         )
         relationships = _Relationships(None)
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(PackageError) as e:
             relationships.part_with_reltype(RT.SLIDE_LAYOUT)
         assert str(e.value) == (
             "multiple relationships of type 'http://schemas.openxmlformats.org/"

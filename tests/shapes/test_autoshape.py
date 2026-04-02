@@ -11,6 +11,7 @@ import pytest
 from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
+from pptx.exc import ShapeError
 from pptx.oxml import parse_xml
 from pptx.oxml.shapes.autoshape import CT_PresetGeometry2D, CT_Shape
 from pptx.shapes.autoshape import Adjustment, AdjustmentCollection, AutoShapeType, Shape
@@ -149,7 +150,7 @@ class DescribeAdjustmentCollection:
         """
         AdjustmentCollection[n] = val raises on val is not number
         """
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             adjustments[0] = "1.0"
 
     def it_writes_adj_vals_to_xml_on_assignment(self, adjustments_with_prstGeom_):
@@ -314,7 +315,7 @@ class DescribeShape:
         assert auto_shape_type == expected_value
 
     def but_it_raises_when_auto_shape_type_called_on_non_autoshape(self, non_autoshape_shape_):
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             non_autoshape_shape_.auto_shape_type
 
     def it_has_a_fill(self, shape):

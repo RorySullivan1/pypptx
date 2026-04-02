@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE, PP_MEDIA_TYPE
+from pptx.exc import ShapeError
 from pptx.shapes.base import BaseShape
 from pptx.shared import ParentedElementProxy
 from pptx.util import lazyproperty
@@ -186,7 +187,7 @@ class Picture(_BasePicture):
         """
         slide_part, rId = self.part, self._pic.blip_rId
         if rId is None:
-            raise ValueError("no embedded image")
+            raise ShapeError("no embedded image")
         return slide_part.get_image(rId)
 
     @property

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pptx.dml.chtfmt import ChartFormat
+from pptx.exc import ChartError
 from pptx.enum.chart import (
     XL_AXIS_CROSSES,
     XL_CATEGORY_TYPE,
@@ -237,7 +238,7 @@ class _BaseAxis:
     @visible.setter
     def visible(self, value):
         if value not in (True, False):
-            raise ValueError("assigned value must be True or False, got: %s" % value)
+            raise ChartError("assigned value must be True or False, got: %s" % value)
         delete = self._element.get_or_add_delete_()
         delete.val = not value
 
@@ -410,7 +411,7 @@ class TickLabels:
     @offset.setter
     def offset(self, value):
         if self._element.tag != qn("c:catAx"):
-            raise ValueError("only a category axis has an offset")
+            raise ChartError("only a category axis has an offset")
         self._element._remove_lblOffset()
         if value == 100:
             return

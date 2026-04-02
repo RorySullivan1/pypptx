@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from pptx.dml.color import ColorFormat
 from pptx.enum.dml import MSO_FILL
+from pptx.exc import ShapeError
 from pptx.oxml.dml.fill import (
     CT_BlipFillProperties,
     CT_GradientFillProperties,
@@ -96,25 +97,25 @@ class FillFormat:
         gradient (e.g. a radial gradient).
         """
         if self.type != MSO_FILL.GRADIENT:
-            raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         return self._fill.gradient_angle
 
     @gradient_angle.setter
     def gradient_angle(self, value):
         if self.type != MSO_FILL.GRADIENT:
-            raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         self._fill.gradient_angle = value
 
     @property
     def gradient_stops(self):
         """|GradientStops| object providing access to stops of this gradient.
 
-        Raises |TypeError| when fill is not gradient (call `fill.gradient()`
+        Raises |ShapeError| when fill is not gradient (call `fill.gradient()`
         first). Each stop represents a color between which the gradient
         smoothly transitions.
         """
         if self.type != MSO_FILL.GRADIENT:
-            raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         return self._fill.gradient_stops
 
     @property
@@ -189,21 +190,21 @@ class _Fill:
 
     @property
     def back_color(self):
-        """Raise TypeError for types that do not override this property."""
+        """Raise ShapeError for types that do not override this property."""
         tmpl = "fill type %s has no background color, call .patterned() first"
-        raise TypeError(tmpl % self.__class__.__name__)
+        raise ShapeError(tmpl % self.__class__.__name__)
 
     @property
     def fore_color(self):
-        """Raise TypeError for types that do not override this property."""
-        tmpl = "fill type %s has no foreground color, call .solid() or .pattern" "ed() first"
-        raise TypeError(tmpl % self.__class__.__name__)
+        """Raise ShapeError for types that do not override this property."""
+        tmpl = "fill type %s has no foreground color, call .solid() or .patterned() first"
+        raise ShapeError(tmpl % self.__class__.__name__)
 
     @property
     def pattern(self):
-        """Raise TypeError for fills that do not override this property."""
+        """Raise ShapeError for fills that do not override this property."""
         tmpl = "fill type %s has no pattern, call .patterned() first"
-        raise TypeError(tmpl % self.__class__.__name__)
+        raise ShapeError(tmpl % self.__class__.__name__)
 
     @property
     def type(self) -> MSO_FILL_TYPE:  # pragma: no cover
@@ -238,7 +239,7 @@ class _GradFill(_Fill):
         # ---case 1: gradient path is explicit, but not linear---
         path = self._gradFill.path
         if path is not None:
-            raise ValueError("not a linear gradient")
+            raise ShapeError("not a linear gradient")
 
         # ---case 2: gradient path is inherited (no a:lin OR a:path)---
         lin = self._gradFill.lin
@@ -258,7 +259,7 @@ class _GradFill(_Fill):
     def gradient_angle(self, value):
         lin = self._gradFill.lin
         if lin is None:
-            raise ValueError("not a linear gradient")
+            raise ShapeError("not a linear gradient")
         lin.ang = 360.0 - value
 
     @lazyproperty

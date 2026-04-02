@@ -9,6 +9,7 @@ from xml.sax import saxutils
 from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE, MSO_SHAPE_TYPE
+from pptx.exc import ShapeError
 from pptx.shapes.base import BaseShape
 from pptx.spec import autoshape_types
 from pptx.text.text import TextFrame
@@ -56,7 +57,7 @@ class Adjustment:
     @effective_value.setter
     def effective_value(self, value: float):
         if not isinstance(value, Number):
-            raise ValueError(f"adjustment value must be numeric, got {repr(value)}")
+            raise ShapeError(f"adjustment value must be numeric, got {repr(value)}")
         self.actual = self._denormalize(value)
 
     @staticmethod
@@ -275,7 +276,7 @@ class Shape(BaseShape):
         Like `MSO_SHAPE.ROUNDED_RECTANGLE`. Raises |ValueError| if this shape is not an auto shape.
         """
         if not self._sp.is_autoshape:
-            raise ValueError("shape is not an auto shape")
+            raise ShapeError("shape is not an auto shape")
         return self._sp.prst
 
     @lazyproperty

@@ -7,6 +7,7 @@ from __future__ import annotations
 import pytest
 
 from pptx.dml.fill import FillFormat
+from pptx.exc import TableError
 from pptx.enum.text import MSO_ANCHOR
 from pptx.oxml.ns import qn
 from pptx.oxml.table import CT_Table, CT_TableCell, TcRange
@@ -239,7 +240,7 @@ class Describe_Cell:
 
     def it_raises_on_margin_assigned_other_than_int_or_None(self, margin_raises_fixture):
         cell, margin_attr_name, val_of_invalid_type = margin_raises_fixture
-        with pytest.raises(TypeError):
+        with pytest.raises(TableError):
             setattr(cell, margin_attr_name, val_of_invalid_type)
 
     def it_can_merge_a_range_of_cells(self, TcRange_, tc_range_):
@@ -273,7 +274,7 @@ class Describe_Cell:
         tc_range_.in_same_table = False
         cell, other_cell = _Cell(None, None), _Cell(None, None)
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(TableError) as e:
             cell.merge(other_cell)
         assert "different table" in str(e.value)
 
@@ -282,7 +283,7 @@ class Describe_Cell:
         tc_range_.contains_merged_cell = True
         cell, other_cell = _Cell(None, None), _Cell(None, None)
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(TableError) as e:
             cell.merge(other_cell)
         assert "contains one or more merged cells" in str(e.value)
 
@@ -313,7 +314,7 @@ class Describe_Cell:
         tc = element("a:tbl/a:tr/a:tc").xpath("//a:tc")[0]
         cell = _Cell(tc, None)
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(TableError) as e:
             cell.split()
         assert "not a merge-origin cell" in str(e.value)
 

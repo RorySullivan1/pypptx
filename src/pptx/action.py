@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pptx.enum.action import PP_ACTION
+from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.shapes import Subshape
 from pptx.util import lazyproperty
@@ -124,12 +125,12 @@ class ActionSetting(Subshape):
         elif self.action == PP_ACTION.NEXT_SLIDE:
             next_slide_idx = self._slide_index + 1
             if next_slide_idx >= len(self._slides):
-                raise ValueError("no next slide")
+                raise SlideError("no next slide")
             return self._slides[next_slide_idx]
         elif self.action == PP_ACTION.PREVIOUS_SLIDE:
             prev_slide_idx = self._slide_index - 1
             if prev_slide_idx < 0:
-                raise ValueError("no previous slide")
+                raise SlideError("no previous slide")
             return self._slides[prev_slide_idx]
         elif self.action == PP_ACTION.NAMED_SLIDE:
             assert self._hlink is not None
