@@ -12,7 +12,7 @@ CHART_URI = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 TABLE_URI = "http://schemas.openxmlformats.org/drawingml/2006/table"
 
 
-class DescribeCT_GraphicalObjectFrame(object):
+class DescribeCT_GraphicalObjectFrame:
     """Unit-test suite for `pptx.oxml.shapes.graphfrm.CT_GraphicalObjectFrame."""
 
     def it_can_construct_a_new_graphicFrame(self, new_graphicFrame_fixture):

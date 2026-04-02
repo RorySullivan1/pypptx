@@ -51,7 +51,7 @@ class CategoryPoints(_BasePoints):
         return self._ser.cat_ptCount_val
 
 
-class Point(object):
+class Point:
     """
     Provides access to the properties of an individual data point in
     a series, such as the visual properties of its marker and the text and

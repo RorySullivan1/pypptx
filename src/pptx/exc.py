@@ -15,13 +15,28 @@ PythonPptxError = PyPptxError
 
 
 class PackageNotFoundError(PyPptxError):
-    """
-    Raised when a package cannot be found at the specified path.
-    """
+    """Raised when a package cannot be found at the specified path."""
 
 
 class InvalidXmlError(PyPptxError):
-    """
-    Raised when a value is encountered in the XML that is not valid according
-    to the schema.
-    """
+    """Raised when invalid XML is encountered according to the OOXML schema."""
+
+
+class ShapeError(PyPptxError):
+    """Raised for shape operation failures (type mismatch, invalid state)."""
+
+
+class SlideError(PyPptxError):
+    """Raised for slide collection and management failures."""
+
+
+class ChartError(PyPptxError):
+    """Raised for chart-specific operation failures."""
+
+
+class TableError(PyPptxError):
+    """Raised for table operation failures (cell access, merge)."""
+
+
+class PackageError(PyPptxError):
+    """Raised for OPC package, relationship, or content-type errors."""

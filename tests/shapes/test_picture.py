@@ -15,7 +15,7 @@ from ..unitutil.cxml import element, xml
 from ..unitutil.mock import call, class_mock, instance_mock, property_mock
 
 
-class Describe_BasePicture(object):
+class Describe_BasePicture:
     def it_knows_its_cropping(self, crop_get_fixture):
         picture, prop_name, expected_value = crop_get_fixture
         crop = getattr(picture, prop_name)
@@ -142,7 +142,7 @@ class Describe_BasePicture(object):
         return _BasePicture(element("p:pic/p:spPr"), None)
 
 
-class DescribeMovie(object):
+class DescribeMovie:
     def it_knows_its_shape_type(self, shape_type_fixture):
         movie = shape_type_fixture
         assert movie.shape_type == MSO_SHAPE_TYPE.MEDIA
@@ -219,7 +219,7 @@ class DescribeMovie(object):
         return instance_mock(request, SlidePart)
 
 
-class DescribePicture(object):
+class DescribePicture:
     def it_knows_its_masking_shape(self, autoshape_get_fixture):
         picture, expected_value = autoshape_get_fixture
         auto_shape_type = picture.auto_shape_type

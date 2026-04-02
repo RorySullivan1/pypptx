@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from pptx.oxml.xmlchemy import BaseOxmlElement
 
 
-class FillFormat(object):
+class FillFormat:
     """Provides access to the current fill properties.
 
     Also provides methods to change the fill type.
@@ -161,7 +161,7 @@ class FillFormat(object):
         return self._fill.type
 
 
-class _Fill(object):
+class _Fill:
     """
     Object factory for fill object of class matching fill element, such as
     _SolidFill for ``<a:solidFill>``; also serves as the base class for all

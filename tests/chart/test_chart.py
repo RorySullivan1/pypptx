@@ -8,6 +8,7 @@ import pytest
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.chart import Chart, ChartTitle, Legend, _Plots
+from pptx.exc import ChartError
 from pptx.chart.data import ChartData
 from pptx.chart.plot import _BasePlot
 from pptx.chart.series import SeriesCollection
@@ -27,7 +28,7 @@ from ..unitutil.mock import (
 )
 
 
-class DescribeChart(object):
+class DescribeChart:
     """Unit-test suite for `pptx.chart.chart.Chart` objects."""
 
     def it_provides_access_to_its_font(self, font_fixture, Font_, font_):
@@ -67,7 +68,7 @@ class DescribeChart(object):
 
     def it_raises_when_no_category_axis(self, cat_ax_raise_fixture):
         chart = cat_ax_raise_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(ChartError):
             chart.category_axis
 
     def it_provides_access_to_the_value_axis(self, val_ax_fixture):
@@ -78,7 +79,7 @@ class DescribeChart(object):
 
     def it_raises_when_no_value_axis(self, val_ax_raise_fixture):
         chart = val_ax_raise_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(ChartError):
             chart.value_axis
 
     def it_provides_access_to_its_series(self, series_fixture):
@@ -436,7 +437,7 @@ class DescribeChart(object):
         return property_mock(request, Chart, "_workbook", return_value=workbook_)
 
 
-class DescribeChartTitle(object):
+class DescribeChartTitle:
     """Unit-test suite for `pptx.chart.chart.ChartTitle` objects."""
 
     def it_provides_access_to_its_format(self, format_fixture):
@@ -532,7 +533,7 @@ class DescribeChartTitle(object):
         return class_mock(request, "pptx.chart.chart.TextFrame")
 
 
-class Describe_Plots(object):
+class Describe_Plots:
     """Unit-test suite for `pptx.chart.chart._Plots` objects."""
 
     def it_supports_indexed_access(self, getitem_fixture):

@@ -17,7 +17,7 @@ from pptx.parts.embeddedpackage import (
 from ..unitutil.mock import ANY, FixtureRequest, class_mock, initializer_mock, instance_mock
 
 
-class DescribeEmbeddedPackagePart(object):
+class DescribeEmbeddedPackagePart:
     """Unit-test suite for `pptx.parts.embeddedpackage.EmbeddedPackagePart` objects."""
 
     @pytest.mark.parametrize(

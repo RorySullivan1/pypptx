@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.exc import ShapeError
 from pptx.shapes.base import BaseShape
 from pptx.shared import ParentedElementProxy
 from pptx.spec import (
@@ -45,7 +46,7 @@ class GraphicFrame(BaseShape):
         Raises |ValueError| if this graphic frame does not contain a chart.
         """
         if not self.has_chart:
-            raise ValueError("shape does not contain a chart")
+            raise ShapeError("shape does not contain a chart")
         return self.chart_part.chart
 
     @property
@@ -53,7 +54,7 @@ class GraphicFrame(BaseShape):
         """The |ChartPart| object containing the chart in this graphic frame."""
         chart_rId = self._graphicFrame.chart_rId
         if chart_rId is None:
-            raise ValueError("this graphic frame does not contain a chart")
+            raise ShapeError("this graphic frame does not contain a chart")
         return cast("ChartPart", self.part.related_part(chart_rId))
 
     @property
@@ -82,7 +83,7 @@ class GraphicFrame(BaseShape):
         `EMBEDDED_OLE_OBJECT` or `LINKED_OLE_OBJECT`.
         """
         if not self._graphicFrame.has_oleobj:
-            raise ValueError("not an OLE-object shape")
+            raise ShapeError("not an OLE-object shape")
         return _OleFormat(self._graphicFrame.graphicData, self._parent)
 
     @lazyproperty
@@ -125,7 +126,7 @@ class GraphicFrame(BaseShape):
         Raises |ValueError| if this graphic frame does not contain a table.
         """
         if not self.has_table:
-            raise ValueError("shape does not contain a table")
+            raise ShapeError("shape does not contain a table")
         tbl = self._graphicFrame.graphic.graphicData.tbl
         return Table(tbl, self)
 

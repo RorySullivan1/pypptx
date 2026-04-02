@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from pptx.types import ProvidesPart
 
 
-class ElementProxy(object):
+class ElementProxy:
     """Base class for lxml element proxy classes.
 
     An element proxy class is one whose primary responsibilities are fulfilled by manipulating the

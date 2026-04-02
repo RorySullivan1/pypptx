@@ -15,7 +15,7 @@ from .unitutil.cxml import element, xml
 from .unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
 
 
-class DescribeActionSetting(object):
+class DescribeActionSetting:
     """Unit-test suite for `pptx.action.ActionSetting` objects."""
 
     def it_knows_its_action_type(self, action_fixture):
@@ -250,7 +250,7 @@ class DescribeActionSetting(object):
         return property_mock(request, ActionSetting, "_slide_index")
 
 
-class DescribeHyperlink(object):
+class DescribeHyperlink:
     """Unit-test suite for `pptx.action.Hyperlink` objects."""
 
     def it_knows_the_target_url_of_the_hyperlink(self, address_fixture):

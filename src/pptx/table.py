@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 from pptx.dml.fill import FillFormat
+from pptx.exc import TableError
 from pptx.oxml.table import TcRange
 from pptx.shapes import Subshape
 from pptx.text.text import TextFrame
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from pptx.util import Length
 
 
-class Table(object):
+class Table:
     """A DrawingML table object.
 
     Not intended to be constructed directly, use
@@ -270,9 +271,9 @@ class _Cell(Subshape):
         tc_range = TcRange(self._tc, other_cell._tc)
 
         if not tc_range.in_same_table:
-            raise ValueError("other_cell from different table")
+            raise TableError("other_cell from different table")
         if tc_range.contains_merged_cell:
-            raise ValueError("range contains one or more merged cells")
+            raise TableError("range contains one or more merged cells")
 
         tc_range.move_content_to_origin()
 
@@ -319,7 +320,7 @@ class _Cell(Subshape):
         `.is_merge_origin` before calling.
         """
         if not self.is_merge_origin:
-            raise ValueError("not a merge-origin cell; only a merge-origin cell can be sp" "lit")
+            raise TableError("not a merge-origin cell; only a merge-origin cell can be split")
 
         tc_range = TcRange.from_merge_origin(self._tc)
 

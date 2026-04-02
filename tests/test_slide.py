@@ -8,6 +8,7 @@ import pytest
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.exc import SlideError
 from pptx.package import Package
 from pptx.parts.presentation import PresentationPart
 from pptx.parts.slide import SlideLayoutPart, SlideMasterPart, SlidePart
@@ -43,7 +44,7 @@ from .unitutil.cxml import element, xml
 from .unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
 
 
-class Describe_BaseSlide(object):
+class Describe_BaseSlide:
     """Unit-test suite for `pptx.slide._BaseSlide` objects."""
 
     def it_knows_its_name(self, name_get_fixture):
@@ -106,7 +107,7 @@ class Describe_BaseSlide(object):
         return instance_mock(request, _Background)
 
 
-class Describe_BaseMaster(object):
+class Describe_BaseMaster:
     """Unit-test suite for `pptx.slide._BaseMaster` objects."""
 
     def it_is_a_BaseSlide_subclass(self, subclass_fixture):
@@ -164,7 +165,7 @@ class Describe_BaseMaster(object):
         return instance_mock(request, MasterShapes)
 
 
-class DescribeNotesSlide(object):
+class DescribeNotesSlide:
     """Unit-test suite for `pptx.slide.NotesSlide` objects."""
 
     def it_can_clone_the_notes_master_placeholders(self, request, notes_master_, shapes_):
@@ -294,7 +295,7 @@ class DescribeNotesSlide(object):
         return instance_mock(request, TextFrame)
 
 
-class DescribeSlide(object):
+class DescribeSlide:
     """Unit-test suite for `pptx.slide.Slide` objects."""
 
     def it_is_a_BaseSlide_subclass(self, subclass_fixture):
@@ -443,7 +444,7 @@ class DescribeSlide(object):
         return instance_mock(request, SlidePart)
 
 
-class DescribeSlides(object):
+class DescribeSlides:
     """Unit-test suite for `pptx.slide.Slides` objects."""
 
     def it_supports_indexed_access(self, getitem_fixture):
@@ -454,7 +455,7 @@ class DescribeSlides(object):
 
     def it_raises_on_slide_index_out_of_range(self, getitem_raises_fixture):
         slides = getitem_raises_fixture
-        with pytest.raises(IndexError):
+        with pytest.raises(SlideError):
             slides[2]
 
     def it_knows_the_index_of_a_slide_it_contains(self, index_fixture):
@@ -464,7 +465,7 @@ class DescribeSlides(object):
 
     def it_raises_on_slide_not_in_collection(self, raises_fixture):
         slides, slide = raises_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(SlideError):
             slides.index(slide)
 
     def it_can_iterate_its_slides(self, iter_fixture):
@@ -590,7 +591,7 @@ class DescribeSlides(object):
         return instance_mock(request, SlideLayout)
 
 
-class DescribeSlideLayout(object):
+class DescribeSlideLayout:
     """Unit-test suite for `pptx.slide.SlideLayout` objects."""
 
     def it_is_a_BaseSlide_subclass(self):
@@ -743,7 +744,7 @@ class DescribeSlideLayout(object):
         return instance_mock(request, SlideMaster)
 
 
-class DescribeSlideLayouts(object):
+class DescribeSlideLayouts:
     """Unit-test suite for `pptx.slide.SlideLayouts` objects."""
 
     def it_supports_len(self, len_fixture):
@@ -778,7 +779,7 @@ class DescribeSlideLayouts(object):
 
     def but_it_raises_on_index_out_of_range(self, part_prop_):
         slide_layouts = SlideLayouts(element("p:sldLayoutIdLst/p:sldLayoutId{r:id=rId1}"), None)
-        with pytest.raises(IndexError):
+        with pytest.raises(SlideError):
             slide_layouts[1]
 
     def it_can_find_a_slide_layout_by_name(self, _iter_, slide_layout_, slide_layout_2_):
@@ -821,7 +822,7 @@ class DescribeSlideLayouts(object):
         _iter_.return_value = iter((slide_layout_,))
         slide_layouts = SlideLayouts(None, None)
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(SlideError) as e:
             slide_layouts.index(slide_layout_2_)
         assert str(e.value) == "layout not in this SlideLayouts collection"
 
@@ -846,7 +847,7 @@ class DescribeSlideLayouts(object):
         slide_layout_.used_by_slides = (slide_,)
         slide_layouts = SlideLayouts(None, None)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SlideError):
             slide_layouts.remove(slide_layout_)
 
     # fixtures -------------------------------------------------------
@@ -898,7 +899,7 @@ class DescribeSlideLayouts(object):
         return instance_mock(request, SlideMasterPart)
 
 
-class DescribeSlideMaster(object):
+class DescribeSlideMaster:
     """Unit-test suite for `pptx.slide.SlideMaster` objects."""
 
     def it_is_a_BaseMaster_subclass(self, subclass_fixture):
@@ -935,7 +936,7 @@ class DescribeSlideMaster(object):
         return instance_mock(request, SlideLayouts)
 
 
-class DescribeSlideMasters(object):
+class DescribeSlideMasters:
     """Unit-test suite for `pptx.slide.SlideMasters` objects."""
 
     def it_knows_how_many_masters_it_contains(self, len_fixture):
@@ -956,7 +957,7 @@ class DescribeSlideMasters(object):
 
     def it_raises_on_index_out_of_range(self, getitem_raises_fixture):
         slides = getitem_raises_fixture
-        with pytest.raises(IndexError):
+        with pytest.raises(SlideError):
             slides[1]
 
     # fixtures -------------------------------------------------------
@@ -1011,7 +1012,7 @@ class DescribeSlideMasters(object):
         return instance_mock(request, SlideMaster)
 
 
-class Describe_Background(object):
+class Describe_Background:
     """Unit-test suite for `pptx.slide._Background` objects."""
 
     @pytest.mark.parametrize(

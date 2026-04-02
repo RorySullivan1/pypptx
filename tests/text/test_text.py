@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from pptx.oxml.text import CT_TextBody, CT_TextParagraph
 
 
-class DescribeTextFrame(object):
+class DescribeTextFrame:
     """Unit-test suite for `pptx.text.text.TextFrame` object."""
 
     def it_can_add_a_paragraph_to_itself(self, add_paragraph_fixture):
@@ -468,7 +468,7 @@ class DescribeTextFrame(object):
         return property_mock(request, TextFrame, "text")
 
 
-class DescribeFont(object):
+class DescribeFont:
     """Unit-test suite for `pptx.text.text.Font` object."""
 
     def it_knows_its_bold_setting(self, bold_get_fixture):
@@ -671,7 +671,7 @@ class DescribeFont(object):
         return Font(element("a:rPr"))
 
 
-class Describe_Hyperlink(object):
+class Describe_Hyperlink:
     """Unit-test suite for `pptx.text.text._Hyperlink` object."""
 
     def it_knows_the_target_url_of_the_hyperlink(self, hlink_with_url_):
@@ -785,7 +785,7 @@ class Describe_Hyperlink(object):
         return "https://example.com/pypptx-alt"
 
 
-class Describe_Paragraph(object):
+class Describe_Paragraph:
     """Unit test suite for pptx.text.text._Paragraph object."""
 
     def it_can_add_a_line_break(self, line_break_fixture):
@@ -1139,7 +1139,7 @@ class Describe_Paragraph(object):
         return _Paragraph(p_bldr.element, None)
 
 
-class Describe_Run(object):
+class Describe_Run:
     """Unit-test suite for `pptx.text.text._Run` object."""
 
     def it_provides_access_to_its_font(self, font_fixture):

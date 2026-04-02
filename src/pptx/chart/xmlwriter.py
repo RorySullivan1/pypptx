@@ -76,7 +76,7 @@ def SeriesXmlRewriterFactory(chart_type, chart_data):
     return RewriterCls(chart_data)
 
 
-class _BaseChartXmlWriter(object):
+class _BaseChartXmlWriter:
     """
     Generates XML text (unicode) for a default chart, like the one added by
     PowerPoint when you click the *Add Column Chart* button on the ribbon.
@@ -98,7 +98,7 @@ class _BaseChartXmlWriter(object):
         raise NotImplementedError("must be implemented by all subclasses")
 
 
-class _BaseSeriesXmlWriter(object):
+class _BaseSeriesXmlWriter:
     """
     Provides shared members for series XML writers.
     """
@@ -204,7 +204,7 @@ class _BaseSeriesXmlWriter(object):
         )
 
 
-class _BaseSeriesXmlRewriter(object):
+class _BaseSeriesXmlRewriter:
     """
     Base class for series XML rewriters.
     """

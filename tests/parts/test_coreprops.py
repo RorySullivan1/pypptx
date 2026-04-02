@@ -13,7 +13,7 @@ from pptx.oxml.coreprops import CT_CoreProperties
 from pptx.parts.coreprops import CorePropertiesPart
 
 
-class DescribeCorePropertiesPart(object):
+class DescribeCorePropertiesPart:
     """Unit-test suite for `pptx.parts.coreprops.CorePropertiesPart` objects."""
 
     @pytest.mark.parametrize(

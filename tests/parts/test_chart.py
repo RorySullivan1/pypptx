@@ -19,7 +19,7 @@ from ..unitutil.cxml import element, xml
 from ..unitutil.mock import class_mock, instance_mock, method_mock, property_mock
 
 
-class DescribeChartPart(object):
+class DescribeChartPart:
     """Unit-test suite for `pptx.parts.chart.ChartPart` objects."""
 
     def it_can_construct_from_chart_type_and_data(self, request):
@@ -70,7 +70,7 @@ class DescribeChartPart(object):
         return instance_mock(request, CT_ChartSpace)
 
 
-class DescribeChartWorkbook(object):
+class DescribeChartWorkbook:
     """Unit-test suite for `pptx.parts.chart.ChartWorkbook` objects."""
 
     def it_can_get_the_chart_xlsx_part(self, chart_part_, xlsx_part_):

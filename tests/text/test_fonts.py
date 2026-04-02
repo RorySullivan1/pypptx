@@ -33,7 +33,7 @@ from ..unitutil.mock import (
 )
 
 
-class DescribeFontFiles(object):
+class DescribeFontFiles:
     """Unit-test suite for `pptx.text.fonts.FontFiles` object."""
 
     def it_can_find_a_system_font_file(self, find_fixture):
@@ -172,7 +172,7 @@ class DescribeFontFiles(object):
         return method_mock(request, FontFiles, "_windows_font_directories", autospec=False)
 
 
-class Describe_Font(object):
+class Describe_Font:
     """Unit-test suite for `pptx.text.fonts._Font` object."""
 
     def it_can_construct_from_a_font_file_path(self, open_fixture):
@@ -332,7 +332,7 @@ class Describe_Font(object):
         return property_mock(request, _Font, "_tables")
 
 
-class Describe_Stream(object):
+class Describe_Stream:
     """Unit-test suite for `pptx.text.fonts._Stream` object."""
 
     def it_can_construct_from_a_path(self, request):
@@ -395,7 +395,7 @@ class Describe_Stream(object):
         return instance_mock(request, io.RawIOBase)
 
 
-class Describe_TableFactory(object):
+class Describe_TableFactory:
     """Unit-test suite for `pptx.text.fonts._TableFactory` object."""
 
     def it_constructs_the_appropriate_table_object(self, fixture):
@@ -425,7 +425,7 @@ class Describe_TableFactory(object):
         return instance_mock(request, _Stream)
 
 
-class Describe_HeadTable(object):
+class Describe_HeadTable:
     """Unit-test suite for `pptx.text.fonts._HeadTable` object."""
 
     def it_knows_whether_the_font_is_bold(self, bold_fixture):
@@ -472,7 +472,7 @@ class Describe_HeadTable(object):
         return property_mock(request, _HeadTable, "_macStyle")
 
 
-class Describe_NameTable(object):
+class Describe_NameTable:
     """Unit-test suite for `pptx.text.fonts._NameTable` object."""
 
     def it_knows_the_font_family_name(self, family_fixture):

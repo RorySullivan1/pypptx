@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-class ShadowFormat(object):
+class ShadowFormat:
     """Provides access to shadow effect on a shape."""
 
     def __init__(self, spPr):

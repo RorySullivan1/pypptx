@@ -446,7 +446,7 @@ class CT_TableRow(BaseOxmlElement):
         return CT_TableCell.new()
 
 
-class TcRange(object):
+class TcRange:
     """A 2D block of `a:tc` cell elements in a table.
 
     This object assumes the structure of the underlying table does not change during its lifetime.

@@ -45,7 +45,7 @@ from ..unitutil.file import snippet_seq, snippet_text
 from ..unitutil.mock import call, class_mock, instance_mock, method_mock
 
 
-class DescribeChartXmlWriter(object):
+class DescribeChartXmlWriter:
     def it_contructs_an_xml_writer_for_a_chart_type(self, call_fixture):
         chart_type, series_seq_, XmlWriterClass_, xml_writer_ = call_fixture
         xml_writer = ChartXmlWriter(chart_type, series_seq_)
@@ -102,7 +102,7 @@ class DescribeChartXmlWriter(object):
         return instance_mock(request, tuple)
 
 
-class DescribeSeriesXmlRewriterFactory(object):
+class DescribeSeriesXmlRewriterFactory:
     def it_contructs_an_xml_rewriter_for_a_chart_type(self, call_fixture):
         chart_type, chart_data_, XmlRewriterClass_, xml_rewriter_ = call_fixture
 
@@ -143,7 +143,7 @@ class DescribeSeriesXmlRewriterFactory(object):
         return instance_mock(request, _BaseChartData)
 
 
-class Describe_AreaChartXmlWriter(object):
+class Describe_AreaChartXmlWriter:
     def it_can_generate_xml_for_area_type_charts(self, xml_fixture):
         xml_writer, expected_xml = xml_fixture
         assert xml_writer.xml == expected_xml
@@ -168,7 +168,7 @@ class Describe_AreaChartXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_BarChartXmlWriter(object):
+class Describe_BarChartXmlWriter:
     """Unit-test suite for `pptx.chart.xmlwriter._BarChartXmlWriter`."""
 
     @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ class Describe_BarChartXmlWriter(object):
         assert xml_writer.xml == snippet_text("4x2-multi-cat-bar")
 
 
-class Describe_BubbleChartXmlWriter(object):
+class Describe_BubbleChartXmlWriter:
     def it_can_generate_xml_for_bubble_charts(self, xml_fixture):
         xml_writer, expected_xml = xml_fixture
         assert xml_writer.xml == expected_xml
@@ -230,7 +230,7 @@ class Describe_BubbleChartXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_DoughnutChartXmlWriter(object):
+class Describe_DoughnutChartXmlWriter:
     def it_can_generate_xml_for_doughnut_type_charts(self, xml_fixture):
         xml_writer, expected_xml = xml_fixture
         assert xml_writer.xml == expected_xml
@@ -252,7 +252,7 @@ class Describe_DoughnutChartXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_LineChartXmlWriter(object):
+class Describe_LineChartXmlWriter:
     def it_can_generate_xml_for_a_line_chart(self, xml_fixture):
         xml_writer, expected_xml = xml_fixture
         assert xml_writer.xml == expected_xml
@@ -280,7 +280,7 @@ class Describe_LineChartXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_PieChartXmlWriter(object):
+class Describe_PieChartXmlWriter:
     """Unit-test suite for `pptx.chart.xmlwriter._PieChartXmlWriter`."""
 
     @pytest.mark.parametrize(
@@ -298,7 +298,7 @@ class Describe_PieChartXmlWriter(object):
         assert xml_writer.xml == snippet_text(snippet_name)
 
 
-class Describe_RadarChartXmlWriter(object):
+class Describe_RadarChartXmlWriter:
     """Unit-test suite for `pptx.chart.xmlwriter._RadarChartXmlWriter`."""
 
     def it_can_generate_xml_for_a_radar_chart(self):
@@ -308,7 +308,7 @@ class Describe_RadarChartXmlWriter(object):
         assert xml_writer.xml == snippet_text("2x5-radar")
 
 
-class Describe_XyChartXmlWriter(object):
+class Describe_XyChartXmlWriter:
     def it_can_generate_xml_for_xy_charts(self, xml_fixture):
         xml_writer, expected_xml = xml_fixture
         assert xml_writer.xml == expected_xml
@@ -333,7 +333,7 @@ class Describe_XyChartXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_BubbleSeriesXmlWriter(object):
+class Describe_BubbleSeriesXmlWriter:
     def it_knows_its_bubbleSize_XML(self, bubbleSize_fixture):
         xml_writer, expected_xml = bubbleSize_fixture
         bubbleSize = xml_writer.bubbleSize
@@ -363,7 +363,7 @@ class Describe_BubbleSeriesXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_CategorySeriesXmlWriter(object):
+class Describe_CategorySeriesXmlWriter:
     def it_knows_its_val_XML(self, val_fixture):
         xml_writer, expected_xml = val_fixture
         val = xml_writer.val
@@ -390,7 +390,7 @@ class Describe_CategorySeriesXmlWriter(object):
         return instance_mock(request, CategorySeriesData)
 
 
-class Describe_XySeriesXmlWriter(object):
+class Describe_XySeriesXmlWriter:
     def it_knows_its_xVal_XML(self, xVal_fixture):
         xml_writer, expected_xml = xVal_fixture
         xVal = xml_writer.xVal
@@ -446,7 +446,7 @@ class Describe_XySeriesXmlWriter(object):
         return xml_writer, expected_xml
 
 
-class Describe_BaseSeriesXmlRewriter(object):
+class Describe_BaseSeriesXmlRewriter:
     def it_can_replace_series_data(self, replace_fixture):
         rewriter, chartSpace, plotArea, ser_count, calls = replace_fixture
         rewriter.replace_series_data(chartSpace)
@@ -581,7 +581,7 @@ class Describe_BaseSeriesXmlRewriter(object):
         return method_mock(request, _BaseSeriesXmlRewriter, "_trim_ser_count_by", autospec=True)
 
 
-class Describe_BubbleSeriesXmlRewriter(object):
+class Describe_BubbleSeriesXmlRewriter:
     def it_can_rewrite_a_ser_element(self, rewrite_fixture):
         rewriter, ser, series_data, expected_xml = rewrite_fixture
         rewriter._rewrite_ser_data(ser, series_data, None)
@@ -603,7 +603,7 @@ class Describe_BubbleSeriesXmlRewriter(object):
         return rewriter, ser, series_data, expected_xml
 
 
-class Describe_CategorySeriesXmlRewriter(object):
+class Describe_CategorySeriesXmlRewriter:
     def it_can_rewrite_a_ser_element(self, rewrite_fixture):
         rewriter, ser, series_data, expected_xml = rewrite_fixture
         rewriter._rewrite_ser_data(ser, series_data, False)
@@ -631,7 +631,7 @@ class Describe_CategorySeriesXmlRewriter(object):
         return rewriter, ser, series_data, expected_xml
 
 
-class Describe_XySeriesXmlRewriter(object):
+class Describe_XySeriesXmlRewriter:
     def it_can_rewrite_a_ser_element(self, rewrite_fixture):
         rewriter, ser, series_data, expected_xml = rewrite_fixture
         rewriter._rewrite_ser_data(ser, series_data, None)

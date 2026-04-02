@@ -13,7 +13,7 @@ from pptx.oxml.dml.color import (
 )
 
 
-class ColorFormat(object):
+class ColorFormat:
     """
     Provides access to color settings such as RGB color, theme color, and
     luminance adjustments.
@@ -107,7 +107,7 @@ class ColorFormat(object):
             raise ValueError(msg)
 
 
-class _Color(object):
+class _Color:
     """
     Object factory for color object of the appropriate type, also the base
     class for all color type classes such as SRgbColor.

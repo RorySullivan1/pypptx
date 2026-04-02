@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Iterator, cast
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.exc import SlideError
 from pptx.shapes.shapetree import (
     LayoutPlaceholders,
     LayoutShapes,
@@ -253,7 +254,7 @@ class Slides(ParentedElementProxy):
         try:
             sldId = self._sldIdLst.sldId_lst[idx]
         except IndexError:
-            raise IndexError("slide index out of range")
+            raise SlideError("slide index out of range")
         return self.part.related_slide(sldId.rId)
 
     def __iter__(self) -> Iterator[Slide]:
@@ -290,7 +291,7 @@ class Slides(ParentedElementProxy):
         for idx, this_slide in enumerate(self):
             if this_slide == slide:
                 return idx
-        raise ValueError("%s is not in slide collection" % slide)
+        raise SlideError("%s is not in slide collection" % slide)
 
 
 class SlideLayout(_BaseSlide):
@@ -358,7 +359,7 @@ class SlideLayouts(ParentedElementProxy):
         try:
             sldLayoutId = self._sldLayoutIdLst.sldLayoutId_lst[idx]
         except IndexError:
-            raise IndexError("slide layout index out of range")
+            raise SlideError("slide layout index out of range")
         return self.part.related_slide_layout(sldLayoutId.rId)
 
     def __iter__(self) -> Iterator[SlideLayout]:
@@ -385,7 +386,7 @@ class SlideLayouts(ParentedElementProxy):
         for idx, this_layout in enumerate(self):
             if slide_layout == this_layout:
                 return idx
-        raise ValueError("layout not in this SlideLayouts collection")
+        raise SlideError("layout not in this SlideLayouts collection")
 
     def remove(self, slide_layout: SlideLayout) -> None:
         """Remove `slide_layout` from the collection.
@@ -395,7 +396,7 @@ class SlideLayouts(ParentedElementProxy):
         """
         # ---raise if layout is in use---
         if slide_layout.used_by_slides:
-            raise ValueError("cannot remove slide-layout in use by one or more slides")
+            raise SlideError("cannot remove slide-layout in use by one or more slides")
 
         # ---target layout is identified by its index in this collection---
         target_idx = self.index(slide_layout)
@@ -443,7 +444,7 @@ class SlideMasters(ParentedElementProxy):
         try:
             sldMasterId = self._sldMasterIdLst.sldMasterId_lst[idx]
         except IndexError:
-            raise IndexError("slide master index out of range")
+            raise SlideError("slide master index out of range")
         return self.part.related_slide_master(sldMasterId.rId)
 
     def __iter__(self):

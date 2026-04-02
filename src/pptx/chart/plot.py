@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pptx.chart.category import Categories
 from pptx.chart.datalabel import DataLabels
+from pptx.exc import ChartError
 from pptx.chart.series import SeriesCollection
 from pptx.enum.chart import XL_CHART_TYPE as XL
 from pptx.oxml.ns import qn
@@ -15,7 +16,7 @@ from pptx.oxml.simpletypes import ST_BarDir, ST_Grouping
 from pptx.util import lazyproperty
 
 
-class _BasePlot(object):
+class _BasePlot:
     """
     A distinct plot that appears in the plot area of a chart. A chart may
     have more than one plot, in which case they appear as superimposed
@@ -56,7 +57,7 @@ class _BasePlot(object):
         """
         dLbls = self._element.dLbls
         if dLbls is None:
-            raise ValueError("plot has no data labels, set has_data_labels = True first")
+            raise ChartError("plot has no data labels, set has_data_labels = True first")
         return DataLabels(dLbls)
 
     @property
@@ -245,12 +246,12 @@ def PlotFactory(xChart, chart):
             qn("c:scatterChart"): XyPlot,
         }[xChart.tag]
     except KeyError:
-        raise ValueError("unsupported plot type %s" % xChart.tag)
+        raise ChartError("unsupported plot type %s" % xChart.tag)
 
     return PlotCls(xChart, chart)
 
 
-class PlotTypeInspector(object):
+class PlotTypeInspector:
     """
     "One-shot" service object that knows how to identify the type of a plot
     as a member of the XL_CHART_TYPE enumeration.
@@ -311,7 +312,7 @@ class PlotTypeInspector(object):
                 ST_Grouping.STACKED: XL.COLUMN_STACKED,
                 ST_Grouping.PERCENT_STACKED: XL.COLUMN_STACKED_100,
             }[barChart.grouping_val]
-        raise ValueError("invalid barChart.barDir value '%s'" % barChart.barDir.val)
+        raise ChartError("invalid barChart.barDir value '%s'" % barChart.barDir.val)
 
     @classmethod
     def _differentiate_bubble_chart_type(cls, plot):

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from xlsxwriter import Workbook
 
 
-class _BaseWorkbookWriter(object):
+class _BaseWorkbookWriter:
     """Base class for workbook writers, providing shared members."""
 
     def __init__(self, chart_data):

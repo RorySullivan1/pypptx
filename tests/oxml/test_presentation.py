@@ -13,7 +13,7 @@ from pptx.oxml.presentation import CT_SlideIdList
 from ..unitutil.cxml import element, xml
 
 
-class DescribeCT_SlideIdList(object):
+class DescribeCT_SlideIdList:
     """Unit-test suite for `pptx.oxml.presentation.CT_SlideIdLst` objects."""
 
     def it_can_add_a_sldId_element_as_a_child(self):

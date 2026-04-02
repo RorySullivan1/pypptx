@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 from pptx.action import ActionSetting
 from pptx.dml.effect import ShadowFormat
+from pptx.exc import ShapeError
 from pptx.shared import ElementProxy
 from pptx.util import lazyproperty
 
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from pptx.util import Length
 
 
-class BaseShape(object):
+class BaseShape:
     """Base class for shape objects.
 
     Subclasses include |Shape|, |Picture|, and |GraphicFrame|.
@@ -148,7 +149,7 @@ class BaseShape(object):
         """
         ph = self._element.ph
         if ph is None:
-            raise ValueError("shape is not a placeholder")
+            raise ShapeError("shape is not a placeholder")
         return _PlaceholderFormat(ph)
 
     @property

@@ -12,7 +12,7 @@ from pptx.oxml.ns import qn
 from pptx.util import lazyproperty
 
 
-class _BaseSeries(object):
+class _BaseSeries:
     """
     Base class for |BarSeries| and other series classes.
     """
@@ -83,7 +83,7 @@ class _BaseCategorySeries(_BaseSeries):
         return tuple(iter_values())
 
 
-class _MarkerMixin(object):
+class _MarkerMixin:
     """
     Mixin class providing `.marker` property for line-type chart series. The
     line-type charts are Line, XY, and Radar.
