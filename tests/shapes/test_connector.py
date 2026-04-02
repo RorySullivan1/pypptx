@@ -14,7 +14,7 @@ from ..unitutil.cxml import element, xml
 from ..unitutil.mock import instance_mock, method_mock
 
 
-class DescribeConnector(object):
+class DescribeConnector:
     """Unit-test suite for `pptx.shapes.connector.Connector`."""
 
     def it_knows_its_begin_point_x_location(self, begin_x_get_fixture):

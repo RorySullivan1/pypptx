@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import IO, TYPE_CHECKING, Iterable
 
+from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
 from pptx.opc.packuri import PackURI
@@ -116,7 +117,7 @@ class PresentationPart(XmlPart):
         for sldId in self._element.sldIdLst:
             if self.related_part(sldId.rId) is slide_part:
                 return sldId.id
-        raise ValueError("matching slide_part not found")
+        raise SlideError("matching slide_part not found")
 
     @property
     def _next_slide_partname(self):

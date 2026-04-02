@@ -54,7 +54,7 @@ class ChartPart(XmlPart):
         return ChartWorkbook(self._element, self)
 
 
-class ChartWorkbook(object):
+class ChartWorkbook:
     """Provides access to external chart data in a linked or embedded Excel workbook."""
 
     def __init__(self, chartSpace, chart_part):

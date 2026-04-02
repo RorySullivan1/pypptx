@@ -28,7 +28,7 @@ from pptx.oxml.simpletypes import (
 from ..unitutil.mock import instance_mock, method_mock
 
 
-class DescribeBaseSimpleType(object):
+class DescribeBaseSimpleType:
     """Unit-test suite for `pptx.oxml.simpletypes.BaseSimpleType` objects."""
 
     def it_can_convert_an_XML_attribute_value_to_a_python_type(
@@ -134,7 +134,7 @@ class DescribeBaseSimpleType(object):
         return method_mock(request, ST_SimpleType, "validate", autospec=False)
 
 
-class DescribeBaseIntType(object):
+class DescribeBaseIntType:
     def it_can_convert_a_string_to_an_int(self, from_xml_fixture):
         str_value, expected_value, expected_exception = from_xml_fixture
         if expected_exception is None:
@@ -173,7 +173,7 @@ class DescribeBaseIntType(object):
         return value, expected_str_value
 
 
-class DescribeST_Coordinate(object):
+class DescribeST_Coordinate:
     def it_can_convert_from_ST_UniversalMeasure(self, univ_meas_fixture):
         """
         ST_UniversalMeasure allows strings line '-034.56pt'.
@@ -198,7 +198,7 @@ class DescribeST_Coordinate(object):
         return str_value, expected_value
 
 
-class DescribeST_HexColorRGB(object):
+class DescribeST_HexColorRGB:
     def it_can_validate_a_hex_RGB_string(self, valid_fixture):
         str_value, exception = valid_fixture
         if exception is None:
@@ -241,7 +241,7 @@ class DescribeST_HexColorRGB(object):
         return str_value, exception
 
 
-class DescribeST_Percentage(object):
+class DescribeST_Percentage:
     def it_can_convert_from_xml_percent_literals(self, percent_fixture):
         str_value, expected_value = percent_fixture
         value = ST_Percentage.convert_from_xml(str_value)

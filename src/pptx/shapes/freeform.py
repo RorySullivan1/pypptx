@@ -247,7 +247,7 @@ class FreeformBuilder(Sequence[DrawingOperation]):
         return int(round(self._dx * self._x_scale))
 
 
-class _BaseDrawingOperation(object):
+class _BaseDrawingOperation:
     """Base class for freeform drawing operations.
 
     A drawing operation has at least one location (x, y) in local coordinates.
@@ -283,7 +283,7 @@ class _BaseDrawingOperation(object):
         return self._y
 
 
-class _Close(object):
+class _Close:
     """Specifies adding a `<a:close/>` element to the current contour."""
 
     @classmethod

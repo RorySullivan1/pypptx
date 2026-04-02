@@ -16,7 +16,7 @@ from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
 
-class _BaseAxis(object):
+class _BaseAxis:
     """Base class for chart axis objects. All axis objects share these properties."""
 
     def __init__(self, xAx):
@@ -336,7 +336,7 @@ class MajorGridlines(ElementProxy):
         return ChartFormat(majorGridlines)
 
 
-class TickLabels(object):
+class TickLabels:
     """A service class providing access to formatting of axis tick mark labels."""
 
     def __init__(self, xAx_elm):

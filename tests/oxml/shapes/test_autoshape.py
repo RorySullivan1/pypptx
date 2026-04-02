@@ -13,7 +13,7 @@ from ...unitutil.cxml import element
 from ..unitdata.shape import a_gd, a_prstGeom, an_avLst
 
 
-class DescribeCT_PresetGeometry2D(object):
+class DescribeCT_PresetGeometry2D:
     def it_can_get_the_gd_elms_as_a_sequence(self, gd_lst_fixture):
         prstGeom, expected_vals = gd_lst_fixture
         actual_vals = [(gd.name, gd.fmla) for gd in prstGeom.gd_lst]
@@ -77,7 +77,7 @@ class DescribeCT_PresetGeometry2D(object):
         return prstGeom_bldr
 
 
-class DescribeCT_Shape(object):
+class DescribeCT_Shape:
     def it_knows_how_to_create_a_new_autoshape_sp(self):
         # setup ------------------------
         id_ = 9

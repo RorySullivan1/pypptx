@@ -30,7 +30,7 @@ from ..unitutil.mock import (
 )
 
 
-class DescribeFreeformBuilder(object):
+class DescribeFreeformBuilder:
     """Unit-test suite for `pptx.shapes.freeform.FreeformBuilder` objects."""
 
     def it_provides_a_constructor(self, shapes_: Mock, _init_: Mock):
@@ -402,7 +402,7 @@ class DescribeFreeformBuilder(object):
         return property_mock(request, FreeformBuilder, "_width")
 
 
-class Describe_BaseDrawingOperation(object):
+class Describe_BaseDrawingOperation:
     """Unit-test suite for `pptx.shapes.freeform.BaseDrawingOperation` objects."""
 
     def it_knows_its_x_coordinate(self, x_fixture):
@@ -432,7 +432,7 @@ class Describe_BaseDrawingOperation(object):
         return drawing_operation, expected_value
 
 
-class Describe_Close(object):
+class Describe_Close:
     """Unit-test suite for `pptx.shapes.freeform._Close` objects."""
 
     def it_provides_a_constructor(self, new_fixture):
@@ -471,7 +471,7 @@ class Describe_Close(object):
         return initializer_mock(request, _Close, autospec=True)
 
 
-class Describe_LineSegment(object):
+class Describe_LineSegment:
     """Unit-test suite for `pptx.shapes.freeform._LineSegment` objects."""
 
     def it_provides_a_constructor(self, new_fixture):
@@ -518,7 +518,7 @@ class Describe_LineSegment(object):
         return initializer_mock(request, _LineSegment, autospec=True)
 
 
-class Describe_MoveTo(object):
+class Describe_MoveTo:
     """Unit-test suite for `pptx.shapes.freeform._MoveTo` objects."""
 
     def it_provides_a_constructor(self, new_fixture):

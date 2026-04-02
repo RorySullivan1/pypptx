@@ -122,7 +122,7 @@ class Package(OpcPackage):
         return _MediaParts(self)
 
 
-class _ImageParts(object):
+class _ImageParts:
     """Provides access to the image parts in a package."""
 
     def __init__(self, package):
@@ -169,7 +169,7 @@ class _ImageParts(object):
         return None
 
 
-class _MediaParts(object):
+class _MediaParts:
     """Provides access to the media parts in a package.
 
     Supports iteration and :meth:`get()` using the media object SHA1 hash as

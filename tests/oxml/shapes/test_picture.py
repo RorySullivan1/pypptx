@@ -8,7 +8,7 @@ from pptx.oxml.ns import nsdecls
 from pptx.oxml.shapes.picture import CT_Picture
 
 
-class DescribeCT_Picture(object):
+class DescribeCT_Picture:
     """Unit-test suite for `pptx.oxml.shapes.picture.CT_Picture` objects."""
 
     @pytest.mark.parametrize(

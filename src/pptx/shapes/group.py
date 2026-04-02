@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.exc import ShapeError
 from pptx.shapes.base import BaseShape
 from pptx.util import lazyproperty
 
@@ -29,7 +30,7 @@ class GroupShape(BaseShape):
 
         A group shape cannot have a click action or hover action.
         """
-        raise TypeError("a group shape cannot have a click action")
+        raise ShapeError("a group shape cannot have a click action")
 
     @property
     def has_text_frame(self) -> bool:

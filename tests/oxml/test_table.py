@@ -10,7 +10,7 @@ from pptx.oxml.table import CT_Table, TcRange
 from ..unitutil.cxml import element
 
 
-class DescribeCT_Table(object):
+class DescribeCT_Table:
     def it_can_create_a_new_tbl_element_tree(self):
         """
         Indirectly tests that column widths are a proportional split of total
@@ -50,7 +50,7 @@ class DescribeCT_Table(object):
         assert tbl.tc(1, 1) is tcs[3]
 
 
-class DescribeTcRange(object):
+class DescribeTcRange:
     def it_knows_when_the_range_contains_a_merged_cell(self, contains_merge_fixture):
         tc, other_tc, expected_value = contains_merge_fixture
         tc_range = TcRange(tc, other_tc)

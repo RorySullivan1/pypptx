@@ -29,7 +29,7 @@ from ..unitutil.cxml import element, xml
 from ..unitutil.mock import class_mock, function_mock, instance_mock
 
 
-class Describe_BaseSeries(object):
+class Describe_BaseSeries:
     def it_knows_its_name(self, name_fixture):
         series, expected_value = name_fixture
         assert series.name == expected_value
@@ -80,7 +80,7 @@ class Describe_BaseSeries(object):
         return instance_mock(request, ChartFormat)
 
 
-class Describe_BaseCategorySeries(object):
+class Describe_BaseCategorySeries:
     def it_is_a_BaseSeries_subclass(self, subclass_fixture):
         base_category_series = subclass_fixture
         assert isinstance(base_category_series, _BaseSeries)
@@ -188,7 +188,7 @@ class Describe_BaseCategorySeries(object):
         return instance_mock(request, CategoryPoints)
 
 
-class Describe_MarkerMixin(object):
+class Describe_MarkerMixin:
     def it_provides_access_to_the_series_marker(self, marker_fixture):
         series, Marker_, ser, marker_ = marker_fixture
         marker = series.marker
@@ -214,7 +214,7 @@ class Describe_MarkerMixin(object):
         return instance_mock(request, Marker)
 
 
-class DescribeAreaSeries(object):
+class DescribeAreaSeries:
     def it_is_a_BaseCategorySeries_subclass(self, subclass_fixture):
         area_series = subclass_fixture
         assert isinstance(area_series, _BaseCategorySeries)
@@ -226,7 +226,7 @@ class DescribeAreaSeries(object):
         return AreaSeries(None)
 
 
-class DescribeBarSeries(object):
+class DescribeBarSeries:
     def it_is_a_BaseCategorySeries_subclass(self, subclass_fixture):
         bar_series = subclass_fixture
         assert isinstance(bar_series, _BaseCategorySeries)
@@ -282,7 +282,7 @@ class DescribeBarSeries(object):
         return BarSeries(None)
 
 
-class Describe_BubbleSeries(object):
+class Describe_BubbleSeries:
     def it_provides_access_to_its_points(self, points_fixture):
         series, BubblePoints_, ser, points_ = points_fixture
         points = series.points
@@ -308,7 +308,7 @@ class Describe_BubbleSeries(object):
         return instance_mock(request, BubblePoints)
 
 
-class DescribeLineSeries(object):
+class DescribeLineSeries:
     def it_is_a_BaseCategorySeries_subclass(self, subclass_fixture):
         line_series = subclass_fixture
         assert isinstance(line_series, _BaseCategorySeries)
@@ -359,7 +359,7 @@ class DescribeLineSeries(object):
         return LineSeries(None)
 
 
-class DescribePieSeries(object):
+class DescribePieSeries:
     def it_is_a_BaseCategorySeries_subclass(self, subclass_fixture):
         pie_series = subclass_fixture
         assert isinstance(pie_series, _BaseCategorySeries)
@@ -371,7 +371,7 @@ class DescribePieSeries(object):
         return PieSeries(None)
 
 
-class DescribeRadarSeries(object):
+class DescribeRadarSeries:
     def it_is_a_BaseCategorySeries_subclass(self, subclass_fixture):
         radar_series = subclass_fixture
         assert isinstance(radar_series, _BaseCategorySeries)
@@ -387,7 +387,7 @@ class DescribeRadarSeries(object):
         return RadarSeries(None)
 
 
-class Describe_XySeries(object):
+class Describe_XySeries:
     def it_uses__MarkerMixin(self, subclass_fixture):
         line_series = subclass_fixture
         assert isinstance(line_series, _MarkerMixin)
@@ -452,7 +452,7 @@ class Describe_XySeries(object):
         return instance_mock(request, XyPoints)
 
 
-class DescribeSeriesCollection(object):
+class DescribeSeriesCollection:
     def it_supports_indexed_access(self, getitem_fixture):
         series_collection, index, _SeriesFactory_, ser, series_ = getitem_fixture
         series = series_collection[index]
@@ -522,7 +522,7 @@ class DescribeSeriesCollection(object):
         return instance_mock(request, _BaseSeries)
 
 
-class Describe_SeriesFactory(object):
+class Describe_SeriesFactory:
     def it_contructs_a_series_object_from_a_plot_element(self, call_fixture):
         ser, SeriesCls_, series_ = call_fixture
         series = _SeriesFactory(ser)

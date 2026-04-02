@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.packuri import PackURI
 from pptx.package import Package
@@ -17,7 +18,7 @@ from ..unitutil.cxml import element
 from ..unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
 
 
-class DescribePresentationPart(object):
+class DescribePresentationPart:
     """Unit-test suite for `pptx.parts.presentation.PresentationPart` objects."""
 
     def it_provides_access_to_its_presentation(self, request):
@@ -165,7 +166,7 @@ class DescribePresentationPart(object):
         related_part_.return_value = "not the slide you're looking for"
         prs_part = PresentationPart(None, None, None, prs_elm)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SlideError):
             prs_part.slide_id(slide_part_)
 
     @pytest.mark.parametrize("is_present", (True, False))

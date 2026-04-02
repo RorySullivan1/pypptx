@@ -65,7 +65,7 @@ def nsdecls(*nspfxs):
     return nsdecls
 
 
-class Element(object):
+class Element:
     """
     Represents an XML element, having a namespace, tagname, attributes, and
     may contain either text or children (but not both) or may be empty.

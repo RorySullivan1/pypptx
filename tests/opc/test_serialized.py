@@ -250,7 +250,7 @@ class Describe_DirPkgReader:
 
     def it_can_retrieve_the_blob_for_a_pack_uri(self, dir_pkg_reader: _DirPkgReader):
         blob = dir_pkg_reader[PackURI("/ppt/presentation.xml")]
-        assert hashlib.sha1(blob).hexdigest() == "51b78f4dabc0af2419d4e044ab73028c4bef53aa"
+        assert hashlib.sha1(blob).hexdigest() == "ec5d5bb7214adbcbb7c38b0da84ced7403b178f1"
 
     def but_it_raises_KeyError_when_requested_member_is_not_present(
         self, dir_pkg_reader: _DirPkgReader

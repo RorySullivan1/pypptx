@@ -11,6 +11,7 @@ import pytest
 from pptx.action import ActionSetting
 from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.exc import ShapeError
 from pptx.oxml.shapes.shared import BaseShapeElement
 from pptx.oxml.text import CT_TextBody
 from pptx.shapes import Subshape
@@ -44,7 +45,7 @@ if TYPE_CHECKING:
     from pptx.types import ProvidesPart
 
 
-class DescribeBaseShape(object):
+class DescribeBaseShape:
     """Unit-test suite for `pptx.shapes.base.BaseShape` objects."""
 
     def it_provides_access_to_its_click_action(self, click_action_fixture):
@@ -163,7 +164,7 @@ class DescribeBaseShape(object):
 
     def it_raises_when_shape_is_not_a_placeholder(self, phfmt_raise_fixture):
         shape = phfmt_raise_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             shape.placeholder_format
 
     def it_knows_it_doesnt_contain_a_chart(self):
@@ -575,7 +576,7 @@ class DescribeBaseShape(object):
         return 321
 
 
-class DescribeSubshape(object):
+class DescribeSubshape:
     def it_knows_the_part_it_belongs_to(self, subshape_with_parent_):
         subshape, parent_ = subshape_with_parent_
         part = subshape.part
@@ -590,7 +591,7 @@ class DescribeSubshape(object):
         return subshape, parent_
 
 
-class Describe_PlaceholderFormat(object):
+class Describe_PlaceholderFormat:
     def it_knows_its_idx(self, idx_get_fixture):
         placeholder_format, expected_value = idx_get_fixture
         assert placeholder_format.idx == expected_value

@@ -21,7 +21,7 @@ from ..unitutil.cxml import element
 from ..unitutil.mock import class_mock, instance_mock, property_mock
 
 
-class DescribeGraphicFrame(object):
+class DescribeGraphicFrame:
     """Unit-test suite for `pptx.shapes.graphfrm.GraphicFrame` object."""
 
     def it_provides_access_to_the_chart_it_contains(
@@ -144,7 +144,7 @@ class DescribeGraphicFrame(object):
         return property_mock(request, GraphicFrame, "has_chart")
 
 
-class Describe_OleFormat(object):
+class Describe_OleFormat:
     """Unit-test suite for `pptx.shapes.graphfrm._OleFormat` object."""
 
     def it_provides_access_to_the_OLE_object_blob(self, request):

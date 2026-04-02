@@ -139,7 +139,7 @@ class ImagePart(Part):
         return image.size
 
 
-class Image(object):
+class Image:
     """Immutable value object representing an image such as a JPEG, PNG, or GIF."""
 
     def __init__(self, blob: bytes, filename: str | None):

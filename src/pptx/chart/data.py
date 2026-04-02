@@ -228,7 +228,7 @@ class _BaseSeriesData(Sequence):
         return self._chart_data.y_values_ref(self)
 
 
-class _BaseDataPoint(object):
+class _BaseDataPoint:
     """
     Base class providing common members for data point objects.
     """
@@ -506,7 +506,7 @@ class Categories(Sequence):
         self._number_format = value
 
 
-class Category(object):
+class Category:
     """
     A chart category, primarily having a label to be displayed on the
     category axis, but also able to be configured in a hierarchy for support

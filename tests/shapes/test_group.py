@@ -6,6 +6,7 @@ import pytest
 
 from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.exc import ShapeError
 from pptx.shapes.group import GroupShape
 from pptx.shapes.shapetree import GroupShapes
 
@@ -13,10 +14,10 @@ from ..unitutil.cxml import element
 from ..unitutil.mock import class_mock, initializer_mock, instance_mock
 
 
-class DescribeGroupShape(object):
+class DescribeGroupShape:
     def it_raises_on_access_click_action(self, click_action_fixture):
         group = click_action_fixture
-        with pytest.raises(TypeError):
+        with pytest.raises(ShapeError):
             group.click_action
 
     def it_provides_access_to_its_shadow(self, ShadowFormat_, shadow_):

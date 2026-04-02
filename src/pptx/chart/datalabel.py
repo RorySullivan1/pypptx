@@ -6,7 +6,7 @@ from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
 
-class DataLabels(object):
+class DataLabels:
     """Provides access to properties of data labels for a plot or a series.
 
     This is not a collection and does not provide access to individual data
@@ -140,7 +140,7 @@ class DataLabels(object):
         self._element.get_or_add_showVal().val = bool(value)
 
 
-class DataLabel(object):
+class DataLabel:
     """
     The data label associated with an individual data point.
     """

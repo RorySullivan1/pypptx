@@ -11,7 +11,7 @@ from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.util import lazyproperty
 
 
-class Video(object):
+class Video:
     """Immutable value object representing a video such as MP4."""
 
     def __init__(self, blob: bytes, mime_type: str | None, filename: str | None):

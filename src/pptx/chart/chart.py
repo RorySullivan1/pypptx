@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
+from pptx.exc import ChartError
 from pptx.chart.plot import PlotFactory, PlotTypeInspector
 from pptx.chart.series import SeriesCollection
 from pptx.chart.xmlwriter import SeriesXmlRewriterFactory
@@ -41,7 +42,7 @@ class Chart(PartElementProxy):
         if valAx_lst:
             return ValueAxis(valAx_lst[0])
 
-        raise ValueError("chart has no category axis")
+        raise ChartError("chart has no category axis")
 
     @property
     def chart_style(self):
@@ -185,7 +186,7 @@ class Chart(PartElementProxy):
         """
         valAx_lst = self._chartSpace.valAx_lst
         if not valAx_lst:
-            raise ValueError("chart has no value axis")
+            raise ChartError("chart has no value axis")
 
         idx = 1 if len(valAx_lst) > 1 else 0
         return ValueAxis(valAx_lst[idx])

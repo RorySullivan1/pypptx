@@ -277,7 +277,7 @@ class TextFrame(Subshape):
             set_rPr_font(rPr, family, size, bold, italic)
 
 
-class Font(object):
+class Font:
     """Character properties object, providing font size, font name, bold, italic, etc.
 
     Corresponds to `a:rPr` child element of a run. Also appears as `a:defRPr` and

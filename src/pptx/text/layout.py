@@ -116,7 +116,7 @@ class TextFitter(tuple):
         return lines
 
 
-class _BinarySearchTree(object):
+class _BinarySearchTree:
     """
     A node in a binary search tree. Uniform for root, subtree root, and leaf
     nodes.
@@ -212,7 +212,7 @@ class _BinarySearchTree(object):
         self._insert_from_ordered_sequence(lesser)
 
 
-class _LineSource(object):
+class _LineSource:
     """
     Generates all the possible even-word line breaks in a string of text,
     each in the form of a (line, remainder) 2-tuple where *line* contains the
@@ -289,7 +289,7 @@ class _Line(tuple):
         return self[0]
 
 
-class _Fonts(object):
+class _Fonts:
     """
     A memoizing cache for ImageFont objects.
     """

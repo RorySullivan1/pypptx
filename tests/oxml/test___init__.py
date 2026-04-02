@@ -12,13 +12,13 @@ from pptx.oxml.xmlchemy import BaseOxmlElement
 from ..unitutil.mock import function_mock, loose_mock, var_mock
 
 
-class DescribeOxmlParser(object):
+class DescribeOxmlParser:
     def it_strips_whitespace_between_elements(self, foo, stripped_xml_bytes):
         xml_bytes = etree.tostring(foo)
         assert xml_bytes == stripped_xml_bytes
 
 
-class DescribeParseXml(object):
+class DescribeParseXml:
     def it_uses_oxml_configured_parser_to_parse_xml(
         self, mock_xml_bytes, fromstring, mock_oxml_parser
     ):
@@ -44,7 +44,7 @@ class DescribeParseXml(object):
             parse_xml(xml_text)
 
 
-class DescribeRegisterCustomElementClass(object):
+class DescribeRegisterCustomElementClass:
     def it_determines_cust_elm_class_constructed_for_specified_tag(self, xml_bytes):
         register_element_cls("a:foo", CustElmCls)
         foo = etree.fromstring(xml_bytes, oxml_parser)

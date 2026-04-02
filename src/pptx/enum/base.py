@@ -96,7 +96,7 @@ class BaseXmlEnum(int, enum.Enum):
             raise ValueError(f"{value} not a member of {cls.__name__} enumeration")
 
 
-class DocsPageFormatter(object):
+class DocsPageFormatter:
     """Formats a reStructuredText documention page (string) for an enumeration."""
 
     def __init__(self, clsname: str, clsdict: dict[str, Any]):

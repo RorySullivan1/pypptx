@@ -108,6 +108,34 @@ class _BaseShapes(ParentedElementProxy):
         shape_elms = list(self._iter_member_elms())
         return len(shape_elms)
 
+    def __contains__(self, name_or_shape: str | BaseShape) -> bool:  # type: ignore[override]
+        """Return |True| if a shape with the given name or identity is in the collection.
+
+        Accepts either a shape name (str) or a shape object.
+        """
+        if isinstance(name_or_shape, str):
+            return any(
+                shape_elm.shape_name == name_or_shape
+                for shape_elm in self._iter_member_elms()
+            )
+        return any(
+            shape_elm is name_or_shape.element for shape_elm in self._iter_member_elms()
+        )
+
+    def get_by_name(self, name: str, default: BaseShape | None = None) -> BaseShape | None:
+        """Return the shape with *name*, or *default* if not found."""
+        for shape_elm in self._iter_member_elms():
+            if shape_elm.shape_name == name:
+                return self._shape_factory(shape_elm)
+        return default
+
+    def get_by_id(self, shape_id: int, default: BaseShape | None = None) -> BaseShape | None:
+        """Return the shape with *shape_id*, or *default* if not found."""
+        for shape_elm in self._iter_member_elms():
+            if shape_elm.shape_id == shape_id:
+                return self._shape_factory(shape_elm)
+        return default
+
     def clone_placeholder(self, placeholder: LayoutPlaceholder) -> None:
         """Add a new placeholder shape based on `placeholder`."""
         sp = placeholder.element
@@ -867,7 +895,7 @@ def SlideShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShap
     return BaseShapeFactory(shape_elm, parent)
 
 
-class _MoviePicElementCreator(object):
+class _MoviePicElementCreator:
     """Functional service object for creating a new movie p:pic element.
 
     It's entire external interface is its :meth:`new_movie_pic` class method that returns a new
@@ -997,7 +1025,7 @@ class _MoviePicElementCreator(object):
         return self._video_part_rIds[1]
 
 
-class _OleObjectElementCreator(object):
+class _OleObjectElementCreator:
     """Functional service object for creating a new OLE-object p:graphicFrame element.
 
     It's entire external interface is its :meth:`graphicFrame` class method that returns a new

@@ -6,7 +6,7 @@ from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 
 
-class BaseBuilder(object):
+class BaseBuilder:
     """
     Provides common behavior for all data builders.
     """
