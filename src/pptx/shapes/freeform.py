@@ -106,6 +106,7 @@ class FreeformBuilder(Sequence[DrawingOperation]):
         path = self._start_path(sp)
         for drawing_operation in self:
             drawing_operation.apply_operation_to(path)
+        self._shapes._invalidate_shape_cache()  # pyright: ignore[reportPrivateUsage]
         return self._shapes._shape_factory(sp)  # pyright: ignore[reportPrivateUsage]
 
     def move_to(self, x: float, y: float):
