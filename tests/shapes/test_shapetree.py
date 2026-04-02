@@ -159,6 +159,72 @@ class Describe_BaseShapes:
         shapes, ph_type, sp_id, orient, expected_value = ph_name_fixture
         assert shapes._next_ph_name(ph_type, sp_id, orient) == expected_value
 
+    def it_can_get_a_shape_by_name(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Shape A},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=Shape B})"
+        )
+        shapes = _BaseShapes(spTree, None)
+        shape = shapes.get_by_name("Shape B")
+        assert shape is not None
+        assert shape.name == "Shape B"
+        assert shapes.get_by_name("No Such Shape") is None
+        assert shapes.get_by_name("No Such Shape", "default") == "default"
+
+    def it_can_get_a_shape_by_id(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Shape A},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=Shape B})"
+        )
+        shapes = _BaseShapes(spTree, None)
+        shape = shapes.get_by_id(3)
+        assert shape is not None
+        assert shape.shape_id == 3
+        assert shapes.get_by_id(999) is None
+        assert shapes.get_by_id(999, "default") == "default"
+
+    def it_supports_contains_by_name(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Shape A},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=Shape B})"
+        )
+        shapes = _BaseShapes(spTree, None)
+        assert "Shape A" in shapes
+        assert "Shape B" in shapes
+        assert "Shape C" not in shapes
+
+    def it_caches_name_and_id_indices(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Shape A},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=Shape B})"
+        )
+        shapes = _BaseShapes(spTree, None)
+        # ---first lookup builds the cache---
+        shapes.get_by_name("Shape A")
+        assert shapes._name_index is not None
+        shapes.get_by_id(2)
+        assert shapes._id_index is not None
+        # ---invalidation clears both caches---
+        shapes._invalidate_shape_cache()
+        assert shapes._name_index is None
+        assert shapes._id_index is None
+
+    def it_invalidates_cache_on_clone_placeholder(self):
+        spTree = element("p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Shape A})")
+        shapes = SlideShapes(spTree, None)
+        # ---prime the cache---
+        shapes.get_by_name("Shape A")
+        assert shapes._name_index is not None
+        # ---clone_placeholder invalidates cache---
+        placeholder = element(
+            "p:sp/p:nvSpPr/p:nvPr/p:ph{type=body,idx=1}"
+        )
+        from pptx.shapes.placeholder import LayoutPlaceholder
+
+        ph = LayoutPlaceholder(placeholder, None)
+        shapes.clone_placeholder(ph)
+        assert shapes._name_index is None
+
     # fixtures -------------------------------------------------------
 
     @pytest.fixture

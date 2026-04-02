@@ -84,6 +84,8 @@ class _BaseShapes(ParentedElementProxy):
         super(_BaseShapes, self).__init__(spTree, parent)
         self._spTree = spTree
         self._cached_max_shape_id = None
+        self._name_index: dict[str, ShapeElement] | None = None
+        self._id_index: dict[int, ShapeElement] | None = None
 
     def __getitem__(self, idx: int) -> BaseShape:
         """Return shape at `idx` in sequence, e.g. `shapes[2]`."""
@@ -114,27 +116,45 @@ class _BaseShapes(ParentedElementProxy):
         Accepts either a shape name (str) or a shape object.
         """
         if isinstance(name_or_shape, str):
-            return any(
-                shape_elm.shape_name == name_or_shape
-                for shape_elm in self._iter_member_elms()
-            )
+            return name_or_shape in self._get_name_index()
         return any(
             shape_elm is name_or_shape.element for shape_elm in self._iter_member_elms()
         )
 
     def get_by_name(self, name: str, default: BaseShape | None = None) -> BaseShape | None:
         """Return the shape with *name*, or *default* if not found."""
-        for shape_elm in self._iter_member_elms():
-            if shape_elm.shape_name == name:
-                return self._shape_factory(shape_elm)
+        shape_elm = self._get_name_index().get(name)
+        if shape_elm is not None:
+            return self._shape_factory(shape_elm)
         return default
 
     def get_by_id(self, shape_id: int, default: BaseShape | None = None) -> BaseShape | None:
         """Return the shape with *shape_id*, or *default* if not found."""
-        for shape_elm in self._iter_member_elms():
-            if shape_elm.shape_id == shape_id:
-                return self._shape_factory(shape_elm)
+        shape_elm = self._get_id_index().get(shape_id)
+        if shape_elm is not None:
+            return self._shape_factory(shape_elm)
         return default
+
+    def _get_name_index(self) -> dict[str, ShapeElement]:
+        """Return cached name-to-element index, building it on first access."""
+        if self._name_index is None:
+            self._name_index = {
+                elm.shape_name: elm for elm in self._iter_member_elms()
+            }
+        return self._name_index
+
+    def _get_id_index(self) -> dict[int, ShapeElement]:
+        """Return cached id-to-element index, building it on first access."""
+        if self._id_index is None:
+            self._id_index = {
+                elm.shape_id: elm for elm in self._iter_member_elms()
+            }
+        return self._id_index
+
+    def _invalidate_shape_cache(self) -> None:
+        """Clear cached shape index dicts. Call after any shape mutation."""
+        self._name_index = None
+        self._id_index = None
 
     def clone_placeholder(self, placeholder: LayoutPlaceholder) -> None:
         """Add a new placeholder shape based on `placeholder`."""
@@ -143,6 +163,7 @@ class _BaseShapes(ParentedElementProxy):
         id_ = self._next_shape_id
         name = self._next_ph_name(ph_type, id_, orient)
         self._spTree.add_placeholder(id_, name, ph_type, orient, sz, idx)
+        self._invalidate_shape_cache()
 
     def ph_basename(self, ph_type: PP_PLACEHOLDER) -> str:
         """Return the base name for a placeholder of `ph_type` in this shape collection.
@@ -282,6 +303,7 @@ class _BaseGroupShapes(_BaseShapes):
         """
         rId = self.part.add_chart_part(chart_type, chart_data)
         graphicFrame = self._add_chart_graphicFrame(rId, x, y, cx, cy)
+        self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast("Chart", self._shape_factory(graphicFrame))
 
@@ -300,6 +322,7 @@ class _BaseGroupShapes(_BaseShapes):
         has begin and end points as specified.
         """
         cxnSp = self._add_cxnSp(connector_type, begin_x, begin_y, end_x, end_y)
+        self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast(Connector, self._shape_factory(cxnSp))
 
@@ -319,6 +342,7 @@ class _BaseGroupShapes(_BaseShapes):
             )
         if shapes:
             grpSp.recalculate_extents()
+        self._invalidate_shape_cache()
         return cast(GroupShape, self._shape_factory(grpSp))
 
     def add_ole_object(
@@ -375,6 +399,7 @@ class _BaseGroupShapes(_BaseShapes):
             icon_height,
         )
         self._spTree.append(graphicFrame)
+        self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast(GraphicFrame, self._shape_factory(graphicFrame))
 
@@ -397,6 +422,7 @@ class _BaseGroupShapes(_BaseShapes):
         """
         image_part, rId = self.part.get_or_add_image_part(image_file)
         pic = self._add_pic_from_image_part(image_part, rId, left, top, width, height)
+        self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast(Picture, self._shape_factory(pic))
 
@@ -411,6 +437,7 @@ class _BaseGroupShapes(_BaseShapes):
         """
         autoshape_type = AutoShapeType(autoshape_type_id)
         sp = self._add_sp(autoshape_type, left, top, width, height)
+        self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast(Shape, self._shape_factory(sp))
 
@@ -420,6 +447,7 @@ class _BaseGroupShapes(_BaseShapes):
         The text box is of the specified size, located at the specified position on the slide.
         """
         sp = self._add_textbox_sp(left, top, width, height)
+        self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast(Shape, self._shape_factory(sp))
 
@@ -612,6 +640,7 @@ class SlideShapes(_BaseGroupShapes):
         )
         self._spTree.append(movie_pic)
         self._add_video_timing(movie_pic)
+        self._invalidate_shape_cache()
         return cast(GraphicFrame, self._shape_factory(movie_pic))
 
     def add_table(
@@ -625,6 +654,7 @@ class SlideShapes(_BaseGroupShapes):
         returned |GraphicFrame| shape must be used to access the enclosed |Table| object.
         """
         graphicFrame = self._add_graphicFrame_containing_table(rows, cols, left, top, width, height)
+        self._invalidate_shape_cache()
         return cast(GraphicFrame, self._shape_factory(graphicFrame))
 
     def clone_layout_placeholders(self, slide_layout: SlideLayout) -> None:

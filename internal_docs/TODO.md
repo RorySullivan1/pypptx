@@ -22,11 +22,11 @@ avoids context-switching between layers and exposes schema gaps early.
 - [x] Removed backward-compatibility alias for `PythonPptxError`
 - [x] Migrated remaining generic `ValueError`/`TypeError` raises in API modules to domain exceptions
 
-### 1.3 Shape Tree & Lookup
+### 1.3 Shape Tree & Lookup (DONE)
 - [x] Added `_BaseShapes.get_by_name(name, default)` for name-based lookup
 - [x] Added `_BaseShapes.get_by_id(shape_id, default)` for ID-based lookup
 - [x] Added `_BaseShapes.__contains__` supporting both name (str) and shape object
-- [ ] Build cached index dicts and invalidation on mutation (deferred until shape add/delete is implemented)
+- [x] Built cached index dicts (`_name_index`, `_id_index`) with invalidation on all mutation paths
 
 ### 1.4 Proxy & Base Class Cleanup
 - [x] Removed `(object)` explicit base class from 90 files (Python 2 artifact)
