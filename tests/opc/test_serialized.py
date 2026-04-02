@@ -284,11 +284,11 @@ class Describe_ZipPkgReader:
             zip_pkg_reader[PackURI("/ppt/foobar.xml")]
         assert str(e.value) == "\"no member '/ppt/foobar.xml' in package\""
 
-    def it_loads_the_package_blobs_on_first_access_to_help(self, zip_pkg_reader: _ZipPkgReader):
-        blobs = zip_pkg_reader._blobs
-        assert len(blobs) == 38
-        assert "/ppt/presentation.xml" in blobs
-        assert "/ppt/_rels/presentation.xml.rels" in blobs
+    def it_loads_the_member_names_on_first_access_to_help(self, zip_pkg_reader: _ZipPkgReader):
+        member_names = zip_pkg_reader._member_names
+        assert len(member_names) == 38
+        assert "/ppt/presentation.xml" in member_names
+        assert "/ppt/_rels/presentation.xml.rels" in member_names
 
     # --- fixture components -------------------------------
 

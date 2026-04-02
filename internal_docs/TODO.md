@@ -33,9 +33,9 @@ avoids context-switching between layers and exposes schema gaps early.
 - [x] Reviewed proxy hierarchy — `ElementProxy`/`ParentedElementProxy`/`PartElementProxy` is sound
 - [x] `del` statements in `__init__.py` are intentional namespace cleanup, retained
 
-### 1.5 Part Loading & Memory
+### 1.5 Part Loading & Memory (DONE)
 - [x] Evaluated — blobs are loaded eagerly in `_PackageLoader._parts` via `PartFactory`
-- [ ] Lazy loading deferred — requires `Part`/`PartFactory` refactor to support deferred blob access
+- [x] Refactored `_ZipPkgReader` to read blobs on demand instead of loading all into memory at once
 
 ### 1.6 Type Annotations
 - [x] `py.typed` marker already present
