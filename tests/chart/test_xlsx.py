@@ -10,6 +10,8 @@ import pytest
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
+from pptx.exc import ChartError
+
 from pptx.chart.data import (
     BubbleChartData,
     Categories,
@@ -107,7 +109,7 @@ class DescribeCategoryWorkbookWriter:
 
     def it_raises_on_cat_ref_on_no_categories(self, cat_ref_raises_fixture):
         workbook_writer = cat_ref_raises_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(ChartError):
             workbook_writer.categories_ref
 
     def it_knows_the_ref_for_a_series_name(self, ser_name_ref_fixture):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pptx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
+from pptx.exc import ShapeError
 from pptx.oxml.dml.color import (
     CT_HslColor,
     CT_PresetColor,
@@ -59,7 +60,7 @@ class ColorFormat:
     @rgb.setter
     def rgb(self, rgb):
         if not isinstance(rgb, RGBColor):
-            raise ValueError("assigned value must be type RGBColor")
+            raise ShapeError("assigned value must be type RGBColor")
         # change to rgb color format if not already
         if not isinstance(self._color, _SRgbColor):
             srgbClr = self._xFill.get_or_change_to_srgbClr()
@@ -98,13 +99,13 @@ class ColorFormat:
 
     def _validate_brightness_value(self, value):
         if value < -1.0 or value > 1.0:
-            raise ValueError("brightness must be number in range -1.0 to 1.0")
+            raise ShapeError("brightness must be number in range -1.0 to 1.0")
         if isinstance(self._color, _NoneColor):
             msg = (
                 "can't set brightness when color.type is None. Set color.rgb"
                 " or .theme_color first."
             )
-            raise ValueError(msg)
+            raise ShapeError(msg)
 
 
 class _Color:

@@ -8,6 +8,8 @@ from datetime import date, datetime
 
 import pytest
 
+from pptx.exc import ChartError
+
 from pptx.chart.data import (
     BubbleChartData,
     BubbleDataPoint,
@@ -293,7 +295,7 @@ class DescribeCategories:
 
     def it_raises_on_category_depth_not_uniform(self, depth_raises_fixture):
         categories = depth_raises_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(ChartError):
             categories.depth
 
     def it_can_add_a_category(self, add_fixture):
@@ -470,7 +472,7 @@ class DescribeCategory:
 
     def it_raises_on_depth_not_uniform(self, depth_raises_fixture):
         category = depth_raises_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(ChartError):
             category.depth
 
     def it_knows_its_label(self, label_fixture):

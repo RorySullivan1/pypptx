@@ -12,6 +12,7 @@ from pptx.chart.xlsx import (
     XyWorkbookWriter,
 )
 from pptx.chart.xmlwriter import ChartXmlWriter
+from pptx.exc import ChartError
 from pptx.util import lazyproperty
 
 
@@ -49,7 +50,7 @@ class _BaseChartData(Sequence):
             if series is this_series:
                 return count
             count += len(this_series)
-        raise ValueError("series not in chart data object")
+        raise ChartError("series not in chart data object")
 
     @property
     def number_format(self):
@@ -69,7 +70,7 @@ class _BaseChartData(Sequence):
         for idx, s in enumerate(self):
             if series is s:
                 return idx
-        raise ValueError("series not in chart data object")
+        raise ChartError("series not in chart data object")
 
     def series_name_ref(self, series):
         """
@@ -430,7 +431,7 @@ class Categories(Sequence):
         first_depth = categories[0].depth
         for category in categories[1:]:
             if category.depth != first_depth:
-                raise ValueError("category depth not uniform")
+                raise ChartError("category depth not uniform")
         return first_depth
 
     def index(self, category):
@@ -443,7 +444,7 @@ class Categories(Sequence):
             if category is this_category:
                 return index
             index += this_category.leaf_count
-        raise ValueError("category not in top-level categories")
+        raise ChartError("category not in top-level categories")
 
     @property
     def leaf_count(self):
@@ -540,7 +541,7 @@ class Category:
         first_depth = sub_categories[0].depth
         for category in sub_categories[1:]:
             if category.depth != first_depth:
-                raise ValueError("category depth not uniform")
+                raise ChartError("category depth not uniform")
         return first_depth + 1
 
     @property
@@ -562,7 +563,7 @@ class Category:
             if sub_category is this_sub_category:
                 return index
             index += this_sub_category.leaf_count
-        raise ValueError("sub_category not in this category")
+        raise ChartError("sub_category not in this category")
 
     @property
     def leaf_count(self):

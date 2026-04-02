@@ -9,6 +9,7 @@ from typing import IO, TYPE_CHECKING, Any, cast
 
 from PIL import Image as PIL_Image
 
+from pptx.exc import PackageError
 from pptx.opc.package import Part
 from pptx.opc.spec import image_content_types
 from pptx.util import Emu, lazyproperty
@@ -234,7 +235,7 @@ class Image:
         format = self._format
         if format not in ext_map:
             tmpl = "unsupported image format, expected one of: %s, got '%s'"
-            raise ValueError(tmpl % (ext_map.keys(), format))
+            raise PackageError(tmpl % (ext_map.keys(), format))
         return ext_map[format]
 
     @property

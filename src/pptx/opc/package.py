@@ -9,6 +9,7 @@ from __future__ import annotations
 import collections
 from typing import IO, TYPE_CHECKING, DefaultDict, Iterator, Mapping, Set, cast
 
+from pptx.exc import PackageError
 from pptx.opc.constants import RELATIONSHIP_TARGET_MODE as RTM
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.oxml import CT_Relationships, serialize_part_xml
@@ -580,7 +581,7 @@ class _Relationships(Mapping[str, "_Relationship"]):
             raise KeyError("no relationship of type '%s' in collection" % reltype)
 
         if len(rels_of_reltype) > 1:
-            raise ValueError("multiple relationships of type '%s' in collection" % reltype)
+            raise PackageError("multiple relationships of type '%s' in collection" % reltype)
 
         return rels_of_reltype[0].target_part
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from typing import IO, TYPE_CHECKING
 
+from pptx.exc import PackageError
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.package import Package
 
@@ -32,7 +33,7 @@ def Presentation(pptx: str | IO[bytes] | None = None) -> presentation.Presentati
 
     if not _is_pptx_package(presentation_part):
         tmpl = "file '%s' is not a PowerPoint file, content type is '%s'"
-        raise ValueError(tmpl % (pptx, presentation_part.content_type))
+        raise PackageError(tmpl % (pptx, presentation_part.content_type))
 
     return presentation_part.presentation
 

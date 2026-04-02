@@ -6,6 +6,7 @@ import pytest
 
 from pptx.action import ActionSetting, Hyperlink
 from pptx.enum.action import PP_ACTION
+from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
 from pptx.parts.slide import SlidePart
@@ -62,7 +63,7 @@ class DescribeActionSetting:
 
     def it_raises_on_no_next_prev_slide(self, target_raise_fixture):
         action_setting = target_raise_fixture
-        with pytest.raises(ValueError):
+        with pytest.raises(SlideError):
             action_setting.target_slide
 
     def it_knows_its_slide_index_to_help(self, _slide_index_fixture):

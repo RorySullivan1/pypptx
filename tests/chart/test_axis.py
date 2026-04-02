@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.exc import ChartError
+
 from pptx.chart.axis import (
     AxisTitle,
     CategoryAxis,
@@ -154,7 +156,7 @@ class Describe_BaseAxis:
 
     def but_it_raises_on_assign_non_bool_to_visible(self):
         axis = _BaseAxis(None)
-        with pytest.raises(ValueError):
+        with pytest.raises(ChartError):
             axis.visible = "foobar"
 
     # fixtures -------------------------------------------------------

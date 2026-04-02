@@ -376,7 +376,7 @@ class _Cell(Subshape):
         """Raise ValueError if `margin_value` is not a positive integer value or |None|."""
         if not isinstance(margin_value, int) and margin_value is not None:
             tmpl = "margin value must be integer or None, got '%s'"
-            raise TypeError(tmpl % margin_value)
+            raise TableError(tmpl % margin_value)
 
 
 class _Column(Subshape):

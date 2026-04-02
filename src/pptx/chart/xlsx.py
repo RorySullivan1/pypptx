@@ -7,6 +7,8 @@ from contextlib import contextmanager
 
 from xlsxwriter import Workbook
 
+from pptx.exc import ChartError
+
 
 class _BaseWorkbookWriter:
     """Base class for workbook writers, providing shared members."""
@@ -59,7 +61,7 @@ class CategoryWorkbookWriter(_BaseWorkbookWriter):
         """
         categories = self._chart_data.categories
         if categories.depth == 0:
-            raise ValueError("chart data contains no categories")
+            raise ChartError("chart data contains no categories")
         right_col = chr(ord("A") + categories.depth - 1)
         bottom_row = categories.leaf_count + 1
         return "Sheet1!$A$2:$%s$%d" % (right_col, bottom_row)

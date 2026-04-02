@@ -10,10 +10,6 @@ class PyPptxError(Exception):
     """Generic error class."""
 
 
-# Backward compatibility alias
-PythonPptxError = PyPptxError
-
-
 class PackageNotFoundError(PyPptxError):
     """Raised when a package cannot be found at the specified path."""
 

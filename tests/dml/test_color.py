@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from pptx.dml.color import ColorFormat, RGBColor
+from pptx.exc import ShapeError
 from pptx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
 
 from ..oxml.unitdata.dml import (
@@ -53,7 +54,7 @@ class DescribeColorFormat:
 
     def it_raises_on_assign_non_RGBColor_type_to_rgb(self, rgb_color_format):
         color_format = rgb_color_format
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             color_format.rgb = (0x12, 0x34, 0x56)
 
     def it_can_set_itself_to_a_theme_color(self, set_theme_color_fixture_):
@@ -67,16 +68,16 @@ class DescribeColorFormat:
         assert color_format._xFill.xml == expected_xml
 
     def it_raises_on_attempt_to_set_brightness_out_of_range(self, rgb_color_format):
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             rgb_color_format.brightness = 1.1
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             rgb_color_format.brightness = -1.1
 
     def it_raises_on_attempt_to_set_brightness_on_None_color_type(
         self, color_format_having_none_color_type
     ):
         color_format = color_format_having_none_color_type
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             color_format.brightness = 0.5
 
     # fixtures ---------------------------------------------

@@ -14,13 +14,13 @@ avoids context-switching between layers and exposes schema gaps early.
 - [x] Added `pyproject.toml` with metadata, dependencies (`lxml`, `typing_extensions`, `XlsxWriter`, `Pillow`), dev extras (`pytest`, `pytest-cov`), and pytest configuration
 - [x] Package installs and runs via `pip install -e ".[dev]"`
 
-### 1.2 Exception Hierarchy
+### 1.2 Exception Hierarchy (DONE)
 - [x] Audited all ~130 raise sites across 38 files
 - [x] Added domain-specific exceptions: `ShapeError`, `SlideError`, `ChartError`, `TableError`, `PackageError`
 - [x] Updated key call sites in `shapes/`, `slide.py`, `chart/`, `table.py`, `parts/presentation.py`
 - [x] Updated corresponding test assertions
-- [ ] Remove backward-compatibility alias for `PythonPptxError` once stable
-- [ ] Incrementally migrate remaining generic `ValueError`/`TypeError` raises in lower-level modules
+- [x] Removed backward-compatibility alias for `PythonPptxError`
+- [x] Migrated remaining generic `ValueError`/`TypeError` raises in API modules to domain exceptions
 
 ### 1.3 Shape Tree & Lookup
 - [x] Added `_BaseShapes.get_by_name(name, default)` for name-based lookup

@@ -7,6 +7,7 @@ from __future__ import annotations
 import pytest
 
 from pptx.dml.color import ColorFormat
+from pptx.exc import ShapeError
 from pptx.dml.fill import (
     FillFormat,
     _BlipFill,
@@ -108,11 +109,11 @@ class DescribeFillFormat:
     def it_raises_on_non_gradient_fill(self, grad_fill_, type_prop_):
         type_prop_.return_value = None
         fill = FillFormat(None, grad_fill_)
-        with pytest.raises(TypeError):
+        with pytest.raises(ShapeError):
             fill.gradient_angle
-        with pytest.raises(TypeError):
+        with pytest.raises(ShapeError):
             fill.gradient_angle = 123.4
-        with pytest.raises(TypeError):
+        with pytest.raises(ShapeError):
             fill.gradient_stops
 
     def it_knows_its_pattern(self, pattern_get_fixture):
@@ -307,19 +308,19 @@ class Describe_Fill:
     @pytest.fixture
     def back_raise_fixture(self):
         fill = _Fill("foobar")
-        exception_type = TypeError
+        exception_type = ShapeError
         return fill, exception_type
 
     @pytest.fixture
     def fore_raise_fixture(self):
         fill = _Fill("foobar")
-        exception_type = TypeError
+        exception_type = ShapeError
         return fill, exception_type
 
     @pytest.fixture
     def pattern_raise_fixture(self):
         fill = _Fill("barfoo")
-        exception_type = TypeError
+        exception_type = ShapeError
         return fill, exception_type
 
 
@@ -364,9 +365,9 @@ class Describe_GradFill:
     def it_raises_on_non_linear_gradient(self):
         gradFill = element("a:gradFill/a:path")
         grad_fill = _GradFill(gradFill)
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             grad_fill.gradient_angle
-        with pytest.raises(ValueError):
+        with pytest.raises(ShapeError):
             grad_fill.gradient_angle = 43.21
 
     def it_knows_its_fill_type(self, fill_type_fixture):
