@@ -60,11 +60,6 @@ class BaseSimpleType:
     def validate_string(cls, value):
         if isinstance(value, str):
             return value
-        try:
-            if isinstance(value, basestring):
-                return value
-        except NameError:  # means we're on Python 3
-            pass
         raise TypeError("value must be a string, got %s" % type(value))
 
 
@@ -549,6 +544,21 @@ class ST_PositiveCoordinate(XsdLong):
         cls.validate_int_in_range(value, 0, 27273042316900)
 
 
+class ST_PositiveCoordinate32(XsdInt):
+    """Valid values for `spcCol` attribute on `a:bodyPr` and similar.
+
+    Non-negative 32-bit integer in EMU.
+    """
+
+    @classmethod
+    def convert_from_xml(cls, str_value):
+        return Emu(int(str_value))
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int_in_range(value, 0, 2147483647)
+
+
 class ST_PositiveFixedAngle(ST_Angle):
     """Valid values for `a:lin@ang`.
 
@@ -706,6 +716,75 @@ class ST_TextSpacingPoint(BaseIntType):
     @classmethod
     def validate(cls, value):
         cls.validate_int_in_range(value, 0, 20116800)
+
+
+class ST_TextColumnCount(BaseIntType):
+    """Valid values for `numCol` attribute on `a:bodyPr`.
+
+    Integer in range 1..16 specifying number of text columns.
+    """
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int_in_range(value, 1, 16)
+
+
+class ST_TextMargin(BaseIntType):
+    """Valid values for `marL`, `marR`, `marT`, `marB`, `indent` attributes on `a:pPr`.
+
+    Integer in range 0..51206400 EMU.
+    """
+
+    @classmethod
+    def convert_from_xml(cls, str_value):
+        return Emu(int(str_value))
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int_in_range(value, 0, 51206400)
+
+
+class ST_TextNonNegativePoint(BaseIntType):
+    """Valid values for `kern` attribute on `a:rPr`.
+
+    Non-negative integer in hundredths of a point.
+    """
+
+    @classmethod
+    def convert_from_xml(cls, str_value):
+        return Centipoints(int(str_value))
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int_in_range(value, 0, 400000)
+
+
+class ST_TextPoint(BaseSimpleType):
+    """Valid values for `spc` attribute on `a:rPr`.
+
+    Union of ST_TextPointUnqualified (int -400000..400000 in hundredths of a point)
+    and ST_UniversalMeasure (e.g. "12.5mm").
+    """
+
+    @classmethod
+    def convert_from_xml(cls, str_value):
+        if "i" in str_value or "m" in str_value or "p" in str_value:
+            return ST_UniversalMeasure.convert_from_xml(str_value)
+        return Centipoints(int(str_value))
+
+    @classmethod
+    def convert_to_xml(cls, value):
+        return str(Emu(value).centipoints)
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int(value)
+        emu = Emu(value)
+        centipoints = emu.centipoints
+        if centipoints < -400000 or centipoints > 400000:
+            raise ValueError(
+                "value must be in range -400000 to 400000 centipoints, got %d" % centipoints
+            )
 
 
 class ST_TextTypeface(XsdString):
