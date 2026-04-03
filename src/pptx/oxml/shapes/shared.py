@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from pptx.dml.fill import CT_GradientFillProperties
+from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE, MSO_RECT_ALIGNMENT
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import (
@@ -278,8 +279,8 @@ class CT_LineProperties(BaseOxmlElement):
     custDash = ZeroOrOne("a:custDash", successors=_tag_seq[6:])
     del _tag_seq
     w = OptionalAttribute("w", ST_LineWidth, default=Emu(0))
-    cmpd: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "cmpd", XsdString
+    cmpd: MSO_LINE_COMPOUND_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "cmpd", MSO_LINE_COMPOUND_TYPE
     )
 
     @property

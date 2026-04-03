@@ -181,23 +181,27 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 
 ---
 
-## 5. Enumerations (NEXT)
+## 5. Enumerations (DONE)
 
-Add `XmlEnumeration` / `EnumMember` definitions for new attribute value sets.
+`BaseXmlEnum` definitions in `pptx/enum/` with OXML attribute wiring.
 
-- [ ] `ST_TextStrikeType` — `noStrike`, `sngStrike`, `dblStrike`
-- [ ] `ST_TextCapsType` — `none`, `all`, `small`
-- [ ] `ST_CompoundLine` — `sng`, `dbl`, `thickThin`, `thinThick`, `tri`
-- [ ] `ST_TextVerticalType` — `horz`, `vert`, `vert270`, `wordArtVert`, etc.
-- [ ] `ST_RectAlignment` — `tl`, `t`, `tr`, `l`, `ctr`, `r`, `bl`, `b`, `br` (for shadow alignment)
-- [ ] `ST_TextFontAlignType` — `auto`, `t`, `ctr`, `base`, `b`
-- [ ] `ST_PresetTextShape` — full set of text warp presets
-- [ ] Shadow style enumeration (custom, maps to common presets)
-- [ ] Any additional enums discovered during OXML audit
+### Text enumerations — `enum/text.py` (DONE)
+- [x] `MSO_TEXT_STRIKE_TYPE` — `noStrike`, `sngStrike`, `dblStrike` → wired to `strike` on `CT_TextCharacterProperties`
+- [x] `MSO_TEXT_CAPS` — `none`, `all`, `small` → wired to `cap` on `CT_TextCharacterProperties`
+- [x] `MSO_TEXT_FONT_ALIGN` — `auto`, `t`, `ctr`, `base`, `b` → wired to `fontAlgn` on `CT_TextParagraphProperties`
+- [x] `MSO_TEXT_VERTICAL_TYPE` — `horz`, `vert`, `vert270`, `wordArtVert`, `eaVert`, `mongolianVert`, `wordArtVertRtl` → wired to `vert` on `CT_TextBodyProperties`
+- [x] `MSO_PRESET_TEXT_SHAPE` — 41 text warp presets → wired to `prst` on `CT_PresetTextShape`
+
+### DML enumerations — `enum/dml.py` (DONE)
+- [x] `MSO_LINE_COMPOUND_TYPE` — `sng`, `dbl`, `thickThin`, `thinThick`, `tri` → wired to `cmpd` on `CT_LineProperties`
+- [x] `MSO_RECT_ALIGNMENT` — 9 positions (tl, t, tr, l, ctr, r, bl, b, br) → wired to `algn` on `CT_OuterShadowEffect`
+
+### Deferred
+- [ ] Shadow style enumeration — deferred to Section 12 (Python API shadow implementation)
 
 ---
 
-## 6. Python API — Slide Lifecycle
+## 6. Python API — Slide Lifecycle (NEXT)
 
 _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_
 
