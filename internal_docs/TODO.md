@@ -47,9 +47,9 @@ avoids context-switching between layers and exposes schema gaps early.
 - [x] 2644 tests passing, 97% code coverage
 - [ ] Add round-trip integration tests (deferred)
 
-### 1.8 OXML Layer
+### 1.8 OXML Layer (DONE)
 - [x] Added `p14` and `p15` namespace prefixes for sections and modern comments
-- [ ] `xmlchemy.py` and `simpletypes.py` audit deferred to feature work
+- [x] `xmlchemy.py` and `simpletypes.py` audit moved to Section 2 (OXML Foundation Audit)
 
 ---
 
