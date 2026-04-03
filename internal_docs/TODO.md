@@ -80,48 +80,49 @@ Audit and harden the OXML infrastructure before adding new element types.
 
 ---
 
-## 3. OXML Type Definitions — Missing Attributes on Existing Elements (NEXT)
+## 3. OXML Type Definitions — Missing Attributes on Existing Elements (DONE)
 
 Add attributes and child element declarations to element classes that already
-exist but are incomplete. Grouped by OXML file.
+exist but are incomplete.
 
-### 3.1 `oxml/shapes/shared.py` — `CT_NonVisualDrawingProps` (`cNvPr`)
-- [ ] `descr` — optional attribute (alternative text for accessibility)
-- [ ] `title` — optional attribute (shape title for accessibility)
-- [ ] `hidden` — optional boolean attribute (shape visibility)
-- [ ] Decorative flag — extension element child (accessibility)
+### 3.1 `oxml/shapes/shared.py` — `CT_NonVisualDrawingProps` (`cNvPr`) (DONE)
+- [x] `descr` — optional `XsdString` attribute (alternative text for accessibility)
+- [x] `title` — optional `XsdString` attribute (shape title for accessibility)
+- [x] `hidden` — optional `XsdBoolean` attribute (shape visibility)
+- [ ] Decorative flag — requires manual `a:ext` element handling (deferred to Section 8)
 
-### 3.2 `oxml/shapes/shared.py` — Shape lock elements
-- [ ] `noChangeAspect` — optional boolean attribute on `CT_ShapeLock` / `CT_PictureLock` etc.
+### 3.2 `oxml/shapes/shared.py` — Shape lock elements (DONE)
+- [x] Created `CT_Locking` class with `noChangeAspect` optional boolean attribute
+- [x] Registered for `a:spLocks`, `a:picLocks`, `a:cxnSpLocks`, `a:grpSpLocks`
 
-### 3.3 `oxml/text.py` — `CT_TextCharacterProperties` (`a:rPr`)
-- [ ] `strike` — optional attribute (strikethrough: single, double, none)
-- [ ] `baseline` — optional attribute (superscript/subscript percentage)
-- [ ] `cap` — optional attribute (character caps: none, all, small)
-- [ ] `spc` — optional attribute (character spacing in hundredths of a point)
-- [ ] `kern` — optional attribute (kerning threshold in hundredths of a point)
+### 3.3 `oxml/text.py` — `CT_TextCharacterProperties` (`a:rPr`) (DONE)
+- [x] `strike` — optional `XsdString` attribute (enum type deferred to Section 5)
+- [x] `baseline` — optional `ST_Percentage` attribute (superscript/subscript)
+- [x] `cap` — optional `XsdString` attribute (enum type deferred to Section 5)
+- [x] `spc` — optional `ST_TextPoint` attribute (character spacing)
+- [x] `kern` — optional `ST_TextNonNegativePoint` attribute (kerning threshold)
 
-### 3.4 `oxml/text.py` — `CT_TextParagraphProperties` (`a:pPr`)
-- [ ] `indent` — optional attribute (first-line indent)
-- [ ] `marL` — optional attribute (left margin)
-- [ ] `rtl` — optional boolean attribute (right-to-left text direction)
-- [ ] `hangingPunct` — optional boolean attribute
-- [ ] `fontAlgn` — optional attribute (baseline alignment)
+### 3.4 `oxml/text.py` — `CT_TextParagraphProperties` (`a:pPr`) (DONE)
+- [x] `indent` — optional `ST_TextMargin` attribute (first-line indent)
+- [x] `marL` — optional `ST_TextMargin` attribute (left margin)
+- [x] `rtl` — optional `XsdBoolean` attribute (right-to-left text direction)
+- [x] `hangingPunct` — optional `XsdBoolean` attribute
+- [x] `fontAlgn` — optional `XsdString` attribute (enum type deferred to Section 5)
 
-### 3.5 `oxml/text.py` — `CT_TextBodyProperties` (`a:bodyPr`)
-- [ ] `vert` — optional attribute (text orientation)
-- [ ] `numCol` — optional attribute (text columns)
-- [ ] `spcCol` — optional attribute (column spacing)
+### 3.5 `oxml/text.py` — `CT_TextBodyProperties` (`a:bodyPr`) (DONE)
+- [x] `vert` — optional `XsdString` attribute (enum type deferred to Section 5)
+- [x] `numCol` — optional `ST_TextColumnCount` attribute (text columns 1..16)
+- [x] `spcCol` — optional `ST_PositiveCoordinate32` attribute (column spacing)
 
-### 3.6 `oxml/dml/fill.py` or `oxml/shapes/shared.py` — `CT_LineProperties` (`a:ln`)
-- [ ] `cmpd` — optional attribute (compound line style)
+### 3.6 `oxml/shapes/shared.py` — `CT_LineProperties` (`a:ln`) (DONE)
+- [x] `cmpd` — optional `XsdString` attribute (enum type deferred to Section 5)
 
-### 3.7 `oxml/presentation.py` — `CT_Presentation`
-- [ ] `firstSlideNum` — optional attribute (first slide number)
+### 3.7 `oxml/presentation.py` — `CT_Presentation` (DONE)
+- [x] `firstSlideNum` — optional `XsdInt` attribute (first slide number)
 
 ---
 
-## 4. OXML Type Definitions — New Element Classes
+## 4. OXML Type Definitions — New Element Classes (NEXT)
 
 Define new `CT_*` element classes and register them with `xmlchemy`. Grouped by
 functional area.

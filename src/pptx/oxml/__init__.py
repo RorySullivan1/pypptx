@@ -371,6 +371,7 @@ register_element_cls("p:pic", CT_Picture)
 from pptx.oxml.shapes.shared import (  # noqa: E402
     CT_ApplicationNonVisualDrawingProps,
     CT_LineProperties,
+    CT_Locking,
     CT_NonVisualDrawingProps,
     CT_Placeholder,
     CT_Point2D,
@@ -386,6 +387,10 @@ register_element_cls("a:ln", CT_LineProperties)
 register_element_cls("a:off", CT_Point2D)
 register_element_cls("a:xfrm", CT_Transform2D)
 register_element_cls("c:spPr", CT_ShapeProperties)
+register_element_cls("a:cxnSpLocks", CT_Locking)
+register_element_cls("a:grpSpLocks", CT_Locking)
+register_element_cls("a:picLocks", CT_Locking)
+register_element_cls("a:spLocks", CT_Locking)
 register_element_cls("p:cNvPr", CT_NonVisualDrawingProps)
 register_element_cls("p:nvPr", CT_ApplicationNonVisualDrawingProps)
 register_element_cls("p:ph", CT_Placeholder)
