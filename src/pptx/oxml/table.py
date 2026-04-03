@@ -8,7 +8,7 @@ from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
-from pptx.oxml.simpletypes import ST_Coordinate, ST_Coordinate32, XsdBoolean, XsdInt
+from pptx.oxml.simpletypes import ST_Coordinate, ST_Coordinate32, XsdBoolean, XsdInt, XsdString
 from pptx.oxml.text import CT_TextBody
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -363,6 +363,29 @@ class CT_TableCell(BaseOxmlElement):
 class CT_TableCellProperties(BaseOxmlElement):
     """`a:tcPr` custom element class"""
 
+    _tag_seq = (
+        "a:lnL",
+        "a:lnR",
+        "a:lnT",
+        "a:lnB",
+        "a:lnTlToBr",
+        "a:lnBlToTr",
+        "a:cell3D",
+        "a:noFill",
+        "a:solidFill",
+        "a:gradFill",
+        "a:blipFill",
+        "a:pattFill",
+        "a:grpFill",
+        "a:headers",
+        "a:extLst",
+    )
+    lnL = ZeroOrOne("a:lnL", successors=_tag_seq[1:])
+    lnR = ZeroOrOne("a:lnR", successors=_tag_seq[2:])
+    lnT = ZeroOrOne("a:lnT", successors=_tag_seq[3:])
+    lnB = ZeroOrOne("a:lnB", successors=_tag_seq[4:])
+    lnTlToBr = ZeroOrOne("a:lnTlToBr", successors=_tag_seq[5:])
+    lnBlToTr = ZeroOrOne("a:lnBlToTr", successors=_tag_seq[6:])
     eg_fillProperties = ZeroOrOneChoice(
         (
             Choice("a:noFill"),
@@ -372,8 +395,9 @@ class CT_TableCellProperties(BaseOxmlElement):
             Choice("a:pattFill"),
             Choice("a:grpFill"),
         ),
-        successors=("a:headers", "a:extLst"),
+        successors=_tag_seq[13:],
     )
+    del _tag_seq
     anchor: MSO_VERTICAL_ANCHOR | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "anchor", MSO_VERTICAL_ANCHOR
     )
@@ -422,6 +446,9 @@ class CT_TableProperties(BaseOxmlElement):
     firstCol = OptionalAttribute("firstCol", XsdBoolean, default=False)
     lastRow = OptionalAttribute("lastRow", XsdBoolean, default=False)
     lastCol = OptionalAttribute("lastCol", XsdBoolean, default=False)
+    tblStyle: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "tblStyle", XsdString
+    )
 
 
 class CT_TableRow(BaseOxmlElement):

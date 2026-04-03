@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable, cast
 from pptx.oxml import parse_from_template, parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
-from pptx.oxml.simpletypes import XsdString
+from pptx.oxml.simpletypes import XsdBoolean, XsdString
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     Choice,
@@ -124,6 +124,26 @@ class CT_CommonSlideData(BaseOxmlElement):
         bg = self.get_or_add_bg()
         bg.add_noFill_bgPr()
         return bg
+
+
+class CT_HeaderFooter(BaseOxmlElement):
+    """`p:hf` element, specifying header/footer visibility on slides.
+
+    Controls visibility of date/time, footer, and slide number placeholders.
+    """
+
+    sldNum: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "sldNum", XsdBoolean
+    )
+    hdr: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "hdr", XsdBoolean
+    )
+    ftr: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "ftr", XsdBoolean
+    )
+    dt: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "dt", XsdBoolean
+    )
 
 
 class CT_NotesMaster(_BaseSlideElement):

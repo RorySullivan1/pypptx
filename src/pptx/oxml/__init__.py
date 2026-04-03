@@ -267,9 +267,53 @@ register_element_cls("a:solidFill", CT_SolidColorFillProperties)
 register_element_cls("a:srcRect", CT_RelativeRect)
 
 
+from pptx.oxml.dml.effect import (  # noqa: E402
+    CT_EffectList,
+    CT_GlowEffect,
+    CT_InnerShadowEffect,
+    CT_OuterShadowEffect,
+    CT_ReflectionEffect,
+    CT_SoftEdgesEffect,
+)
+
+register_element_cls("a:effectLst", CT_EffectList)
+register_element_cls("a:glow", CT_GlowEffect)
+register_element_cls("a:innerShdw", CT_InnerShadowEffect)
+register_element_cls("a:outerShdw", CT_OuterShadowEffect)
+register_element_cls("a:reflection", CT_ReflectionEffect)
+register_element_cls("a:softEdge", CT_SoftEdgesEffect)
+
+
 from pptx.oxml.dml.line import CT_PresetLineDashProperties  # noqa: E402
 
 register_element_cls("a:prstDash", CT_PresetLineDashProperties)
+
+
+from pptx.oxml.dml.picture import (  # noqa: E402
+    CT_DuotoneEffect,
+    CT_GrayscaleEffect,
+    CT_LuminanceEffect,
+)
+
+register_element_cls("a:duotone", CT_DuotoneEffect)
+register_element_cls("a:grayscl", CT_GrayscaleEffect)
+register_element_cls("a:lum", CT_LuminanceEffect)
+
+
+from pptx.oxml.dml.threed import (  # noqa: E402
+    CT_Bevel,
+    CT_Camera,
+    CT_LightRig,
+    CT_Scene3D,
+    CT_Shape3D,
+)
+
+register_element_cls("a:bevelB", CT_Bevel)
+register_element_cls("a:bevelT", CT_Bevel)
+register_element_cls("a:camera", CT_Camera)
+register_element_cls("a:lightRig", CT_LightRig)
+register_element_cls("a:scene3d", CT_Scene3D)
+register_element_cls("a:sp3d", CT_Shape3D)
 
 
 from pptx.oxml.presentation import (  # noqa: E402
@@ -398,10 +442,35 @@ register_element_cls("p:spPr", CT_ShapeProperties)
 register_element_cls("p:xfrm", CT_Transform2D)
 
 
+from pptx.oxml.comment import (  # noqa: E402
+    CT_Comment,
+    CT_CommentAuthor,
+    CT_CommentAuthorList,
+    CT_CommentList,
+)
+
+register_element_cls("p:cm", CT_Comment)
+register_element_cls("p:cmAuthor", CT_CommentAuthor)
+register_element_cls("p:cmAuthorLst", CT_CommentAuthorList)
+register_element_cls("p:cmLst", CT_CommentList)
+
+
+from pptx.oxml.section import (  # noqa: E402
+    CT_Section,
+    CT_SectionList,
+    CT_SectionSlideIdListEntry,
+)
+
+register_element_cls("p14:section", CT_Section)
+register_element_cls("p14:sectionLst", CT_SectionList)
+register_element_cls("p14:sldId", CT_SectionSlideIdListEntry)
+
+
 from pptx.oxml.slide import (  # noqa: E402
     CT_Background,
     CT_BackgroundProperties,
     CT_CommonSlideData,
+    CT_HeaderFooter,
     CT_NotesMaster,
     CT_NotesSlide,
     CT_Slide,
@@ -418,6 +487,7 @@ register_element_cls("p:bg", CT_Background)
 register_element_cls("p:bgPr", CT_BackgroundProperties)
 register_element_cls("p:childTnLst", CT_TimeNodeList)
 register_element_cls("p:cSld", CT_CommonSlideData)
+register_element_cls("p:hf", CT_HeaderFooter)
 register_element_cls("p:notes", CT_NotesSlide)
 register_element_cls("p:notesMaster", CT_NotesMaster)
 register_element_cls("p:sld", CT_Slide)
@@ -449,6 +519,7 @@ register_element_cls("a:tr", CT_TableRow)
 
 
 from pptx.oxml.text import (  # noqa: E402
+    CT_PresetTextShape,
     CT_RegularTextRun,
     CT_TextBody,
     CT_TextBodyProperties,
@@ -472,6 +543,7 @@ register_element_cls("a:fld", CT_TextField)
 register_element_cls("a:latin", CT_TextFont)
 register_element_cls("a:lnSpc", CT_TextSpacing)
 register_element_cls("a:normAutofit", CT_TextNormalAutofit)
+register_element_cls("a:prstTxWarp", CT_PresetTextShape)
 register_element_cls("a:r", CT_RegularTextRun)
 register_element_cls("a:p", CT_TextParagraph)
 register_element_cls("a:pPr", CT_TextParagraphProperties)
@@ -486,6 +558,17 @@ register_element_cls("c:txPr", CT_TextBody)
 register_element_cls("p:txBody", CT_TextBody)
 
 
-from pptx.oxml.theme import CT_OfficeStyleSheet  # noqa: E402
+from pptx.oxml.theme import (  # noqa: E402
+    CT_BaseStyles,
+    CT_ColorScheme,
+    CT_FontCollection,
+    CT_FontScheme,
+    CT_OfficeStyleSheet,
+)
 
+register_element_cls("a:clrScheme", CT_ColorScheme)
+register_element_cls("a:fontScheme", CT_FontScheme)
+register_element_cls("a:majorFont", CT_FontCollection)
+register_element_cls("a:minorFont", CT_FontCollection)
 register_element_cls("a:theme", CT_OfficeStyleSheet)
+register_element_cls("a:themeElements", CT_BaseStyles)
