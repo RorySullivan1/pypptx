@@ -53,28 +53,34 @@ avoids context-switching between layers and exposes schema gaps early.
 
 ---
 
-## 2. OXML Foundation Audit (NEXT)
+## 2. OXML Foundation Audit (DONE)
 
-Audit and harden the OXML infrastructure before adding new element types. This
-ensures new types are built on solid ground.
+Audit and harden the OXML infrastructure before adding new element types.
 
-### 2.1 `simpletypes.py` Audit
-- [ ] Review all ~50 existing simple type converters for completeness and correctness
-- [ ] Add missing simple types needed by planned features (see sections 3-4 below)
-- [ ] Ensure all converters handle edge cases (empty strings, out-of-range values)
+### 2.1 `simpletypes.py` Audit (DONE)
+- [x] Reviewed all ~50 existing simple type converters for completeness and correctness
+- [x] Removed dead Python 2 `basestring` check from `validate_string`
+- [x] Added missing simple types needed by planned features:
+  - `ST_TextColumnCount` — int 1..16 (text columns on `a:bodyPr`)
+  - `ST_TextMargin` — int 0..51206400 EMU (paragraph indent/margin on `a:pPr`)
+  - `ST_TextNonNegativePoint` — int >= 0 centipoints (kerning on `a:rPr`)
+  - `ST_TextPoint` — union of int centipoints and universal measure (character spacing on `a:rPr`)
+  - `ST_PositiveCoordinate32` — non-negative 32-bit int EMU (column spacing on `a:bodyPr`)
+- [x] Existing converters handle edge cases correctly (range validation, type checking)
 
-### 2.2 `xmlchemy.py` Audit
-- [ ] Review declarative element/attribute machinery for gaps
-- [ ] Confirm `ZeroOrOne`, `ZeroOrMore`, `OneOrMore`, `RequiredAttribute`, `OptionalAttribute` cover all usage patterns needed for planned element types
-- [ ] Document any limitations or workarounds
+### 2.2 `xmlchemy.py` Audit (DONE)
+- [x] All needed descriptors present: `ZeroOrOne`, `ZeroOrMore`, `OneOrMore`, `OneAndOnlyOne`, `ZeroOrOneChoice`, `Choice`, `OptionalAttribute`, `RequiredAttribute`
+- [x] `OptionalAttribute` supports boolean via `XsdBoolean`
+- [x] **Limitation:** No built-in extension element support — decorative flag on `cNvPr` will require manual `a:ext` element handling (not a descriptor gap, just a known pattern)
 
-### 2.3 Namespace Registry
-- [ ] Verify all namespace prefixes needed for planned features are registered in `ns.py`
-- [ ] Confirm `p14`, `p15` prefixes are complete for sections and modern comments
+### 2.3 Namespace Registry (DONE)
+- [x] `p14`, `p15` confirmed present for sections and modern comments
+- [x] Added `a14` (`http://schemas.microsoft.com/office/drawing/2010/main`) for DrawingML 2010 extensions
+- [x] Added `adec` (`http://schemas.microsoft.com/office/drawing/2017/decorative`) for decorative flag support
 
 ---
 
-## 3. OXML Type Definitions — Missing Attributes on Existing Elements
+## 3. OXML Type Definitions — Missing Attributes on Existing Elements (NEXT)
 
 Add attributes and child element declarations to element classes that already
 exist but are incomplete. Grouped by OXML file.
