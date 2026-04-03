@@ -183,6 +183,26 @@ class Describe_BaseShapes:
         assert shapes.get_by_id(999) is None
         assert shapes.get_by_id(999, "default") == "default"
 
+    def it_returns_first_match_for_duplicate_names(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Dupe},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=Dupe})"
+        )
+        shapes = _BaseShapes(spTree, None)
+        shape = shapes.get_by_name("Dupe")
+        assert shape is not None
+        assert shape.shape_id == 2
+
+    def it_returns_first_match_for_duplicate_ids(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=5,name=First},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=5,name=Second})"
+        )
+        shapes = _BaseShapes(spTree, None)
+        shape = shapes.get_by_id(5)
+        assert shape is not None
+        assert shape.name == "First"
+
     def it_supports_contains_by_name(self):
         spTree = element(
             "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=Shape A},"

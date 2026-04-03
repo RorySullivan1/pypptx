@@ -273,7 +273,7 @@ class Shape(BaseShape):
     def auto_shape_type(self):
         """Enumeration value identifying the type of this auto shape.
 
-        Like `MSO_SHAPE.ROUNDED_RECTANGLE`. Raises |ValueError| if this shape is not an auto shape.
+        Like `MSO_SHAPE.ROUNDED_RECTANGLE`. Raises |ShapeError| if this shape is not an auto shape.
         """
         if not self._sp.is_autoshape:
             raise ShapeError("shape is not an auto shape")

@@ -92,8 +92,8 @@ class FillFormat:
         from the style hierarchy. An angle of 0.0 corresponds to
         a left-to-right gradient. Increasing angles represent
         counter-clockwise rotation of the line, for example 90.0 represents
-        a bottom-to-top gradient. Raises |TypeError| when the fill type is
-        not MSO_FILL_TYPE.GRADIENT. Raises |ValueError| for a non-linear
+        a bottom-to-top gradient. Raises |ShapeError| when the fill type is
+        not MSO_FILL_TYPE.GRADIENT. Raises |ShapeError| for a non-linear
         gradient (e.g. a radial gradient).
         """
         if self.type != MSO_FILL.GRADIENT:
@@ -122,7 +122,7 @@ class FillFormat:
     def pattern(self):
         """Return member of :ref:`MsoPatternType` indicating fill pattern.
 
-        Raises |TypeError| when fill is not patterned (call
+        Raises |ShapeError| when fill is not patterned (call
         `fill.patterned()` first). Returns |None| if no pattern has been set;
         PowerPoint may display the default `PERCENT_5` pattern in this case.
         Assigning |None| will remove any explicit pattern setting, although
