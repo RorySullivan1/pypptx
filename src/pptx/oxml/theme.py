@@ -8,7 +8,7 @@ from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrOne
 from . import parse_from_template
 
 
-class CT_Color(BaseOxmlElement):
+class CT_ThemeColor(BaseOxmlElement):
     """Color element within a color scheme (e.g. `a:dk1`, `a:lt1`, `a:accent1`)."""
 
 
@@ -30,18 +30,18 @@ class CT_ColorScheme(BaseOxmlElement):
         "a:folHlink",
         "a:extLst",
     )
-    dk1: CT_Color | None = ZeroOrOne("a:dk1", successors=_tag_seq[1:])  # pyright: ignore[reportAssignmentType]
-    lt1: CT_Color | None = ZeroOrOne("a:lt1", successors=_tag_seq[2:])  # pyright: ignore[reportAssignmentType]
-    dk2: CT_Color | None = ZeroOrOne("a:dk2", successors=_tag_seq[3:])  # pyright: ignore[reportAssignmentType]
-    lt2: CT_Color | None = ZeroOrOne("a:lt2", successors=_tag_seq[4:])  # pyright: ignore[reportAssignmentType]
-    accent1: CT_Color | None = ZeroOrOne("a:accent1", successors=_tag_seq[5:])  # pyright: ignore[reportAssignmentType]
-    accent2: CT_Color | None = ZeroOrOne("a:accent2", successors=_tag_seq[6:])  # pyright: ignore[reportAssignmentType]
-    accent3: CT_Color | None = ZeroOrOne("a:accent3", successors=_tag_seq[7:])  # pyright: ignore[reportAssignmentType]
-    accent4: CT_Color | None = ZeroOrOne("a:accent4", successors=_tag_seq[8:])  # pyright: ignore[reportAssignmentType]
-    accent5: CT_Color | None = ZeroOrOne("a:accent5", successors=_tag_seq[9:])  # pyright: ignore[reportAssignmentType]
-    accent6: CT_Color | None = ZeroOrOne("a:accent6", successors=_tag_seq[10:])  # pyright: ignore[reportAssignmentType]
-    hlink: CT_Color | None = ZeroOrOne("a:hlink", successors=_tag_seq[11:])  # pyright: ignore[reportAssignmentType]
-    folHlink: CT_Color | None = ZeroOrOne("a:folHlink", successors=_tag_seq[12:])  # pyright: ignore[reportAssignmentType]
+    dk1: CT_ThemeColor | None = ZeroOrOne("a:dk1", successors=_tag_seq[1:])  # pyright: ignore[reportAssignmentType]
+    lt1: CT_ThemeColor | None = ZeroOrOne("a:lt1", successors=_tag_seq[2:])  # pyright: ignore[reportAssignmentType]
+    dk2: CT_ThemeColor | None = ZeroOrOne("a:dk2", successors=_tag_seq[3:])  # pyright: ignore[reportAssignmentType]
+    lt2: CT_ThemeColor | None = ZeroOrOne("a:lt2", successors=_tag_seq[4:])  # pyright: ignore[reportAssignmentType]
+    accent1: CT_ThemeColor | None = ZeroOrOne("a:accent1", successors=_tag_seq[5:])  # pyright: ignore[reportAssignmentType]
+    accent2: CT_ThemeColor | None = ZeroOrOne("a:accent2", successors=_tag_seq[6:])  # pyright: ignore[reportAssignmentType]
+    accent3: CT_ThemeColor | None = ZeroOrOne("a:accent3", successors=_tag_seq[7:])  # pyright: ignore[reportAssignmentType]
+    accent4: CT_ThemeColor | None = ZeroOrOne("a:accent4", successors=_tag_seq[8:])  # pyright: ignore[reportAssignmentType]
+    accent5: CT_ThemeColor | None = ZeroOrOne("a:accent5", successors=_tag_seq[9:])  # pyright: ignore[reportAssignmentType]
+    accent6: CT_ThemeColor | None = ZeroOrOne("a:accent6", successors=_tag_seq[10:])  # pyright: ignore[reportAssignmentType]
+    hlink: CT_ThemeColor | None = ZeroOrOne("a:hlink", successors=_tag_seq[11:])  # pyright: ignore[reportAssignmentType]
+    folHlink: CT_ThemeColor | None = ZeroOrOne("a:folHlink", successors=_tag_seq[12:])  # pyright: ignore[reportAssignmentType]
     del _tag_seq
 
     name: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]

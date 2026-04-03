@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from pptx.oxml.simpletypes import XsdString
-from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrMore
+from pptx.oxml.simpletypes import XsdString, XsdUnsignedInt
+from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, RequiredAttribute, ZeroOrMore
 
 
 class CT_SectionSlideIdListEntry(BaseOxmlElement):
     """`p14:sldId` element, a reference to a slide within a section."""
 
-    id: str = OptionalAttribute("r:id", XsdString)  # pyright: ignore[reportAssignmentType]
+    id: int = RequiredAttribute("id", XsdUnsignedInt)  # pyright: ignore[reportAssignmentType]
 
 
 class CT_Section(BaseOxmlElement):

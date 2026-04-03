@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pptx.oxml.simpletypes import ST_PositiveFixedPercentage
+from pptx.oxml.simpletypes import ST_Percentage
 from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute
 
 
@@ -10,10 +10,10 @@ class CT_LuminanceEffect(BaseOxmlElement):
     """`a:lum` element, specifying brightness and contrast adjustments on a blip."""
 
     bright: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "bright", ST_PositiveFixedPercentage
+        "bright", ST_Percentage
     )
     contrast: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "contrast", ST_PositiveFixedPercentage
+        "contrast", ST_Percentage
     )
 
 

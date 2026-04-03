@@ -755,6 +755,10 @@ class ST_TextNonNegativePoint(BaseIntType):
         return Centipoints(int(str_value))
 
     @classmethod
+    def convert_to_xml(cls, value):
+        return str(Emu(value).centipoints)
+
+    @classmethod
     def validate(cls, value):
         cls.validate_int_in_range(value, 0, 400000)
 
