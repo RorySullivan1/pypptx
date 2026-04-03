@@ -173,11 +173,16 @@ class _ZipPkgReader(_PhysPkgReader):
     """Implements |PhysPkgReader| interface for a zip-file OPC package.
 
     Blobs are read on demand from the zip archive rather than all at once,
-    reducing peak memory usage for large packages.
+    reducing peak memory usage for large packages. The zip file is kept open
+    for the lifetime of the reader to avoid repeated open/close cycles.
     """
 
     def __init__(self, pkg_file: str | IO[bytes]):
-        self._pkg_file = pkg_file
+        self._zipf = zipfile.ZipFile(pkg_file, "r")
+
+    def __del__(self) -> None:
+        """Close the zip file when this reader is garbage-collected."""
+        self._zipf.close()
 
     def __contains__(self, pack_uri: object) -> bool:
         """Return True when part identified by `pack_uri` is present in zip archive."""
@@ -192,8 +197,7 @@ class _ZipPkgReader(_PhysPkgReader):
         membername = self._member_names.get(pack_uri)
         if membername is None:
             raise KeyError("no member '%s' in package" % pack_uri)
-        with zipfile.ZipFile(self._pkg_file, "r") as z:
-            return z.read(membername)
+        return self._zipf.read(membername)
 
     @lazyproperty
     def _member_names(self) -> dict[PackURI, str]:
@@ -202,8 +206,7 @@ class _ZipPkgReader(_PhysPkgReader):
         Only the member names are loaded eagerly — the actual blob bytes are
         read on demand in ``__getitem__``.
         """
-        with zipfile.ZipFile(self._pkg_file, "r") as z:
-            return {PackURI("/%s" % name): name for name in z.namelist()}
+        return {PackURI("/%s" % name): name for name in self._zipf.namelist()}
 
 
 class _PhysPkgWriter:

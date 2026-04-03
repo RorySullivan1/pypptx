@@ -136,19 +136,32 @@ class _BaseShapes(ParentedElementProxy):
         return default
 
     def _get_name_index(self) -> dict[str, ShapeElement]:
-        """Return cached name-to-element index, building it on first access."""
+        """Return cached name-to-element index, building it on first access.
+
+        When duplicate names exist, the first element in document order wins,
+        matching the linear-scan semantics of the pre-cache implementation.
+        """
         if self._name_index is None:
-            self._name_index = {
-                elm.shape_name: elm for elm in self._iter_member_elms()
-            }
+            index: dict[str, ShapeElement] = {}
+            for elm in self._iter_member_elms():
+                name = elm.shape_name
+                if name not in index:
+                    index[name] = elm
+            self._name_index = index
         return self._name_index
 
     def _get_id_index(self) -> dict[int, ShapeElement]:
-        """Return cached id-to-element index, building it on first access."""
+        """Return cached id-to-element index, building it on first access.
+
+        When duplicate IDs exist, the first element in document order wins.
+        """
         if self._id_index is None:
-            self._id_index = {
-                elm.shape_id: elm for elm in self._iter_member_elms()
-            }
+            index: dict[int, ShapeElement] = {}
+            for elm in self._iter_member_elms():
+                shape_id = elm.shape_id
+                if shape_id not in index:
+                    index[shape_id] = elm
+            self._id_index = index
         return self._id_index
 
     def _invalidate_shape_cache(self) -> None:

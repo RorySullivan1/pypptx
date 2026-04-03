@@ -265,7 +265,7 @@ class _Cell(Subshape):
         diagonal of the cell region may be specified in either order, e.g. self=bottom-right,
         other_cell=top-left, etc.
 
-        Raises |ValueError| if the specified range already contains merged cells anywhere within
+        Raises |TableError| if the specified range already contains merged cells anywhere within
         its extents or if `other_cell` is not in the same table as `self`.
         """
         tc_range = TcRange(self._tc, other_cell._tc)
@@ -316,7 +316,7 @@ class _Cell(Subshape):
         The merged cell represented by this object will be "unmerged", yielding a separate
         unmerged cell for each grid cell previously spanned by this merge.
 
-        Raises |ValueError| when this cell is not a merge-origin cell. Test with
+        Raises |TableError| when this cell is not a merge-origin cell. Test with
         `.is_merge_origin` before calling.
         """
         if not self.is_merge_origin:
@@ -373,7 +373,7 @@ class _Cell(Subshape):
 
     @staticmethod
     def _validate_margin_value(margin_value: Length | None) -> None:
-        """Raise ValueError if `margin_value` is not a positive integer value or |None|."""
+        """Raise TableError if `margin_value` is not a positive integer value or |None|."""
         if not isinstance(margin_value, int) and margin_value is not None:
             tmpl = "margin value must be integer or None, got '%s'"
             raise TableError(tmpl % margin_value)
