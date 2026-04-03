@@ -236,6 +236,18 @@ class CT_ApplicationNonVisualDrawingProps(BaseOxmlElement):
     )
 
 
+class CT_Locking(BaseOxmlElement):
+    """Custom element class for `a:spLocks`, `a:picLocks`, `a:cxnSpLocks`, `a:grpSpLocks`.
+
+    These lock elements share a common set of boolean attributes that control
+    which aspects of a shape can be changed.
+    """
+
+    noChangeAspect: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "noChangeAspect", XsdBoolean
+    )
+
+
 class CT_LineProperties(BaseOxmlElement):
     """Custom element class for <a:ln> element"""
 
@@ -266,6 +278,9 @@ class CT_LineProperties(BaseOxmlElement):
     custDash = ZeroOrOne("a:custDash", successors=_tag_seq[6:])
     del _tag_seq
     w = OptionalAttribute("w", ST_LineWidth, default=Emu(0))
+    cmpd: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "cmpd", XsdString
+    )
 
     @property
     def eg_fillProperties(self):
@@ -303,6 +318,11 @@ class CT_NonVisualDrawingProps(BaseOxmlElement):
     hlinkHover: CT_Hyperlink | None = ZeroOrOne("a:hlinkHover", successors=_tag_seq[2:])
     id = RequiredAttribute("id", ST_DrawingElementId)
     name = RequiredAttribute("name", XsdString)
+    descr: str | None = OptionalAttribute("descr", XsdString)  # pyright: ignore[reportAssignmentType]
+    title: str | None = OptionalAttribute("title", XsdString)  # pyright: ignore[reportAssignmentType]
+    hidden: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "hidden", XsdBoolean
+    )
     del _tag_seq
 
 

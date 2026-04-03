@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
 
-from pptx.oxml.simpletypes import ST_SlideId, ST_SlideSizeCoordinate, XsdString
-from pptx.oxml.xmlchemy import BaseOxmlElement, RequiredAttribute, ZeroOrMore, ZeroOrOne
+from pptx.oxml.simpletypes import ST_SlideId, ST_SlideSizeCoordinate, XsdInt, XsdString
+from pptx.oxml.xmlchemy import (
+    BaseOxmlElement,
+    OptionalAttribute,
+    RequiredAttribute,
+    ZeroOrMore,
+    ZeroOrOne,
+)
 
 if TYPE_CHECKING:
     from pptx.util import Length
@@ -35,6 +41,9 @@ class CT_Presentation(BaseOxmlElement):
     )
     sldSz: CT_SlideSize | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:sldSz", successors=("p:notesSz",)
+    )
+    firstSlideNum: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "firstSlideNum", XsdInt
     )
 
 

@@ -18,14 +18,21 @@ from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.simpletypes import (
     ST_Coordinate32,
+    ST_Percentage,
+    ST_PositiveCoordinate32,
+    ST_TextColumnCount,
     ST_TextFontScalePercentOrPercentString,
     ST_TextFontSize,
     ST_TextIndentLevelType,
+    ST_TextMargin,
+    ST_TextNonNegativePoint,
+    ST_TextPoint,
     ST_TextSpacingPercentOrPercentString,
     ST_TextSpacingPoint,
     ST_TextTypeface,
     ST_TextWrappingType,
     XsdBoolean,
+    XsdString,
 )
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -232,6 +239,15 @@ class CT_TextBodyProperties(BaseOxmlElement):
     wrap: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "wrap", ST_TextWrappingType
     )
+    vert: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "vert", XsdString
+    )
+    numCol: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "numCol", ST_TextColumnCount
+    )
+    spcCol: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "spcCol", ST_PositiveCoordinate32
+    )
 
     @property
     def autofit(self):
@@ -324,6 +340,21 @@ class CT_TextCharacterProperties(BaseOxmlElement):
     i: bool | None = OptionalAttribute("i", XsdBoolean)  # pyright: ignore[reportAssignmentType]
     u: MSO_TEXT_UNDERLINE_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "u", MSO_TEXT_UNDERLINE_TYPE
+    )
+    strike: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "strike", XsdString
+    )
+    baseline: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "baseline", ST_Percentage
+    )
+    cap: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "cap", XsdString
+    )
+    spc: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "spc", ST_TextPoint
+    )
+    kern: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "kern", ST_TextNonNegativePoint
     )
 
     def _new_gradFill(self):
@@ -507,6 +538,19 @@ class CT_TextParagraphProperties(BaseOxmlElement):
     algn: PP_PARAGRAPH_ALIGNMENT | None = OptionalAttribute(
         "algn", PP_PARAGRAPH_ALIGNMENT
     )  # pyright: ignore[reportAssignmentType]
+    indent: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "indent", ST_TextMargin
+    )
+    marL: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "marL", ST_TextMargin
+    )
+    rtl: bool | None = OptionalAttribute("rtl", XsdBoolean)  # pyright: ignore[reportAssignmentType]
+    hangingPunct: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "hangingPunct", XsdBoolean
+    )
+    fontAlgn: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "fontAlgn", XsdString
+    )
     del _tag_seq
 
     @property
