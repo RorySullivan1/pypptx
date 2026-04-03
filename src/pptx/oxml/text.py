@@ -217,6 +217,10 @@ class CT_TextBodyProperties(BaseOxmlElement):
     normAutofit: CT_TextNormalAutofit | None
     spAutoFit: BaseOxmlElement | None
 
+    prstTxWarp: CT_PresetTextShape | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:prstTxWarp",
+        successors=("a:noAutofit", "a:normAutofit", "a:spAutoFit", "a:scene3d", "a:sp3d", "a:flatTx", "a:extLst"),
+    )
     eg_textAutoFit = ZeroOrOneChoice(
         (Choice("a:noAutofit"), Choice("a:normAutofit"), Choice("a:spAutoFit")),
         successors=("a:scene3d", "a:sp3d", "a:flatTx", "a:extLst"),
@@ -659,4 +663,17 @@ class CT_TextSpacingPoint(BaseOxmlElement):
 
     val: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
         "val", ST_TextSpacingPoint
+    )
+
+
+class CT_PresetTextShape(BaseOxmlElement):
+    """`a:prstTxWarp` element, specifying a preset text warp shape.
+
+    The `prst` attribute identifies the warp preset (e.g. "textWave1").
+    Contains optional `a:avLst` child with adjustment values.
+    """
+
+    avLst = ZeroOrOne("a:avLst", successors=())
+    prst: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "prst", XsdString
     )

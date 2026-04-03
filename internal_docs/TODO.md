@@ -122,63 +122,66 @@ exist but are incomplete.
 
 ---
 
-## 4. OXML Type Definitions — New Element Classes (NEXT)
+## 4. OXML Type Definitions — New Element Classes (DONE)
 
-Define new `CT_*` element classes and register them with `xmlchemy`. Grouped by
-functional area.
+New `CT_*` element classes defined and registered with `xmlchemy`.
 
-### 4.1 Shadow Elements (for `a:effectLst`)
-- [ ] `CT_OuterShadowEffect` (`a:outerShdw`) — `blurRad`, `dist`, `dir`, `algn`, `rotWithShape` attributes; color child
-- [ ] `CT_InnerShadowEffect` (`a:innerShdw`) — `blurRad`, `dist`, `dir` attributes; color child
-- [ ] Ensure `CT_EffectList` declares `a:outerShdw` and `a:innerShdw` as `ZeroOrOne` children
+### 4.1 Shadow Elements — `oxml/dml/effect.py` (DONE)
+- [x] `CT_OuterShadowEffect` (`a:outerShdw`) — `blurRad`, `dist`, `dir`, `algn`, `rotWithShape` attributes
+- [x] `CT_InnerShadowEffect` (`a:innerShdw`) — `blurRad`, `dist`, `dir` attributes
+- [x] `CT_EffectList` (`a:effectLst`) — declares `glow`, `innerShdw`, `outerShdw`, `reflection`, `softEdge` as `ZeroOrOne` children
 
-### 4.2 Additional Effect Elements (for `a:effectLst`)
-- [ ] `CT_ReflectionEffect` (`a:reflection`) — blur, start/end alpha, distance, direction, scale attributes
-- [ ] `CT_GlowEffect` (`a:glow`) — radius attribute, color child
-- [ ] `CT_SoftEdgesEffect` (`a:softEdge`) — radius attribute
-- [ ] Register all three as `ZeroOrOne` children on `CT_EffectList`
+### 4.2 Additional Effect Elements — `oxml/dml/effect.py` (DONE)
+- [x] `CT_ReflectionEffect` (`a:reflection`) — blur, start/end alpha, distance, direction, rotWithShape
+- [x] `CT_GlowEffect` (`a:glow`) — radius attribute, color child
+- [x] `CT_SoftEdgesEffect` (`a:softEdge`) — radius attribute
 
-### 4.3 Table Cell Border Elements
-- [ ] Ensure `CT_TableCellProperties` (`a:tcPr`) declares `a:lnL`, `a:lnR`, `a:lnT`, `a:lnB` as `ZeroOrOne` children of type `CT_LineProperties`
-- [ ] Add `a:lnTlToBr`, `a:lnBlToTr` diagonal border children on `a:tcPr`
-- [ ] `tblStyle` attribute on `CT_TableProperties` (`a:tblPr`)
+### 4.3 Table Cell Border Elements — `oxml/table.py` (DONE)
+- [x] `CT_TableCellProperties` (`a:tcPr`) declares `a:lnL`, `a:lnR`, `a:lnT`, `a:lnB` as `ZeroOrOne` children
+- [x] Added `a:lnTlToBr`, `a:lnBlToTr` diagonal border children on `a:tcPr`
+- [x] Added `tblStyle` attribute on `CT_TableProperties` (`a:tblPr`)
 
-### 4.4 Headers & Footers
-- [ ] `CT_HeaderFooter` (`p:hf`) — boolean attributes for date/time, footer, slide number visibility; date format
-- [ ] Register on slide, slide layout, slide master elements as appropriate
+### 4.4 Headers & Footers — `oxml/slide.py` (DONE)
+- [x] `CT_HeaderFooter` (`p:hf`) — boolean attributes: `sldNum`, `hdr`, `ftr`, `dt`
+- [x] Registered as `p:hf` (already referenced in tag sequences of NotesMaster, SlideLayout, SlideMaster)
 
-### 4.5 Sections & Tags
-- [ ] `CT_SectionList` (`p14:sectionLst`) — container for section entries
-- [ ] `CT_Section` (`p14:section`) — name attribute, slide ID list child
-- [ ] Tag part element types (key-value pairs in `tags[N].xml`)
+### 4.5 Sections — `oxml/section.py` (DONE)
+- [x] `CT_SectionList` (`p14:sectionLst`) — container with `ZeroOrMore` section children
+- [x] `CT_Section` (`p14:section`) — `name` attribute, `ZeroOrMore` `p14:sldId` children
+- [x] `CT_SectionSlideIdListEntry` (`p14:sldId`) — slide reference within section
 
-### 4.6 Comments
-- [ ] `CT_Comment` — author index, date, text, position (x, y) attributes
-- [ ] `CT_CommentList` — container for comments
-- [ ] `CT_CommentAuthor` — name, initials, last index, color index
-- [ ] `CT_CommentAuthorList` — container for authors
+### 4.6 Comments — `oxml/comment.py` (DONE)
+- [x] `CT_Comment` (`p:cm`) — `authorId`, `idx` attributes; `pos` and `text` children
+- [x] `CT_CommentList` (`p:cmLst`) — container for comments
+- [x] `CT_CommentAuthor` (`p:cmAuthor`) — `id`, `name`, `initials`, `lastIdx`, `clrIdx`
+- [x] `CT_CommentAuthorList` (`p:cmAuthorLst`) — container for authors
 
-### 4.7 Picture Format Effects (on blip)
-- [ ] `CT_LuminanceEffect` (`a:lum`) — brightness/contrast attributes
-- [ ] `CT_GrayscaleEffect` (`a:grayscl`)
-- [ ] `CT_DuotoneEffect` (`a:duotone`)
+### 4.7 Picture Format Effects — `oxml/dml/picture.py` (DONE)
+- [x] `CT_LuminanceEffect` (`a:lum`) — `bright`, `contrast` attributes
+- [x] `CT_GrayscaleEffect` (`a:grayscl`) — no attributes needed
+- [x] `CT_DuotoneEffect` (`a:duotone`) — color children
 
-### 4.8 3D Formatting
-- [ ] Ensure `CT_Shape3D` (`a:sp3d`) has extrusion height, contour width, material attributes
-- [ ] Ensure `CT_Bevel` (`a:bevelT`, `a:bevelB`) type and dimensions are declared
-- [ ] Ensure `CT_Scene3D` / `CT_Camera` / `CT_LightRig` have full attribute coverage
+### 4.8 3D Formatting — `oxml/dml/threed.py` (DONE)
+- [x] `CT_Shape3D` (`a:sp3d`) — `extrusionH`, `contourW`, `prstMaterial`; bevel children
+- [x] `CT_Bevel` (`a:bevelT`/`a:bevelB`) — `w`, `h`, `prst` attributes
+- [x] `CT_Scene3D` (`a:scene3d`) — `camera` and `lightRig` children
+- [x] `CT_Camera` (`a:camera`) — `prst`, `fov` attributes
+- [x] `CT_LightRig` (`a:lightRig`) — `rig`, `dir` attributes
 
-### 4.9 Theme Elements
-- [ ] `CT_ColorScheme` (`a:clrScheme`) — access to dk1, lt1, dk2, lt2, accent1-6, hlink, folHlink
-- [ ] Font scheme access — major and minor font families
+### 4.9 Theme Elements — `oxml/theme.py` (DONE)
+- [x] `CT_ColorScheme` (`a:clrScheme`) — all 12 color slots (dk1, lt1, dk2, lt2, accent1-6, hlink, folHlink)
+- [x] `CT_FontScheme` (`a:fontScheme`) — `majorFont` and `minorFont` children
+- [x] `CT_FontCollection` (`a:majorFont`/`a:minorFont`) — latin, ea, cs children
+- [x] `CT_BaseStyles` (`a:themeElements`) — `clrScheme` and `fontScheme` children
+- [x] `CT_OfficeStyleSheet` updated with `themeElements` child
 
-### 4.10 WordArt
-- [ ] `CT_PresetTextShape` (`a:prstTxWarp`) — preset attribute, adjustment values
-- [ ] Register as `ZeroOrOne` child on `CT_TextBodyProperties`
+### 4.10 WordArt — `oxml/text.py` (DONE)
+- [x] `CT_PresetTextShape` (`a:prstTxWarp`) — `prst` attribute, `avLst` child
+- [x] Registered as `ZeroOrOne` child (`prstTxWarp`) on `CT_TextBodyProperties`
 
 ---
 
-## 5. Enumerations
+## 5. Enumerations (NEXT)
 
 Add `XmlEnumeration` / `EnumMember` definitions for new attribute value sets.
 
