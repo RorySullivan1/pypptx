@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from pptx.chart.datalabel import DataLabels
 from pptx.chart.marker import Marker
 from pptx.chart.point import BubblePoints, CategoryPoints, XyPoints
+from pptx.chart.trendline import TrendlineCollection
 from pptx.dml.chtfmt import ChartFormat
 from pptx.oxml.ns import qn
 from pptx.util import lazyproperty
@@ -48,6 +49,14 @@ class _BaseSeries:
         names = self._element.xpath("./c:tx//c:pt/c:v/text()")
         name = names[0] if names else ""
         return name
+
+    @lazyproperty
+    def trendlines(self):
+        """The |TrendlineCollection| for this series.
+
+        Provides access to trendlines, and supports adding new ones.
+        """
+        return TrendlineCollection(self._ser)
 
 
 class _BaseCategorySeries(_BaseSeries):
@@ -243,14 +252,22 @@ def _SeriesFactory(ser):
 
     try:
         SeriesCls = {
+            qn("c:area3DChart"): AreaSeries,
             qn("c:areaChart"): AreaSeries,
+            qn("c:bar3DChart"): BarSeries,
             qn("c:barChart"): BarSeries,
             qn("c:bubbleChart"): BubbleSeries,
             qn("c:doughnutChart"): PieSeries,
+            qn("c:line3DChart"): LineSeries,
             qn("c:lineChart"): LineSeries,
+            qn("c:ofPieChart"): PieSeries,
+            qn("c:pie3DChart"): PieSeries,
             qn("c:pieChart"): PieSeries,
             qn("c:radarChart"): RadarSeries,
             qn("c:scatterChart"): XySeries,
+            qn("c:stockChart"): LineSeries,
+            qn("c:surface3DChart"): AreaSeries,
+            qn("c:surfaceChart"): AreaSeries,
         }[xChart_tag]
     except KeyError:
         raise NotImplementedError("series class for %s not yet implemented" % xChart_tag)

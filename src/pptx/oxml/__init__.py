@@ -116,6 +116,17 @@ register_element_cls("c:size", CT_MarkerSize)
 register_element_cls("c:symbol", CT_MarkerStyle)
 
 
+from pptx.oxml.chart.trendline import (  # noqa: E402
+    CT_Trendline,
+    CT_TrendlineLabel,
+    CT_TrendlineType,
+)
+
+register_element_cls("c:trendline", CT_Trendline)
+register_element_cls("c:trendlineLbl", CT_TrendlineLabel)
+register_element_cls("c:trendlineType", CT_TrendlineType)
+
+
 from pptx.oxml.chart.plot import (  # noqa: E402
     CT_Area3DChart,
     CT_AreaChart,
@@ -198,12 +209,17 @@ from pptx.oxml.chart.shared import (  # noqa: E402
 
 register_element_cls("c:autoTitleDeleted", CT_Boolean_Explicit)
 register_element_cls("c:autoUpdate", CT_Boolean)
+register_element_cls("c:backward", CT_Double)
 register_element_cls("c:bubble3D", CT_Boolean)
 register_element_cls("c:crossAx", CT_UnsignedInt)
 register_element_cls("c:crossesAt", CT_Double)
 register_element_cls("c:date1904", CT_Boolean)
 register_element_cls("c:delete", CT_Boolean)
+register_element_cls("c:dispEq", CT_Boolean)
+register_element_cls("c:dispRSqr", CT_Boolean)
+register_element_cls("c:forward", CT_Double)
 register_element_cls("c:idx", CT_UnsignedInt)
+register_element_cls("c:intercept", CT_Double)
 register_element_cls("c:invertIfNegative", CT_Boolean_Explicit)
 register_element_cls("c:layout", CT_Layout)
 register_element_cls("c:manualLayout", CT_ManualLayout)
@@ -212,6 +228,7 @@ register_element_cls("c:min", CT_Double)
 register_element_cls("c:numFmt", CT_NumFmt)
 register_element_cls("c:order", CT_UnsignedInt)
 register_element_cls("c:overlay", CT_Boolean_Explicit)
+register_element_cls("c:period", CT_UnsignedInt)
 register_element_cls("c:ptCount", CT_UnsignedInt)
 register_element_cls("c:showCatName", CT_Boolean_Explicit)
 register_element_cls("c:showLegendKey", CT_Boolean_Explicit)

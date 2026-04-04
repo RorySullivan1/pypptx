@@ -490,3 +490,36 @@ class XL_TICK_LABEL_POSITION(BaseXmlEnum):
 
     NONE = (-4142, "none", "No tick labels.")
     """No tick labels."""
+
+
+class XL_TRENDLINE_TYPE(BaseXmlEnum):
+    """Specifies how the trendline that smoothes out fluctuations in the data is calculated.
+
+    Example::
+
+        from pptx.enum.chart import XL_TRENDLINE_TYPE
+
+        trendline.trendline_type = XL_TRENDLINE_TYPE.LINEAR
+
+    MS API Name: `XlTrendlineType`
+
+    https://learn.microsoft.com/en-us/office/vba/api/excel.xltrendlinetype
+    """
+
+    EXPONENTIAL = (5, "exp", "Uses an equation to calculate the least squares fit through points.")
+    """Exponential trendline."""
+
+    LINEAR = (-4132, "linear", "Uses the linear equation m*x + b to calculate the least squares fit.")
+    """Linear trendline."""
+
+    LOGARITHMIC = (-4133, "log", "Uses the equation ln(x) to calculate the least squares fit.")
+    """Logarithmic trendline."""
+
+    MOVING_AVERAGE = (6, "movingAvg", "Uses a moving average to smooth variations in the data.")
+    """Moving average trendline."""
+
+    POLYNOMIAL = (3, "poly", "Uses the polynomial equation to calculate the least squares fit.")
+    """Polynomial trendline."""
+
+    POWER = (4, "power", "Uses the power equation to calculate the least squares fit.")
+    """Power trendline."""
