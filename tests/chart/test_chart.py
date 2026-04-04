@@ -82,6 +82,32 @@ class DescribeChart:
         with pytest.raises(ChartError):
             chart.value_axis
 
+    def it_provides_access_to_a_secondary_value_axis(self):
+        chartSpace = element("c:chartSpace/c:chart/c:plotArea/(c:valAx,c:valAx)")
+        chart = Chart(chartSpace, None)
+        secondary = chart.secondary_value_axis
+        assert isinstance(secondary, ValueAxis)
+        assert secondary._element is chartSpace.xpath(".//c:valAx")[1]
+
+    def it_raises_when_no_secondary_value_axis(self):
+        chartSpace = element("c:chartSpace/c:chart/c:plotArea/c:valAx")
+        chart = Chart(chartSpace, None)
+        with pytest.raises(ChartError):
+            chart.secondary_value_axis
+
+    def it_provides_access_to_a_secondary_category_axis(self):
+        chartSpace = element("c:chartSpace/c:chart/c:plotArea/(c:catAx,c:catAx)")
+        chart = Chart(chartSpace, None)
+        secondary = chart.secondary_category_axis
+        assert isinstance(secondary, CategoryAxis)
+        assert secondary._element is chartSpace.xpath(".//c:catAx")[1]
+
+    def it_raises_when_no_secondary_category_axis(self):
+        chartSpace = element("c:chartSpace/c:chart/c:plotArea/c:catAx")
+        chart = Chart(chartSpace, None)
+        with pytest.raises(ChartError):
+            chart.secondary_category_axis
+
     def it_provides_access_to_its_series(self, series_fixture):
         chart, SeriesCollection_, plotArea, series_ = series_fixture
         series = chart.series
@@ -318,7 +344,7 @@ class DescribeChart:
     @pytest.fixture(
         params=[
             ("c:chartSpace/c:chart/c:plotArea/(c:catAx,c:valAx)", 0),
-            ("c:chartSpace/c:chart/c:plotArea/(c:valAx,c:valAx)", 1),
+            ("c:chartSpace/c:chart/c:plotArea/(c:valAx,c:valAx)", 0),
         ]
     )
     def val_ax_fixture(self, request, ValueAxis_, value_axis_):
