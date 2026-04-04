@@ -39,10 +39,19 @@ class CT_DLbl(BaseOxmlElement):
         "c:extLst",
     )
     idx = OneAndOnlyOne("c:idx")
+    layout = ZeroOrOne("c:layout", successors=_tag_seq[2:])
     tx = ZeroOrOne("c:tx", successors=_tag_seq[3:])
+    numFmt = ZeroOrOne("c:numFmt", successors=_tag_seq[4:])
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[5:])
     txPr = ZeroOrOne("c:txPr", successors=_tag_seq[6:])
     dLblPos = ZeroOrOne("c:dLblPos", successors=_tag_seq[7:])
+    showLegendKey = ZeroOrOne("c:showLegendKey", successors=_tag_seq[8:])
+    showVal = ZeroOrOne("c:showVal", successors=_tag_seq[9:])
+    showCatName = ZeroOrOne("c:showCatName", successors=_tag_seq[10:])
+    showSerName = ZeroOrOne("c:showSerName", successors=_tag_seq[11:])
+    showPercent = ZeroOrOne("c:showPercent", successors=_tag_seq[12:])
+    showBubbleSize = ZeroOrOne("c:showBubbleSize", successors=_tag_seq[13:])
+    separator = ZeroOrOne("c:separator", successors=_tag_seq[14:])
     del _tag_seq
 
     def get_or_add_rich(self):
@@ -149,6 +158,7 @@ class CT_DLbls(BaseOxmlElement):
     )
     dLbl = ZeroOrMore("c:dLbl", successors=_tag_seq[1:])
     numFmt = ZeroOrOne("c:numFmt", successors=_tag_seq[2:])
+    spPr = ZeroOrOne("c:spPr", successors=_tag_seq[3:])
     txPr = ZeroOrOne("c:txPr", successors=_tag_seq[4:])
     dLblPos = ZeroOrOne("c:dLblPos", successors=_tag_seq[5:])
     showLegendKey = ZeroOrOne("c:showLegendKey", successors=_tag_seq[6:])
@@ -156,6 +166,10 @@ class CT_DLbls(BaseOxmlElement):
     showCatName = ZeroOrOne("c:showCatName", successors=_tag_seq[8:])
     showSerName = ZeroOrOne("c:showSerName", successors=_tag_seq[9:])
     showPercent = ZeroOrOne("c:showPercent", successors=_tag_seq[10:])
+    showBubbleSize = ZeroOrOne("c:showBubbleSize", successors=_tag_seq[11:])
+    separator = ZeroOrOne("c:separator", successors=_tag_seq[12:])
+    showLeaderLines = ZeroOrOne("c:showLeaderLines", successors=_tag_seq[13:])
+    leaderLines = ZeroOrOne("c:leaderLines", successors=_tag_seq[14:])
     del _tag_seq
 
     @property
