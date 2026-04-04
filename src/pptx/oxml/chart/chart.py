@@ -40,6 +40,10 @@ class CT_Chart(BaseOxmlElement):
     )
     title = ZeroOrOne("c:title", successors=_tag_seq[1:])
     autoTitleDeleted = ZeroOrOne("c:autoTitleDeleted", successors=_tag_seq[2:])
+    view3D = ZeroOrOne("c:view3D", successors=_tag_seq[4:])
+    floor = ZeroOrOne("c:floor", successors=_tag_seq[5:])
+    sideWall = ZeroOrOne("c:sideWall", successors=_tag_seq[6:])
+    backWall = ZeroOrOne("c:backWall", successors=_tag_seq[7:])
     plotArea = OneAndOnlyOne("c:plotArea")
     legend = ZeroOrOne("c:legend", successors=_tag_seq[9:])
     rId: str = RequiredAttribute("r:id", XsdString)  # pyright: ignore[reportAssignmentType]

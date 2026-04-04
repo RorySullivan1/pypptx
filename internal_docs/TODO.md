@@ -467,14 +467,14 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] Supports "line", "bar", "area", "scatter" overlay types
 - [x] `Chart.plots` iteration verified working with multiple xChart elements
 
-### 18.6 3D Chart Properties
+### 18.6 3D Chart Properties (DONE)
 
-- [ ] `CT_View3D` (`c:view3D`) — `rotX`, `rotY`, `rAngAx`, `perspective`, `depthPercent`, `heightPercent` children
-- [ ] Declare `c:view3D` as `ZeroOrOne` on `CT_Chart` (likely already in `_tag_seq`)
-- [ ] `Chart.view_3d` API — rotation X/Y, right-angle axes, perspective, depth/height percent
-- [ ] `CT_Surface` / `CT_Floor` / `CT_SideWall` / `CT_BackWall` — `spPr`, `thickness` children
-- [ ] Declare floor/walls on `CT_Chart`
-- [ ] `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` API properties
+- [x] `CT_View3D` — `rotX`, `rotY`, `rAngAx`, `perspective`, `depthPercent`, `hPercent` children with val properties
+- [x] `CT_RotX`, `CT_RotY`, `CT_Perspective`, `CT_DepthPercent`, `CT_HPercent` element classes
+- [x] `CT_Surface` — shared class for `c:floor`, `c:sideWall`, `c:backWall` with `thickness` and `spPr`
+- [x] Declared `c:view3D`, `c:floor`, `c:sideWall`, `c:backWall` as `ZeroOrOne` on `CT_Chart`
+- [x] `Chart.view_3d` API — `View3D` with rot_x, rot_y, right_angle_axes, perspective, depth_percent, height_percent
+- [x] `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` — `ChartSurface` with format and thickness
 
 ### 18.7 Chart & Plot Area Formatting
 
