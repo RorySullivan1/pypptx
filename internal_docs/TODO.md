@@ -529,15 +529,15 @@ Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless
 
 ### 18.11 OXML Foundation — Data Label Descriptor Gaps
 
-- [ ] `CT_DLbls` — add `spPr` descriptor (data label collection formatting)
-- [ ] `CT_DLbls` — add `separator` descriptor
-- [ ] `CT_DLbls` — add `showLeaderLines` descriptor
-- [ ] `CT_DLbls` — add `leaderLines` descriptor
-- [ ] `CT_DLbls` — add `showBubbleSize` descriptor
-- [ ] `CT_DLbl` — add `numFmt` descriptor
-- [ ] `CT_DLbl` — add `showLegendKey`, `showVal`, `showCatName`, `showSerName`, `showPercent`, `showBubbleSize` descriptors
-- [ ] `CT_DLbl` — add `separator` descriptor
-- [ ] `CT_DLbl` — add `layout` descriptor (per-point label positioning)
+- [x] `CT_DLbls` — add `spPr` descriptor (data label collection formatting)
+- [x] `CT_DLbls` — add `separator` descriptor
+- [x] `CT_DLbls` — add `showLeaderLines` descriptor
+- [x] `CT_DLbls` — add `leaderLines` descriptor
+- [x] `CT_DLbls` — add `showBubbleSize` descriptor
+- [x] `CT_DLbl` — add `numFmt` descriptor
+- [x] `CT_DLbl` — add `showLegendKey`, `showVal`, `showCatName`, `showSerName`, `showPercent`, `showBubbleSize` descriptors
+- [x] `CT_DLbl` — add `separator` descriptor
+- [x] `CT_DLbl` — add `layout` descriptor (per-point label positioning)
 
 ### 18.12 OXML Foundation — Axis Descriptor Gaps
 
