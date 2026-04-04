@@ -25,6 +25,16 @@ class BaseChartElement(BaseOxmlElement):
     """
 
     @property
+    def axId_lst(self):
+        """Return list of ``c:axId`` child elements."""
+        return self.xpath("c:axId")
+
+    @property
+    def axId_vals(self):
+        """Return list of integer axis ID values from ``c:axId`` children."""
+        return [axId.val for axId in self.axId_lst]
+
+    @property
     def cat(self):
         """
         Return the `c:cat` element of the first series in this xChart, or

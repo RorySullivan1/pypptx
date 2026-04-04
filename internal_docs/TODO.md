@@ -456,13 +456,16 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [ ] `Plot.axis_ids` property — expose which axis IDs a plot references (deferred to 18.5)
 - [ ] Combo chart axis assignment — when adding a second plot, assign correct axis pair (deferred to 18.5)
 
-### 18.5 Combo Charts — API
+### 18.5 Combo Charts — API (DONE)
 
-Reading existing combo charts works. Need creation support.
-
-- [ ] `Chart.add_plot()` — add a second plot type to an existing chart (e.g. line on top of bar)
-- [ ] Axis assignment for new plots — auto-create secondary axes when needed
-- [ ] `Chart.plots` — already exists, verify iteration over multiple `xChart` elements works correctly
+- [x] `Plot.axis_ids` property — tuple of integer axis IDs the plot references
+- [x] `BaseChartElement.axId_vals` / `axId_lst` — OXML axis ID accessors
+- [x] Register `c:axId` as `CT_UnsignedInt`
+- [x] `CT_PlotArea.add_secondary_axes()` — creates hidden secondary catAx + right-positioned valAx
+- [x] `CT_PlotArea.add_xChart()` — adds xChart element with axis references
+- [x] `Chart.add_plot(plot_type, use_secondary_axis, grouping)` — high-level API for overlay plots
+- [x] Supports "line", "bar", "area", "scatter" overlay types
+- [x] `Chart.plots` iteration verified working with multiple xChart elements
 
 ### 18.6 3D Chart Properties
 

@@ -108,6 +108,52 @@ class DescribeChart:
         with pytest.raises(ChartError):
             chart.secondary_category_axis
 
+    def it_can_add_an_overlay_plot_with_secondary_axes(self):
+        chartSpace = element(
+            "c:chartSpace/c:chart/c:plotArea/(c:barChart/(c:axId{val=1},c:axId{val=2})"
+            ",c:catAx/c:axId{val=1},c:valAx/c:axId{val=2})"
+        )
+        chart = Chart(chartSpace, None)
+        plot = chart.add_plot("line", use_secondary_axis=True)
+
+        # New plot should be a LinePlot
+        from pptx.chart.plot import LinePlot
+
+        assert isinstance(plot, LinePlot)
+
+        # Should have axis references
+        assert len(plot.axis_ids) == 2
+
+        # Should now have secondary axes (2 catAx, 2 valAx)
+        assert len(chartSpace.xpath(".//c:catAx")) == 2
+        assert len(chartSpace.xpath(".//c:valAx")) == 2
+
+        # Secondary catAx should be hidden (delete=1)
+        secondary_catAx = chartSpace.xpath(".//c:catAx")[1]
+        delete_val = secondary_catAx.xpath("c:delete/@val")[0]
+        assert delete_val in ("1", "true")
+
+    def it_can_add_an_overlay_plot_sharing_primary_axes(self):
+        chartSpace = element(
+            "c:chartSpace/c:chart/c:plotArea/(c:barChart/(c:axId{val=1},c:axId{val=2})"
+            ",c:catAx/c:axId{val=1},c:valAx/c:axId{val=2})"
+        )
+        chart = Chart(chartSpace, None)
+        plot = chart.add_plot("area", use_secondary_axis=False)
+
+        # Should reference the same axes as primary
+        assert plot.axis_ids == (1, 2)
+
+        # No new axes should be created
+        assert len(chartSpace.xpath(".//c:catAx")) == 1
+        assert len(chartSpace.xpath(".//c:valAx")) == 1
+
+    def it_raises_on_invalid_overlay_plot_type(self):
+        chartSpace = element("c:chartSpace/c:chart/c:plotArea/c:barChart")
+        chart = Chart(chartSpace, None)
+        with pytest.raises(ChartError, match="unsupported overlay plot type"):
+            chart.add_plot("invalid_type")
+
     def it_provides_access_to_its_series(self, series_fixture):
         chart, SeriesCollection_, plotArea, series_ = series_fixture
         series = chart.series
