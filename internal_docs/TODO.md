@@ -570,17 +570,16 @@ _Prerequisites: 18.11 (data label descriptors)_
 
 _Prerequisites: 18.12 (axis descriptors)_
 
+- [x] Log scale — `ValueAxis.log_scale` read/write float (logBase on scaling)
+- [x] Cross between — `ValueAxis.cross_between` read/write string
+- [x] Axis crossing at specific value — `ValueAxis.crosses_at` (already existed)
+- [x] Category axis tick skip — `CategoryAxis.tick_label_skip`, `CategoryAxis.tick_mark_skip`
+- [x] Category axis label offset — `TickLabels.offset` (already existed)
+- [x] Date axis time units — `DateAxis.base_time_unit`, `DateAxis.major_time_unit`, `DateAxis.minor_time_unit`
+- [x] Chart-level API — `Chart.plot_visible_only`, `Chart.show_data_labels_over_max`, `Chart.rounded_corners`
+- [x] Legend API — `Legend.format` (ChartFormat for legend box formatting)
 - [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
 - [ ] Display units — `c:dispUnits` (hundreds, thousands, millions, etc.)
-- [ ] Log scale — `c:logBase` attribute on `c:scaling`
-- [ ] Axis crossing at specific value — `c:crossesAt` (OXML exists, needs API)
-- [ ] Category axis label offset — `c:lblOffset` value exposure
-- [ ] Date axis base time unit — `c:baseTimeUnit`, `c:majorTimeUnit`, `c:minorTimeUnit`
-- [ ] Axis crossing at specific value — `c:crossesAt` API exposure
-- [ ] Category axis label skip/offset — `c:tickLblSkip`, `c:lblOffset` API exposure
-- [ ] Date axis time unit API — base_time_unit, major_time_unit, minor_time_unit properties
-- [ ] Chart-level API — `Chart.plot_visible_only`, `Chart.show_data_labels_over_max`, `Chart.rounded_corners`
-- [ ] Legend API — `Legend.format` (spPr), legend entry access
 - [ ] Series API — `Series.explosion`, `Series.shape`, `Series.bubble_3d`
 
 ---

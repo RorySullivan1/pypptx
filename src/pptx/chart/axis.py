@@ -303,6 +303,42 @@ class CategoryAxis(_BaseAxis):
         """
         return XL_CATEGORY_TYPE.CATEGORY_SCALE
 
+    @property
+    def tick_label_skip(self):
+        """Read/write integer. Interval between displayed tick labels.
+
+        A value of 2 means every other label is displayed. Returns None
+        if not explicitly set (PowerPoint auto-determines).
+        """
+        tickLblSkip = self._element.tickLblSkip
+        if tickLblSkip is None:
+            return None
+        return tickLblSkip.val
+
+    @tick_label_skip.setter
+    def tick_label_skip(self, value):
+        self._element._remove_tickLblSkip()
+        if value is not None:
+            self._element._add_tickLblSkip(val=value)
+
+    @property
+    def tick_mark_skip(self):
+        """Read/write integer. Interval between tick marks on the axis.
+
+        A value of 2 means every other tick mark appears. Returns None
+        if not explicitly set (PowerPoint auto-determines).
+        """
+        tickMarkSkip = self._element.tickMarkSkip
+        if tickMarkSkip is None:
+            return None
+        return tickMarkSkip.val
+
+    @tick_mark_skip.setter
+    def tick_mark_skip(self, value):
+        self._element._remove_tickMarkSkip()
+        if value is not None:
+            self._element._add_tickMarkSkip(val=value)
+
 
 class DateAxis(_BaseAxis):
     """A category axis with dates as its category labels.
@@ -312,12 +348,66 @@ class DateAxis(_BaseAxis):
     """
 
     @property
+    def base_time_unit(self):
+        """Read/write string. Base time unit for the date axis.
+
+        One of ``"days"``, ``"months"``, or ``"years"``. Returns None if
+        not explicitly set (PowerPoint auto-determines).
+        """
+        baseTimeUnit = self._element.baseTimeUnit
+        if baseTimeUnit is None:
+            return None
+        return baseTimeUnit.val
+
+    @base_time_unit.setter
+    def base_time_unit(self, value):
+        self._element._remove_baseTimeUnit()
+        if value is not None:
+            self._element._add_baseTimeUnit(val=value)
+
+    @property
     def category_type(self):
         """
         A member of :ref:`XlCategoryType` specifying the scale type of this
         axis. Unconditionally ``TIME_SCALE`` for a |DateAxis| object.
         """
         return XL_CATEGORY_TYPE.TIME_SCALE
+
+    @property
+    def major_time_unit(self):
+        """Read/write string. Time unit for major tick marks.
+
+        One of ``"days"``, ``"months"``, or ``"years"``. Returns None if
+        not explicitly set.
+        """
+        majorTimeUnit = self._element.majorTimeUnit
+        if majorTimeUnit is None:
+            return None
+        return majorTimeUnit.val
+
+    @major_time_unit.setter
+    def major_time_unit(self, value):
+        self._element._remove_majorTimeUnit()
+        if value is not None:
+            self._element._add_majorTimeUnit(val=value)
+
+    @property
+    def minor_time_unit(self):
+        """Read/write string. Time unit for minor tick marks.
+
+        One of ``"days"``, ``"months"``, or ``"years"``. Returns None if
+        not explicitly set.
+        """
+        minorTimeUnit = self._element.minorTimeUnit
+        if minorTimeUnit is None:
+            return None
+        return minorTimeUnit.val
+
+    @minor_time_unit.setter
+    def minor_time_unit(self, value):
+        self._element._remove_minorTimeUnit()
+        if value is not None:
+            self._element._add_minorTimeUnit(val=value)
 
 
 class MajorGridlines(ElementProxy):
@@ -427,6 +517,21 @@ class ValueAxis(_BaseAxis):
     """
 
     @property
+    def cross_between(self):
+        """Read/write string. Where category axis crosses value axis.
+
+        One of ``"between"`` or ``"midCat"``. Returns ``"between"`` if not set.
+        """
+        crossBetween = self._element.crossBetween
+        if crossBetween is None:
+            return "between"
+        return crossBetween.val
+
+    @cross_between.setter
+    def cross_between(self, value):
+        self._element.get_or_add_crossBetween().val = value
+
+    @property
     def crosses(self):
         """
         Member of :ref:`XlAxisCrosses` enumeration specifying the point on
@@ -471,6 +576,26 @@ class ValueAxis(_BaseAxis):
         if value is None:
             return
         cross_xAx._add_crossesAt(val=value)
+
+    @property
+    def log_scale(self):
+        """Read/write float. Base of the logarithmic scale, or None for linear.
+
+        Common values are 10 (log10), 2, or ``e`` (2.718...). Setting to None
+        removes the log scale, reverting to linear. The OOXML spec allows
+        values between 2 and 1000.
+        """
+        logBase = self._element.scaling.logBase
+        if logBase is None:
+            return None
+        return logBase.val
+
+    @log_scale.setter
+    def log_scale(self, value):
+        scaling = self._element.scaling
+        scaling._remove_logBase()
+        if value is not None:
+            scaling._add_logBase(val=value)
 
     @property
     def major_unit(self):
