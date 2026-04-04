@@ -38,6 +38,8 @@ class CT_BlipFillProperties(BaseOxmlElement):
     _tag_seq = ("a:blip", "a:srcRect", "a:tile", "a:stretch")
     blip = ZeroOrOne("a:blip", successors=_tag_seq[1:])
     srcRect = ZeroOrOne("a:srcRect", successors=_tag_seq[2:])
+    tile = ZeroOrOne("a:tile", successors=_tag_seq[3:])
+    stretch = ZeroOrOne("a:stretch", successors=())
     del _tag_seq
 
     def crop(self, cropping):

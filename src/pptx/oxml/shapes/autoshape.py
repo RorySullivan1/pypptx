@@ -197,6 +197,7 @@ class CT_Shape(BaseShapeElement):
 
     nvSpPr: CT_ShapeNonVisual = OneAndOnlyOne("p:nvSpPr")  # pyright: ignore[reportAssignmentType]
     spPr: CT_ShapeProperties = OneAndOnlyOne("p:spPr")  # pyright: ignore[reportAssignmentType]
+    style = ZeroOrOne("p:style", successors=("p:txBody", "p:extLst"))
     txBody: CT_TextBody | None = ZeroOrOne("p:txBody", successors=("p:extLst",))  # pyright: ignore
 
     def add_path(self, w: Length, h: Length) -> CT_Path2D:

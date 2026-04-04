@@ -30,6 +30,7 @@ class CT_Connector(BaseShapeElement):
     _tag_seq = ("p:nvCxnSpPr", "p:spPr", "p:style", "p:extLst")
     nvCxnSpPr = OneAndOnlyOne("p:nvCxnSpPr")
     spPr: CT_ShapeProperties = OneAndOnlyOne("p:spPr")  # pyright: ignore[reportAssignmentType]
+    style = ZeroOrOne("p:style", successors=_tag_seq[3:])
     del _tag_seq
 
     @classmethod

@@ -334,8 +334,38 @@ class CT_TextCharacterProperties(BaseOxmlElement):
             "a:extLst",
         ),
     )
+    ea: CT_TextFont | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:ea",
+        successors=("a:cs", "a:sym", "a:hlinkClick", "a:hlinkMouseOver", "a:rtl", "a:extLst"),
+    )
+    cs: CT_TextFont | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:cs",
+        successors=("a:sym", "a:hlinkClick", "a:hlinkMouseOver", "a:rtl", "a:extLst"),
+    )
+    sym: CT_TextFont | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:sym",
+        successors=("a:hlinkClick", "a:hlinkMouseOver", "a:rtl", "a:extLst"),
+    )
     hlinkClick: CT_Hyperlink | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:hlinkClick", successors=("a:hlinkMouseOver", "a:rtl", "a:extLst")
+    )
+
+    highlight = ZeroOrOne(
+        "a:highlight",
+        successors=(
+            "a:uLnTx",
+            "a:uLn",
+            "a:uFillTx",
+            "a:uFill",
+            "a:latin",
+            "a:ea",
+            "a:cs",
+            "a:sym",
+            "a:hlinkClick",
+            "a:hlinkMouseOver",
+            "a:rtl",
+            "a:extLst",
+        ),
     )
 
     lang: MSO_LANGUAGE_ID | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
@@ -537,6 +567,17 @@ class CT_TextParagraphProperties(BaseOxmlElement):
     spcAft: CT_TextSpacing | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:spcAft", successors=_tag_seq[3:]
     )
+    buClrTx = ZeroOrOne("a:buClrTx", successors=_tag_seq[4:])
+    buClr = ZeroOrOne("a:buClr", successors=_tag_seq[5:])
+    buSzTx = ZeroOrOne("a:buSzTx", successors=_tag_seq[6:])
+    buSzPct = ZeroOrOne("a:buSzPct", successors=_tag_seq[7:])
+    buSzPts = ZeroOrOne("a:buSzPts", successors=_tag_seq[8:])
+    buFontTx = ZeroOrOne("a:buFontTx", successors=_tag_seq[9:])
+    buFont = ZeroOrOne("a:buFont", successors=_tag_seq[10:])
+    buNone = ZeroOrOne("a:buNone", successors=_tag_seq[11:])
+    buAutoNum = ZeroOrOne("a:buAutoNum", successors=_tag_seq[12:])
+    buChar = ZeroOrOne("a:buChar", successors=_tag_seq[13:])
+    buBlip = ZeroOrOne("a:buBlip", successors=_tag_seq[14:])
     defRPr: CT_TextCharacterProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:defRPr", successors=_tag_seq[16:]
     )
