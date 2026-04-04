@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pptx.dml.chtfmt import ChartFormat
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
@@ -28,6 +29,18 @@ class DataLabels:
         defRPr = self._element.defRPr
         font = Font(defRPr)
         return font
+
+    @property
+    def leader_lines(self):
+        """A |ChartFormat| object for leader line formatting.
+
+        Raises |ValueError| if leader lines are not present. Use
+        :attr:`show_leader_lines` to ensure they are enabled first.
+        """
+        leaderLines = self._element.leaderLines
+        if leaderLines is None:
+            raise ValueError("plot has no leader lines; set show_leader_lines = True first")
+        return ChartFormat(leaderLines)
 
     @property
     def number_format(self):
@@ -131,6 +144,46 @@ class DataLabels:
         self._element.get_or_add_showSerName().val = bool(value)
 
     @property
+    def separator(self):
+        """Read/write string. The separator between label components.
+
+        Returns None if no separator is explicitly set (PowerPoint default is comma).
+        Assigning None removes any explicit separator.
+        """
+        separator = self._element.separator
+        if separator is None:
+            return None
+        return separator.text
+
+    @separator.setter
+    def separator(self, value):
+        if value is None:
+            self._element._remove_separator()
+            return
+        self._element.get_or_add_separator().text = value
+
+    @property
+    def show_bubble_size(self):
+        """Read/write. True when data label displays bubble size."""
+        return self._element.get_or_add_showBubbleSize().val
+
+    @show_bubble_size.setter
+    def show_bubble_size(self, value):
+        self._element.get_or_add_showBubbleSize().val = bool(value)
+
+    @property
+    def show_leader_lines(self):
+        """Read/write. True when leader lines are displayed for data labels."""
+        showLeaderLines = self._element.showLeaderLines
+        if showLeaderLines is None:
+            return True
+        return showLeaderLines.val
+
+    @show_leader_lines.setter
+    def show_leader_lines(self, value):
+        self._element.get_or_add_showLeaderLines().val = bool(value)
+
+    @property
     def show_value(self):
         """Read/write. True when label displays numeric value of datapoint."""
         return self._element.get_or_add_showVal().val
@@ -214,6 +267,128 @@ class DataLabel:
             return
         dLbl = self._get_or_add_dLbl()
         dLbl.get_or_add_dLblPos().val = value
+
+    @property
+    def separator(self):
+        """Read/write string. Separator between label components for this data point.
+
+        Returns None if no separator is set (inherits from DataLabels default).
+        Assigning None removes any explicit separator.
+        """
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        separator = dLbl.separator
+        if separator is None:
+            return None
+        return separator.text
+
+    @separator.setter
+    def separator(self, value):
+        if value is None:
+            dLbl = self._dLbl
+            if dLbl is None:
+                return
+            dLbl._remove_separator()
+            return
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_separator().text = value
+
+    @property
+    def show_bubble_size(self):
+        """Read/write. True when this data label displays bubble size."""
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        showBubbleSize = dLbl.showBubbleSize
+        if showBubbleSize is None:
+            return None
+        return showBubbleSize.val
+
+    @show_bubble_size.setter
+    def show_bubble_size(self, value):
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_showBubbleSize().val = bool(value)
+
+    @property
+    def show_category_name(self):
+        """Read/write. True when this data label displays category name."""
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        showCatName = dLbl.showCatName
+        if showCatName is None:
+            return None
+        return showCatName.val
+
+    @show_category_name.setter
+    def show_category_name(self, value):
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_showCatName().val = bool(value)
+
+    @property
+    def show_legend_key(self):
+        """Read/write. True when this data label displays legend key swatch."""
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        showLegendKey = dLbl.showLegendKey
+        if showLegendKey is None:
+            return None
+        return showLegendKey.val
+
+    @show_legend_key.setter
+    def show_legend_key(self, value):
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_showLegendKey().val = bool(value)
+
+    @property
+    def show_percentage(self):
+        """Read/write. True when this data label displays percentage."""
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        showPercent = dLbl.showPercent
+        if showPercent is None:
+            return None
+        return showPercent.val
+
+    @show_percentage.setter
+    def show_percentage(self, value):
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_showPercent().val = bool(value)
+
+    @property
+    def show_series_name(self):
+        """Read/write. True when this data label displays series name."""
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        showSerName = dLbl.showSerName
+        if showSerName is None:
+            return None
+        return showSerName.val
+
+    @show_series_name.setter
+    def show_series_name(self, value):
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_showSerName().val = bool(value)
+
+    @property
+    def show_value(self):
+        """Read/write. True when this data label displays numeric value."""
+        dLbl = self._dLbl
+        if dLbl is None:
+            return None
+        showVal = dLbl.showVal
+        if showVal is None:
+            return None
+        return showVal.val
+
+    @show_value.setter
+    def show_value(self, value):
+        dLbl = self._get_or_add_dLbl()
+        dLbl.get_or_add_showVal().val = bool(value)
 
     @property
     def text_frame(self):

@@ -265,9 +265,37 @@ class BubblePlot(_BasePlot):
 
 
 class DoughnutPlot(_BasePlot):
-    """
-    An doughnut plot.
-    """
+    """A doughnut plot."""
+
+    @property
+    def first_slice_angle(self):
+        """Read/write integer. Angle in degrees of the first slice.
+
+        Default is 0 when not explicitly set.
+        """
+        firstSliceAng = self._element.firstSliceAng
+        if firstSliceAng is None:
+            return 0
+        return firstSliceAng.val
+
+    @first_slice_angle.setter
+    def first_slice_angle(self, value):
+        self._element.get_or_add_firstSliceAng().val = value
+
+    @property
+    def hole_size(self):
+        """Read/write integer. Size of the hole as a percentage (1-90).
+
+        Default is 10 when not explicitly set.
+        """
+        holeSize = self._element.holeSize
+        if holeSize is None:
+            return 10
+        return holeSize.val
+
+    @hole_size.setter
+    def hole_size(self, value):
+        self._element.get_or_add_holeSize().val = value
 
 
 class Line3DPlot(_BasePlot):
@@ -342,6 +370,21 @@ class OfPiePlot(_BasePlot):
     """A pie-of-pie or bar-of-pie plot."""
 
     @property
+    def gap_width(self):
+        """Read/write integer. Gap width between primary and secondary pie/bar.
+
+        Default is 150 when not explicitly set.
+        """
+        gapWidth = self._element.gapWidth
+        if gapWidth is None:
+            return 150
+        return gapWidth.val
+
+    @gap_width.setter
+    def gap_width(self, value):
+        self._element.get_or_add_gapWidth().val = value
+
+    @property
     def has_series_lines(self):
         """Read/write boolean. |True| if series connector lines are displayed."""
         return self._element.serLines is not None
@@ -354,6 +397,21 @@ class OfPiePlot(_BasePlot):
             self._element._remove_serLines()
 
     @property
+    def second_pie_size(self):
+        """Read/write integer. Size of the secondary pie as percentage (5-200).
+
+        Default is 75 when not explicitly set.
+        """
+        secondPieSize = self._element.secondPieSize
+        if secondPieSize is None:
+            return 75
+        return secondPieSize.val
+
+    @second_pie_size.setter
+    def second_pie_size(self, value):
+        self._element.get_or_add_secondPieSize().val = value
+
+    @property
     def series_lines(self):
         """A |SeriesLines| object. Raises if not present."""
         serLines = self._element.serLines
@@ -361,15 +419,61 @@ class OfPiePlot(_BasePlot):
             raise ChartError("plot has no series lines")
         return SeriesLines(serLines)
 
+    @property
+    def split_pos(self):
+        """Read/write float. The threshold value for splitting data points.
+
+        Returns None if not explicitly set.
+        """
+        splitPos = self._element.splitPos
+        if splitPos is None:
+            return None
+        return splitPos.val
+
+    @split_pos.setter
+    def split_pos(self, value):
+        if value is None:
+            self._element._remove_splitPos()
+            return
+        self._element.get_or_add_splitPos().val = value
+
+    @property
+    def split_type(self):
+        """Read/write string. How data is split between the two pies.
+
+        One of 'auto', 'cust', 'percent', 'pos', 'val'. Default is 'auto'.
+        """
+        splitType = self._element.splitType
+        if splitType is None:
+            return "auto"
+        return splitType.val
+
+    @split_type.setter
+    def split_type(self, value):
+        self._element.get_or_add_splitType().val = value
+
 
 class Pie3DPlot(_BasePlot):
     """A 3-dimensional pie plot."""
 
 
 class PiePlot(_BasePlot):
-    """
-    A pie chart-style plot.
-    """
+    """A pie chart-style plot."""
+
+    @property
+    def first_slice_angle(self):
+        """Read/write integer. Angle in degrees of the first slice.
+
+        Default is 0 when not explicitly set.
+        """
+        firstSliceAng = self._element.firstSliceAng
+        if firstSliceAng is None:
+            return 0
+        return firstSliceAng.val
+
+    @first_slice_angle.setter
+    def first_slice_angle(self, value):
+        self._element.get_or_add_firstSliceAng().val = value
 
 
 class RadarPlot(_BasePlot):
