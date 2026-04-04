@@ -495,30 +495,52 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] API: DropLines, HiLowLines, SeriesLines (format), UpDownBars (gap_width, up/down bars format)
 - [x] has_drop_lines/has_hi_low_lines/has_up_down_bars/has_series_lines toggle properties on plots
 
-### 18.9 Data Label Enhancements
+### 18.9 OXML Foundation — Plot Type Descriptor Gaps
 
-- [ ] Separator text — `c:separator` element on `c:dLbls`
-- [ ] Leader line formatting — `c:leaderLines` spPr on `c:dLbls`
-- [ ] Individual data label override — `c:dLbl` per-point customization (already partially implemented)
+_OXML descriptors must exist before API properties can be built on them._
+
+Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless noted.
+
+- [ ] `CT_Area3DChart` — convert to `_tag_seq` pattern; add `varyColors`, `ser` (ZeroOrMore), `dLbls`, `dropLines`, `gapDepth` descriptors
+- [ ] `CT_Bar3DChart` — add `c:gapDepth`, `c:shape` descriptors
+- [ ] `CT_BubbleChart` — add `c:varyColors`, `c:showNegBubbles`, `c:sizeRepresents` descriptors
+- [ ] `CT_DoughnutChart` — add `c:firstSliceAng`, `c:holeSize` descriptors
+- [ ] `CT_PieChart` — add `c:firstSliceAng` descriptor
+- [ ] `CT_OfPieChart` — add `c:ofPieType`, `c:gapWidth`, `c:splitType`, `c:splitPos`, `c:custSplit`, `c:secondPieSize` descriptors
+- [ ] `CT_LineChart` — add `c:marker`, `c:smooth` descriptors
+- [ ] `CT_Line3DChart` — add `c:gapDepth` descriptor
+- [ ] `CT_RadarChart` — add `c:radarStyle` descriptor
+- [ ] `CT_ScatterChart` — add `c:scatterStyle`, `c:dLbls` descriptors
+- [ ] `CT_Surface3DChart` — add `c:wireframe`, `c:bandFmts` descriptors
+- [ ] `CT_SurfaceChart` — add `c:wireframe`, `c:bandFmts` descriptors
+
+### 18.10 OXML Foundation — Series, Legend & Chart-Level Descriptor Gaps
+
+- [ ] `CT_SeriesComposite` — add `c:explosion` descriptor (pie/doughnut slice explosion)
+- [ ] `CT_SeriesComposite` — add `c:shape` descriptor (bar shape: box, cone, cylinder, pyramid)
+- [ ] `CT_SeriesComposite` — add `c:bubble3D` descriptor (3D bubble effect)
+- [ ] `CT_DPt` — add `c:explosion`, `c:bubble3D` descriptors (per-point overrides)
+- [ ] `CT_Legend` — add `c:legendEntry` (ZeroOrMore) descriptor (per-entry formatting)
+- [ ] `CT_Legend` — add `c:spPr` descriptor (legend box formatting)
+- [ ] `CT_TrendlineLabel` — add `c:layout`, `c:tx`, `c:txPr` descriptors
+- [ ] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
+- [ ] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
+- [ ] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
+
+### 18.11 OXML Foundation — Data Label Descriptor Gaps
+
 - [ ] `CT_DLbls` — add `spPr` descriptor (data label collection formatting)
-- [ ] `CT_DLbls` — add `separator` descriptor + API property
-- [ ] `CT_DLbls` — add `showLeaderLines` descriptor + API property
-- [ ] `CT_DLbls` — add `leaderLines` descriptor + API property (ChartFormat)
-- [ ] `CT_DLbls` — add `showBubbleSize` descriptor + API property
+- [ ] `CT_DLbls` — add `separator` descriptor
+- [ ] `CT_DLbls` — add `showLeaderLines` descriptor
+- [ ] `CT_DLbls` — add `leaderLines` descriptor
+- [ ] `CT_DLbls` — add `showBubbleSize` descriptor
 - [ ] `CT_DLbl` — add `numFmt` descriptor
 - [ ] `CT_DLbl` — add `showLegendKey`, `showVal`, `showCatName`, `showSerName`, `showPercent`, `showBubbleSize` descriptors
 - [ ] `CT_DLbl` — add `separator` descriptor
 - [ ] `CT_DLbl` — add `layout` descriptor (per-point label positioning)
-- [ ] Per-point data label API — `DataLabel` class with show* overrides, separator, format, position
 
-### 18.10 Axis Enhancements
+### 18.12 OXML Foundation — Axis Descriptor Gaps
 
-- [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
-- [ ] Display units — `c:dispUnits` (hundreds, thousands, millions, etc.)
-- [ ] Log scale — `c:logBase` attribute on `c:scaling`
-- [ ] Axis crossing at specific value — `c:crossesAt` (OXML exists, needs API)
-- [ ] Category axis label offset — `c:lblOffset` value exposure
-- [ ] Date axis base time unit — `c:baseTimeUnit`, `c:majorTimeUnit`, `c:minorTimeUnit`
 - [ ] `CT_Scaling` — add `c:logBase` descriptor (enables logarithmic scale)
 - [ ] `CT_ValAx` — add `c:dispUnits` descriptor (hundreds, thousands, millions, etc.)
 - [ ] `CT_ValAx` — add `c:axPos` descriptor (axis position: l, r, t, b)
@@ -528,42 +550,38 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [ ] `CT_CatAx` — add `c:tickLblSkip`, `c:tickMarkSkip`, `c:noMultiLvlLbl` descriptors
 - [ ] `CT_DateAx` — add `c:crossAx` descriptor
 - [ ] `CT_DateAx` — add `c:baseTimeUnit`, `c:majorUnit`, `c:majorTimeUnit`, `c:minorUnit`, `c:minorTimeUnit` descriptors
-- [ ] Axis crossing at specific value — `c:crossesAt` API exposure (OXML exists)
+
+### 18.13 API — Data Label Enhancements
+
+_Prerequisites: 18.11 (data label descriptors)_
+
+- [ ] Separator text — `c:separator` element on `c:dLbls`
+- [ ] Leader line formatting — `c:leaderLines` spPr on `c:dLbls`
+- [ ] Individual data label override — `c:dLbl` per-point customization (already partially implemented)
+- [ ] `DataLabels.separator` — read/write separator string property
+- [ ] `DataLabels.show_leader_lines` — read/write boolean
+- [ ] `DataLabels.leader_lines` — ChartFormat for leader line formatting
+- [ ] `DataLabels.show_bubble_size` — read/write boolean
+- [ ] Per-point data label API — `DataLabel` class with show* overrides, separator, format, position
+- [ ] Pie/doughnut API — `DoughnutPlot.hole_size`, `PiePlot.first_slice_angle`, `DoughnutPlot.first_slice_angle`
+- [ ] Of-pie API — `OfPiePlot.split_type`, `OfPiePlot.split_pos`, `OfPiePlot.second_pie_size`, `OfPiePlot.gap_width`
+
+### 18.14 API — Axis Enhancements
+
+_Prerequisites: 18.12 (axis descriptors)_
+
+- [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
+- [ ] Display units — `c:dispUnits` (hundreds, thousands, millions, etc.)
+- [ ] Log scale — `c:logBase` attribute on `c:scaling`
+- [ ] Axis crossing at specific value — `c:crossesAt` (OXML exists, needs API)
+- [ ] Category axis label offset — `c:lblOffset` value exposure
+- [ ] Date axis base time unit — `c:baseTimeUnit`, `c:majorTimeUnit`, `c:minorTimeUnit`
+- [ ] Axis crossing at specific value — `c:crossesAt` API exposure
 - [ ] Category axis label skip/offset — `c:tickLblSkip`, `c:lblOffset` API exposure
 - [ ] Date axis time unit API — base_time_unit, major_time_unit, minor_time_unit properties
-
-### 18.11 Plot Type Descriptor Gaps
-
-Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless noted.
-
-- [ ] `CT_Area3DChart` — convert to `_tag_seq` pattern; add `varyColors`, `ser` (ZeroOrMore), `dLbls`, `dropLines`, `gapDepth` descriptors
-- [ ] `CT_Bar3DChart` — add `c:gapDepth`, `c:shape` descriptors
-- [ ] `CT_BubbleChart` — add `c:varyColors`, `c:showNegBubbles`, `c:sizeRepresents` descriptors
-- [ ] `CT_DoughnutChart` — add `c:firstSliceAng`, `c:holeSize` descriptors + API (hole_size, first_slice_angle)
-- [ ] `CT_PieChart` — add `c:firstSliceAng` descriptor + API (first_slice_angle)
-- [ ] `CT_OfPieChart` — add `c:ofPieType`, `c:gapWidth`, `c:splitType`, `c:splitPos`, `c:custSplit`, `c:secondPieSize` descriptors + API
-- [ ] `CT_LineChart` — add `c:marker`, `c:smooth` descriptors
-- [ ] `CT_Line3DChart` — add `c:gapDepth` descriptor
-- [ ] `CT_RadarChart` — add `c:radarStyle` descriptor
-- [ ] `CT_ScatterChart` — add `c:scatterStyle`, `c:dLbls` descriptors
-- [ ] `CT_Surface3DChart` — add `c:wireframe`, `c:bandFmts` descriptors
-- [ ] `CT_SurfaceChart` — add `c:wireframe`, `c:bandFmts` descriptors
-
-### 18.12 Series & Legend Descriptor Gaps
-
-- [ ] `CT_SeriesComposite` — add `c:explosion` descriptor (pie/doughnut slice explosion)
-- [ ] `CT_SeriesComposite` — add `c:shape` descriptor (bar shape: box, cone, cylinder, pyramid)
-- [ ] `CT_SeriesComposite` — add `c:bubble3D` descriptor (3D bubble effect)
-- [ ] `CT_DPt` — add `c:explosion`, `c:bubble3D` descriptors (per-point overrides)
-- [ ] `CT_Legend` — add `c:legendEntry` (ZeroOrMore) descriptor (per-entry formatting)
-- [ ] `CT_Legend` — add `c:spPr` descriptor (legend box formatting)
-- [ ] `CT_TrendlineLabel` — add `c:layout`, `c:tx`, `c:txPr` descriptors
-
-### 18.13 Chart-Level Descriptor Gaps
-
-- [ ] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
-- [ ] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
-- [ ] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
+- [ ] Chart-level API — `Chart.plot_visible_only`, `Chart.show_data_labels_over_max`, `Chart.rounded_corners`
+- [ ] Legend API — `Legend.format` (spPr), legend entry access
+- [ ] Series API — `Series.explosion`, `Series.shape`, `Series.bubble_3d`
 
 ---
 
