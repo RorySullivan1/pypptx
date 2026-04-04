@@ -201,6 +201,38 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 
 ---
 
+## 5.1 OXML Foundation Gap Fixes (DONE)
+
+Close gaps where elements exist in `_tag_seq` / successor lists but lack
+`ZeroOrOne`/`ZeroOrMore` descriptor declarations, making them inaccessible
+programmatically.
+
+### Slide elements (DONE)
+- [x] `p:hf` declared as `ZeroOrOne` on `CT_NotesMaster`, `CT_SlideLayout`, `CT_SlideMaster`
+- [x] `p:transition` declared as `ZeroOrOne` on `CT_Slide`, `CT_SlideLayout`
+
+### Text character properties (DONE)
+- [x] `a:ea`, `a:cs`, `a:sym` declared as `ZeroOrOne` (`CT_TextFont`) on `CT_TextCharacterProperties`
+- [x] `a:highlight` declared as `ZeroOrOne` on `CT_TextCharacterProperties`
+- [x] Registered `a:ea`, `a:cs`, `a:sym` element classes as `CT_TextFont`
+
+### Bullet elements on paragraph properties (DONE)
+- [x] Declared all 11 bullet child elements on `CT_TextParagraphProperties`:
+  `buClrTx`, `buClr`, `buSzTx`, `buSzPct`, `buSzPts`, `buFontTx`, `buFont`,
+  `buNone`, `buAutoNum`, `buChar`, `buBlip`
+
+### Color modifiers (DONE)
+- [x] Added `tint`, `shade`, `satMod`, `satOff`, `lumMod`, `lumOff`, `alpha` on `_BaseColorElement`
+- [x] Registered `a:alpha`, `a:satMod`, `a:satOff`, `a:shade`, `a:tint` as `CT_Percentage`
+
+### Blip fill (DONE)
+- [x] `a:tile` and `a:stretch` declared as `ZeroOrOne` on `CT_BlipFillProperties`
+
+### Shape style (DONE)
+- [x] `p:style` declared as `ZeroOrOne` on `CT_Shape` and `CT_Connector`
+
+---
+
 ## 6. Python API — Slide Lifecycle (NEXT)
 
 _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_

@@ -18,8 +18,13 @@ class _BaseColorElement(BaseOxmlElement):
     Base class for <a:srgbClr> and <a:schemeClr> elements.
     """
 
+    tint = ZeroOrOne("a:tint")
+    shade = ZeroOrOne("a:shade")
+    satMod = ZeroOrOne("a:satMod")
+    satOff = ZeroOrOne("a:satOff")
     lumMod = ZeroOrOne("a:lumMod")
     lumOff = ZeroOrOne("a:lumOff")
+    alpha = ZeroOrOne("a:alpha")
 
     def add_lumMod(self, value):
         """

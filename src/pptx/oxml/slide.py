@@ -151,6 +151,9 @@ class CT_NotesMaster(_BaseSlideElement):
 
     _tag_seq = ("p:cSld", "p:clrMap", "p:hf", "p:notesStyle", "p:extLst")
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
+    hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:hf", successors=_tag_seq[3:]
+    )
     del _tag_seq
 
     @classmethod
@@ -182,6 +185,7 @@ class CT_Slide(_BaseSlideElement):
     _tag_seq = ("p:cSld", "p:clrMapOvr", "p:transition", "p:timing", "p:extLst")
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
     clrMapOvr = ZeroOrOne("p:clrMapOvr", successors=_tag_seq[2:])
+    transition = ZeroOrOne("p:transition", successors=_tag_seq[3:])
     timing = ZeroOrOne("p:timing", successors=_tag_seq[4:])
     del _tag_seq
 
@@ -276,6 +280,10 @@ class CT_SlideLayout(_BaseSlideElement):
 
     _tag_seq = ("p:cSld", "p:clrMapOvr", "p:transition", "p:timing", "p:hf", "p:extLst")
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
+    transition = ZeroOrOne("p:transition", successors=_tag_seq[3:])
+    hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:hf", successors=_tag_seq[5:]
+    )
     del _tag_seq
 
 
@@ -317,6 +325,9 @@ class CT_SlideMaster(_BaseSlideElement):
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
     sldLayoutIdLst: CT_SlideLayoutIdList = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:sldLayoutIdLst", successors=_tag_seq[3:]
+    )
+    hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:hf", successors=_tag_seq[6:]
     )
     del _tag_seq
 
