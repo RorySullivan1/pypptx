@@ -141,6 +141,7 @@ class CT_SeriesComposite(BaseOxmlElement):
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[4:])
     invertIfNegative = ZeroOrOne("c:invertIfNegative", successors=_tag_seq[5:])
     marker = ZeroOrOne("c:marker", successors=_tag_seq[7:])
+    explosion = ZeroOrOne("c:explosion", successors=_tag_seq[8:])
     dPt = ZeroOrMore("c:dPt", successors=_tag_seq[9:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[10:])
     trendline = ZeroOrMore("c:trendline", successors=_tag_seq[11:])
