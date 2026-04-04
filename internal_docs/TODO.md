@@ -541,15 +541,15 @@ Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless
 
 ### 18.12 OXML Foundation — Axis Descriptor Gaps
 
-- [ ] `CT_Scaling` — add `c:logBase` descriptor (enables logarithmic scale)
-- [ ] `CT_ValAx` — add `c:dispUnits` descriptor (hundreds, thousands, millions, etc.)
-- [ ] `CT_ValAx` — add `c:axPos` descriptor (axis position: l, r, t, b)
-- [ ] `CT_ValAx` — add `c:crossBetween` descriptor (midpoint vs between categories)
-- [ ] `CT_CatAx` — add `c:crossAx` descriptor (cross-axis reference)
-- [ ] `CT_CatAx` — add `c:axPos`, `c:auto`, `c:lblAlgn` descriptors
-- [ ] `CT_CatAx` — add `c:tickLblSkip`, `c:tickMarkSkip`, `c:noMultiLvlLbl` descriptors
-- [ ] `CT_DateAx` — add `c:crossAx` descriptor
-- [ ] `CT_DateAx` — add `c:baseTimeUnit`, `c:majorUnit`, `c:majorTimeUnit`, `c:minorUnit`, `c:minorTimeUnit` descriptors
+- [x] `CT_Scaling` — add `c:logBase` descriptor (enables logarithmic scale)
+- [x] `CT_ValAx` — add `c:dispUnits` descriptor (hundreds, thousands, millions, etc.)
+- [x] `CT_ValAx` — add `c:axPos` descriptor (axis position: l, r, t, b)
+- [x] `CT_ValAx` — add `c:crossBetween` descriptor (midpoint vs between categories)
+- [x] `CT_CatAx` — add `c:crossAx` descriptor (cross-axis reference)
+- [x] `CT_CatAx` — add `c:axPos`, `c:auto`, `c:lblAlgn` descriptors
+- [x] `CT_CatAx` — add `c:tickLblSkip`, `c:tickMarkSkip`, `c:noMultiLvlLbl` descriptors
+- [x] `CT_DateAx` — add `c:crossAx` descriptor
+- [x] `CT_DateAx` — add `c:baseTimeUnit`, `c:majorUnit`, `c:majorTimeUnit`, `c:minorUnit`, `c:minorTimeUnit` descriptors
 
 ### 18.13 API — Data Label Enhancements
 
