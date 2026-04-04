@@ -394,14 +394,109 @@ _Prerequisites: Section 4.7 (picture format effects)_
 
 ---
 
-## 18. Python API — Chart Enhancements
+## 18. Chart Buildout — Full Chart Capabilities (NEXT)
 
-- [ ] Plot area — position (x, y, width, height) and formatting
-- [ ] Chart area — formatting (fill, line)
-- [ ] Display blanks as — `c:dispBlanksAs` (gap, zero, span)
-- [ ] Secondary value and category axes — second axis pair with `axId` cross-references
-- [ ] 3D chart view — rotation, elevation, perspective attributes on `c:view3D`
-- [ ] 3D chart surfaces — floor, walls, back wall, side wall formatting
+High-value for reporting automation. The existing chart subsystem covers 9 of
+16+ chart types and lacks trendlines, error bars, secondary axes, and several
+formatting APIs. This section closes all gaps.
+
+_Prerequisites: None — chart OXML and API are self-contained subsystems._
+
+### 18.1 Missing OXML Chart Type Classes
+
+Define CT_* element classes for chart types that have enumerations but no OXML
+implementation, then register them in `__init__.py`.
+
+- [ ] `CT_Bar3DChart` (`c:bar3DChart`) — `barDir`, `grouping`, `varyColors`, `ser`, `gapWidth`, `gapDepth`, `shape`, `axId` children
+- [ ] `CT_Line3DChart` (`c:line3DChart`) — `grouping`, `varyColors`, `ser`, `gapDepth`, `axId` children
+- [ ] `CT_Pie3DChart` (`c:pie3DChart`) — `varyColors`, `ser` children
+- [ ] `CT_StockChart` (`c:stockChart`) — `ser`, `axId`, `hiLowLines`, `upDownBars` children
+- [ ] `CT_SurfaceChart` (`c:surfaceChart`) — `wireframe`, `ser`, `bandFmts`, `axId` children
+- [ ] `CT_Surface3DChart` (`c:surface3DChart`) — same structure as surface
+- [ ] `CT_OfPieChart` (`c:ofPieChart`) — `ofPieType`, `varyColors`, `ser`, `gapWidth`, `splitType`, `splitPos`, `custSplit`, `secondPieSize`, `serLines` children
+- [ ] Register all new classes in `oxml/__init__.py`
+- [ ] Wire into `PlotFactory` / `PlotTypeInspector` so existing API recognizes them
+
+### 18.2 Trendlines — OXML + API
+
+Most-requested chart feature for reporting automation.
+
+- [ ] `CT_Trendline` (`c:trendline`) — `name`, `spPr`, `trendlineType`, `order`, `period`, `forward`, `backward`, `intercept`, `dispRSqr`, `dispEq`, `trendlineLbl` children
+- [ ] `CT_TrendlineType` (`c:trendlineType`) — `val` attribute (linear, exponential, logarithmic, movingAvg, polynomial, power)
+- [ ] `CT_TrendlineLabel` (`c:trendlineLbl`) — layout, `numFmt`, `spPr`, `txPr`, `tx` children
+- [ ] Declare `c:trendline` as `ZeroOrMore` on `CT_SeriesComposite` (already in `_tag_seq`)
+- [ ] Register new classes in `__init__.py`
+- [ ] `Trendline` API class — type, order, period, forward/backward, intercept, display R², display equation
+- [ ] `TrendlineCollection` on series — add/remove/iterate trendlines
+- [ ] `XL_TRENDLINE_TYPE` enumeration (linear, exponential, logarithmic, movingAvg, polynomial, power)
+
+### 18.3 Error Bars — OXML + API
+
+- [ ] `CT_ErrBars` (`c:errBars`) — `errDir`, `errBarType`, `errValType`, `noEndCap`, `plus`, `minus`, `val`, `spPr` children
+- [ ] `CT_ErrBarType` / `CT_ErrValType` / `CT_ErrDir` — val-attribute elements for error bar configuration
+- [ ] Declare `c:errBars` as `ZeroOrMore` on `CT_SeriesComposite` (already in `_tag_seq`)
+- [ ] Register new classes in `__init__.py`
+- [ ] `ErrorBars` API class — direction, bar type (both/plus/minus), value type (fixedVal/percentage/stdDev/stdErr/custom), value, formatting
+- [ ] Access via `series.error_bars` property
+- [ ] `XL_ERROR_BAR_TYPE` / `XL_ERROR_BAR_DIRECTION` enumerations
+
+### 18.4 Secondary Axis — API
+
+OXML already supports multiple axes via `ZeroOrMore`. Need API exposure.
+
+- [ ] `Chart.secondary_value_axis` — access second `c:valAx` if present
+- [ ] `Chart.secondary_category_axis` — access second `c:catAx`/`c:dateAx` if present
+- [ ] Fix `Chart.value_axis` heuristic — currently returns `valAx_lst[1]` when count > 1
+- [ ] Axis `axId` / `crossAx` cross-referencing — associate axes with correct plots
+- [ ] `Plot.axis_ids` property — expose which axis IDs a plot references
+- [ ] Combo chart axis assignment — when adding a second plot, assign correct axis pair
+
+### 18.5 Combo Charts — API
+
+Reading existing combo charts works. Need creation support.
+
+- [ ] `Chart.add_plot()` — add a second plot type to an existing chart (e.g. line on top of bar)
+- [ ] Axis assignment for new plots — auto-create secondary axes when needed
+- [ ] `Chart.plots` — already exists, verify iteration over multiple `xChart` elements works correctly
+
+### 18.6 3D Chart Properties
+
+- [ ] `CT_View3D` (`c:view3D`) — `rotX`, `rotY`, `rAngAx`, `perspective`, `depthPercent`, `heightPercent` children
+- [ ] Declare `c:view3D` as `ZeroOrOne` on `CT_Chart` (likely already in `_tag_seq`)
+- [ ] `Chart.view_3d` API — rotation X/Y, right-angle axes, perspective, depth/height percent
+- [ ] `CT_Surface` / `CT_Floor` / `CT_SideWall` / `CT_BackWall` — `spPr`, `thickness` children
+- [ ] Declare floor/walls on `CT_Chart`
+- [ ] `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` API properties
+
+### 18.7 Chart & Plot Area Formatting
+
+- [ ] Plot area position — manual layout via `c:layout` / `c:manualLayout` (x, y, w, h)
+- [ ] Plot area formatting — fill and line via `c:spPr` on `c:plotArea`
+- [ ] Chart area formatting — fill and line via `c:spPr` on `c:chartSpace`
+- [ ] `c:dispBlanksAs` — gap, zero, span for missing data points
+
+### 18.8 Line/Area/Bar Chart Special Elements
+
+- [ ] `c:hiLowLines` — high-low lines on line/stock charts (spPr for formatting)
+- [ ] `c:upDownBars` — up/down bars on line/stock charts (gapWidth, upBars, downBars with spPr)
+- [ ] `c:dropLines` — drop lines on line/area charts (spPr for formatting)
+- [ ] `c:serLines` — series connector lines on bar/pie charts (spPr for formatting)
+- [ ] Expose on relevant plot types as properties with formatting access
+
+### 18.9 Data Label Enhancements
+
+- [ ] Separator text — `c:separator` element on `c:dLbls`
+- [ ] Leader line formatting — `c:leaderLines` spPr on `c:dLbls`
+- [ ] Individual data label override — `c:dLbl` per-point customization (already partially implemented)
+
+### 18.10 Axis Enhancements
+
+- [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
+- [ ] Display units — `c:dispUnits` (hundreds, thousands, millions, etc.)
+- [ ] Log scale — `c:logBase` attribute on `c:scaling`
+- [ ] Axis crossing at specific value — `c:crossesAt` (OXML exists, needs API)
+- [ ] Category axis label offset — `c:lblOffset` value exposure
+- [ ] Date axis base time unit — `c:baseTimeUnit`, `c:majorTimeUnit`, `c:minorTimeUnit`
 
 ---
 
