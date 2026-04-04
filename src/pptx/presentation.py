@@ -84,6 +84,15 @@ class Presentation(PartElementProxy):
         """
         return self.slide_masters[0]
 
+    @property
+    def theme(self):
+        """A |Theme| object for this presentation's first slide master theme.
+
+        Returns None if no theme is available. This is a convenience for
+        the common case of a single slide master.
+        """
+        return self.slide_master.theme
+
     @lazyproperty
     def slide_masters(self) -> SlideMasters:
         """|SlideMasters| collection of slide-masters belonging to this presentation."""

@@ -295,3 +295,14 @@ class SlideMasterPart(BaseSlidePart):
         The |SlideMaster| object representing this part.
         """
         return SlideMaster(self._element, self)
+
+    @property
+    def theme_part(self):
+        """The |XmlPart| containing the theme for this slide master.
+
+        Returns None if no theme relationship exists.
+        """
+        try:
+            return self.part_related_by(RT.THEME)
+        except KeyError:
+            return None

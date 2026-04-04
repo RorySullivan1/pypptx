@@ -599,9 +599,9 @@ _Prerequisites: Section 4.8 (3D elements)_
 
 _Prerequisites: Section 4.9 (theme elements)_
 
-- [ ] Read/write theme color schemes — `a:clrScheme` in `theme.xml`
-- [ ] Read/write theme font schemes — major and minor font families
-- [ ] Theme effect schemes
+- [x] Read/write theme color schemes — `a:clrScheme` in `theme.xml`
+- [x] Read/write theme font schemes — major and minor font families
+- [ ] Theme effect schemes (deferred — rarely used in practice)
 
 ---
 
