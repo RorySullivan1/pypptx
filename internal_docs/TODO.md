@@ -445,16 +445,16 @@ Most-requested chart feature for reporting automation.
 - [x] `XL_ERROR_BAR_DIRECTION` (X, Y)
 - [x] `XL_ERROR_BAR_INCLUDE` (BOTH, MINUS_VALUES, PLUS_VALUES)
 
-### 18.4 Secondary Axis — API
+### 18.4 Secondary Axis — API (DONE)
 
-OXML already supports multiple axes via `ZeroOrMore`. Need API exposure.
+OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 
-- [ ] `Chart.secondary_value_axis` — access second `c:valAx` if present
-- [ ] `Chart.secondary_category_axis` — access second `c:catAx`/`c:dateAx` if present
-- [ ] Fix `Chart.value_axis` heuristic — currently returns `valAx_lst[1]` when count > 1
-- [ ] Axis `axId` / `crossAx` cross-referencing — associate axes with correct plots
-- [ ] `Plot.axis_ids` property — expose which axis IDs a plot references
-- [ ] Combo chart axis assignment — when adding a second plot, assign correct axis pair
+- [x] `Chart.secondary_value_axis` — access second `c:valAx` if present
+- [x] `Chart.secondary_category_axis` — access second `c:catAx`/`c:dateAx` if present
+- [x] Fix `Chart.value_axis` heuristic — was returning `valAx_lst[1]` when count > 1, now returns `[0]` (primary)
+- [ ] Axis `axId` / `crossAx` cross-referencing — associate axes with correct plots (deferred to 18.5)
+- [ ] `Plot.axis_ids` property — expose which axis IDs a plot references (deferred to 18.5)
+- [ ] Combo chart axis assignment — when adding a second plot, assign correct axis pair (deferred to 18.5)
 
 ### 18.5 Combo Charts — API
 

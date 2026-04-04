@@ -179,17 +179,43 @@ class Chart(PartElementProxy):
 
     @property
     def value_axis(self):
-        """
-        The |ValueAxis| object providing access to properties of the value
-        axis of this chart. Raises |ValueError| if the chart has no value
-        axis.
+        """The primary |ValueAxis| of this chart.
+
+        Raises |ChartError| if the chart has no value axis.
         """
         valAx_lst = self._chartSpace.valAx_lst
         if not valAx_lst:
             raise ChartError("chart has no value axis")
+        return ValueAxis(valAx_lst[0])
 
-        idx = 1 if len(valAx_lst) > 1 else 0
-        return ValueAxis(valAx_lst[idx])
+    @property
+    def secondary_value_axis(self):
+        """The secondary |ValueAxis| of this chart.
+
+        Present on combo charts and charts with a secondary axis.
+        Raises |ChartError| if no secondary value axis exists.
+        """
+        valAx_lst = self._chartSpace.valAx_lst
+        if len(valAx_lst) < 2:
+            raise ChartError("chart has no secondary value axis")
+        return ValueAxis(valAx_lst[1])
+
+    @property
+    def secondary_category_axis(self):
+        """The secondary |CategoryAxis| or |DateAxis| of this chart.
+
+        Present on combo charts and charts with a secondary axis.
+        Raises |ChartError| if no secondary category axis exists.
+        """
+        catAx_lst = self._chartSpace.catAx_lst
+        if len(catAx_lst) >= 2:
+            return CategoryAxis(catAx_lst[1])
+
+        dateAx_lst = self._chartSpace.dateAx_lst
+        if len(dateAx_lst) >= 2:
+            return DateAxis(dateAx_lst[1])
+
+        raise ChartError("chart has no secondary category axis")
 
     @property
     def _workbook(self):
