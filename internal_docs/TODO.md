@@ -497,6 +497,9 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 
 ### 18.9 Data Label Enhancements
 
+- [ ] Separator text — `c:separator` element on `c:dLbls`
+- [ ] Leader line formatting — `c:leaderLines` spPr on `c:dLbls`
+- [ ] Individual data label override — `c:dLbl` per-point customization (already partially implemented)
 - [ ] `CT_DLbls` — add `spPr` descriptor (data label collection formatting)
 - [ ] `CT_DLbls` — add `separator` descriptor + API property
 - [ ] `CT_DLbls` — add `showLeaderLines` descriptor + API property
@@ -510,6 +513,12 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 
 ### 18.10 Axis Enhancements
 
+- [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
+- [ ] Display units — `c:dispUnits` (hundreds, thousands, millions, etc.)
+- [ ] Log scale — `c:logBase` attribute on `c:scaling`
+- [ ] Axis crossing at specific value — `c:crossesAt` (OXML exists, needs API)
+- [ ] Category axis label offset — `c:lblOffset` value exposure
+- [ ] Date axis base time unit — `c:baseTimeUnit`, `c:majorTimeUnit`, `c:minorTimeUnit`
 - [ ] `CT_Scaling` — add `c:logBase` descriptor (enables logarithmic scale)
 - [ ] `CT_ValAx` — add `c:dispUnits` descriptor (hundreds, thousands, millions, etc.)
 - [ ] `CT_ValAx` — add `c:axPos` descriptor (axis position: l, r, t, b)
@@ -519,7 +528,6 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [ ] `CT_CatAx` — add `c:tickLblSkip`, `c:tickMarkSkip`, `c:noMultiLvlLbl` descriptors
 - [ ] `CT_DateAx` — add `c:crossAx` descriptor
 - [ ] `CT_DateAx` — add `c:baseTimeUnit`, `c:majorUnit`, `c:majorTimeUnit`, `c:minorUnit`, `c:minorTimeUnit` descriptors
-- [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
 - [ ] Axis crossing at specific value — `c:crossesAt` API exposure (OXML exists)
 - [ ] Category axis label skip/offset — `c:tickLblSkip`, `c:lblOffset` API exposure
 - [ ] Date axis time unit API — base_time_unit, major_time_unit, minor_time_unit properties
