@@ -516,16 +516,16 @@ Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless
 
 ### 18.10 OXML Foundation — Series, Legend & Chart-Level Descriptor Gaps
 
-- [ ] `CT_SeriesComposite` — add `c:explosion` descriptor (pie/doughnut slice explosion)
-- [ ] `CT_SeriesComposite` — add `c:shape` descriptor (bar shape: box, cone, cylinder, pyramid)
-- [ ] `CT_SeriesComposite` — add `c:bubble3D` descriptor (3D bubble effect)
-- [ ] `CT_DPt` — add `c:explosion`, `c:bubble3D` descriptors (per-point overrides)
-- [ ] `CT_Legend` — add `c:legendEntry` (ZeroOrMore) descriptor (per-entry formatting)
-- [ ] `CT_Legend` — add `c:spPr` descriptor (legend box formatting)
-- [ ] `CT_TrendlineLabel` — add `c:layout`, `c:tx`, `c:txPr` descriptors
-- [ ] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
-- [ ] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
-- [ ] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
+- [x] `CT_SeriesComposite` — add `c:explosion` descriptor (pie/doughnut slice explosion)
+- [x] `CT_SeriesComposite` — add `c:shape` descriptor (bar shape: box, cone, cylinder, pyramid)
+- [x] `CT_SeriesComposite` — add `c:bubble3D` descriptor (3D bubble effect)
+- [x] `CT_DPt` — add `c:explosion`, `c:bubble3D` descriptors (per-point overrides)
+- [x] `CT_Legend` — add `c:legendEntry` (ZeroOrMore) descriptor (per-entry formatting)
+- [x] `CT_Legend` — add `c:spPr` descriptor (legend box formatting)
+- [x] `CT_TrendlineLabel` — add `c:layout`, `c:tx`, `c:txPr` descriptors
+- [x] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
+- [x] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
+- [x] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
 
 ### 18.11 OXML Foundation — Data Label Descriptor Gaps
 

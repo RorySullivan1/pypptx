@@ -46,7 +46,9 @@ class CT_Chart(BaseOxmlElement):
     backWall = ZeroOrOne("c:backWall", successors=_tag_seq[7:])
     plotArea = OneAndOnlyOne("c:plotArea")
     legend = ZeroOrOne("c:legend", successors=_tag_seq[9:])
+    plotVisOnly = ZeroOrOne("c:plotVisOnly", successors=_tag_seq[10:])
     dispBlanksAs = ZeroOrOne("c:dispBlanksAs", successors=_tag_seq[11:])
+    showDLblsOverMax = ZeroOrOne("c:showDLblsOverMax", successors=_tag_seq[12:])
     rId: str = RequiredAttribute("r:id", XsdString)  # pyright: ignore[reportAssignmentType]
 
     @property
@@ -102,6 +104,7 @@ class CT_ChartSpace(BaseOxmlElement):
         "c:extLst",
     )
     date1904 = ZeroOrOne("c:date1904", successors=_tag_seq[1:])
+    roundedCorners = ZeroOrOne("c:roundedCorners", successors=_tag_seq[3:])
     style = ZeroOrOne("c:style", successors=_tag_seq[4:])
     chart = OneAndOnlyOne("c:chart")
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[9:])
