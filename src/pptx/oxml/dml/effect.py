@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from pptx.enum.dml import MSO_RECT_ALIGNMENT
 from pptx.oxml.simpletypes import (
     ST_Angle,
     ST_PositiveCoordinate,
     ST_PositiveFixedPercentage,
     XsdBoolean,
-    XsdString,
 )
 from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrOne
 
@@ -34,8 +34,8 @@ class CT_OuterShadowEffect(BaseOxmlElement):
     dir: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "dir", ST_Angle
     )
-    algn: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "algn", XsdString
+    algn: MSO_RECT_ALIGNMENT | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "algn", MSO_RECT_ALIGNMENT
     )
     rotWithShape: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "rotWithShape", XsdBoolean

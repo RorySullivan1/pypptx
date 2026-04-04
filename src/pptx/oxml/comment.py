@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
-from pptx.oxml.simpletypes import ST_Coordinate, XsdString, XsdUnsignedInt
-from pptx.oxml.xmlchemy import BaseOxmlElement, RequiredAttribute, ZeroOrMore, ZeroOrOne
+from pptx.oxml.simpletypes import XsdString, XsdUnsignedInt
+from pptx.oxml.xmlchemy import (
+    BaseOxmlElement,
+    OptionalAttribute,
+    RequiredAttribute,
+    ZeroOrMore,
+    ZeroOrOne,
+)
 
 
 class CT_CommentAuthor(BaseOxmlElement):
@@ -41,7 +47,7 @@ class CT_Comment(BaseOxmlElement):
     authorId: int = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
         "authorId", XsdUnsignedInt
     )
-    dt: str | None = None  # datetime is stored as an attribute, read via lxml
+    dt: str | None = OptionalAttribute("dt", XsdString)  # pyright: ignore[reportAssignmentType]
     idx: int = RequiredAttribute("idx", XsdUnsignedInt)  # pyright: ignore[reportAssignmentType]
 
 

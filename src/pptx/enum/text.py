@@ -228,3 +228,251 @@ class PP_PARAGRAPH_ALIGNMENT(BaseXmlEnum):
 
 
 PP_ALIGN = PP_PARAGRAPH_ALIGNMENT
+
+
+class MSO_TEXT_STRIKE_TYPE(BaseXmlEnum):
+    """Specifies the type of strikethrough for text.
+
+    Used with :attr:`.Font.strikethrough` to specify the style of text strikethrough.
+
+    Example::
+
+        from pptx.enum.text import MSO_TEXT_STRIKE_TYPE
+
+        run.font.strikethrough = MSO_TEXT_STRIKE_TYPE.SINGLE_STRIKE
+
+    MS API Name: `MsoTextStrikeType`
+    """
+
+    NO_STRIKE = (0, "noStrike", "Specifies no strike.")
+    """Specifies no strike."""
+
+    SINGLE_STRIKE = (1, "sngStrike", "Specifies a single strike.")
+    """Specifies a single strike."""
+
+    DOUBLE_STRIKE = (2, "dblStrike", "Specifies a double strike.")
+    """Specifies a double strike."""
+
+
+class MSO_TEXT_CAPS(BaseXmlEnum):
+    """Specifies the capitalization for text.
+
+    Used with :attr:`.Font.caps` to specify the capitalization style.
+
+    Example::
+
+        from pptx.enum.text import MSO_TEXT_CAPS
+
+        run.font.caps = MSO_TEXT_CAPS.ALL
+
+    MS API Name: `MsoTextCaps`
+    """
+
+    NONE = (0, "none", "Specifies no capitalization.")
+    """Specifies no capitalization."""
+
+    ALL = (1, "all", "Specifies all capitals.")
+    """Specifies all capitals."""
+
+    SMALL = (2, "small", "Specifies small capitals.")
+    """Specifies small capitals."""
+
+
+class MSO_TEXT_FONT_ALIGN(BaseXmlEnum):
+    """Specifies the vertical alignment of text relative to the text body baseline.
+
+    Used with the `fontAlgn` attribute on paragraph properties.
+
+    MS API Name: `MsoTextFontAlign`
+    """
+
+    AUTO = (0, "auto", "Automatic alignment.")
+    """Automatic alignment."""
+
+    TOP = (1, "t", "Text is aligned to the top of the text body.")
+    """Text is aligned to the top of the text body."""
+
+    CENTER = (2, "ctr", "Text is vertically centered.")
+    """Text is vertically centered."""
+
+    BASELINE = (3, "base", "Text is aligned to the baseline.")
+    """Text is aligned to the baseline."""
+
+    BOTTOM = (4, "b", "Text is aligned to the bottom of the text body.")
+    """Text is aligned to the bottom of the text body."""
+
+
+class MSO_TEXT_VERTICAL_TYPE(BaseXmlEnum):
+    """Specifies the text direction within a text body.
+
+    Used with the `vert` attribute on `a:bodyPr` to control text orientation.
+
+    MS API Name: `MsoTextOrientation`
+    """
+
+    HORIZONTAL = (1, "horz", "Text flows horizontally (default).")
+    """Text flows horizontally (default)."""
+
+    VERTICAL = (2, "vert", "Text flows top to bottom; each line is rotated 90 degrees.")
+    """Text flows top to bottom; each line is rotated 90 degrees."""
+
+    VERTICAL_270 = (3, "vert270", "Text flows bottom to top; each line is rotated 270 degrees.")
+    """Text flows bottom to top; each line is rotated 270 degrees."""
+
+    WORD_ART_VERTICAL = (
+        4,
+        "wordArtVert",
+        "Text flows top to bottom; characters are not rotated, stacked vertically.",
+    )
+    """Text flows top to bottom; characters are not rotated, stacked vertically."""
+
+    EAST_ASIAN_VERTICAL = (
+        5,
+        "eaVert",
+        "East Asian vertical text flow (top to bottom, right to left).",
+    )
+    """East Asian vertical text flow (top to bottom, right to left)."""
+
+    MONGOLIAN_VERTICAL = (6, "mongolianVert", "Mongolian vertical text flow.")
+    """Mongolian vertical text flow."""
+
+    WORD_ART_VERTICAL_RTL = (
+        7,
+        "wordArtVertRtl",
+        "Right-to-left WordArt vertical text.",
+    )
+    """Right-to-left WordArt vertical text."""
+
+
+class MSO_PRESET_TEXT_SHAPE(BaseXmlEnum):
+    """Specifies the preset text warp shape.
+
+    Used with the `prst` attribute on `a:prstTxWarp` to control text warp effects.
+    """
+
+    TEXT_NO_SHAPE = (0, "textNoShape", "No text shape (default).")
+    """No text shape (default)."""
+
+    TEXT_PLAIN = (1, "textPlain", "Plain text.")
+    """Plain text."""
+
+    TEXT_STOP = (2, "textStop", "Octagon (stop sign) text.")
+    """Octagon (stop sign) text."""
+
+    TEXT_TRIANGLE = (3, "textTriangle", "Triangle text.")
+    """Triangle text."""
+
+    TEXT_TRIANGLE_INVERTED = (4, "textTriangleInverted", "Inverted triangle text.")
+    """Inverted triangle text."""
+
+    TEXT_CHEVRON = (5, "textChevron", "Chevron text.")
+    """Chevron text."""
+
+    TEXT_CHEVRON_INVERTED = (6, "textChevronInverted", "Inverted chevron text.")
+    """Inverted chevron text."""
+
+    TEXT_RING_INSIDE = (7, "textRingInside", "Ring inside text.")
+    """Ring inside text."""
+
+    TEXT_RING_OUTSIDE = (8, "textRingOutside", "Ring outside text.")
+    """Ring outside text."""
+
+    TEXT_ARCH_UP = (9, "textArchUp", "Arch up text.")
+    """Arch up text."""
+
+    TEXT_ARCH_DOWN = (10, "textArchDown", "Arch down text.")
+    """Arch down text."""
+
+    TEXT_CIRCLE = (11, "textCircle", "Circle text.")
+    """Circle text."""
+
+    TEXT_BUTTON = (12, "textButton", "Button text.")
+    """Button text."""
+
+    TEXT_ARCH_UP_POUR = (13, "textArchUpPour", "Arch up pour text.")
+    """Arch up pour text."""
+
+    TEXT_ARCH_DOWN_POUR = (14, "textArchDownPour", "Arch down pour text.")
+    """Arch down pour text."""
+
+    TEXT_CIRCLE_POUR = (15, "textCirclePour", "Circle pour text.")
+    """Circle pour text."""
+
+    TEXT_BUTTON_POUR = (16, "textButtonPour", "Button pour text.")
+    """Button pour text."""
+
+    TEXT_CURVE_UP = (17, "textCurveUp", "Curve up text.")
+    """Curve up text."""
+
+    TEXT_CURVE_DOWN = (18, "textCurveDown", "Curve down text.")
+    """Curve down text."""
+
+    TEXT_CAN_UP = (19, "textCanUp", "Can up text.")
+    """Can up text."""
+
+    TEXT_CAN_DOWN = (20, "textCanDown", "Can down text.")
+    """Can down text."""
+
+    TEXT_WAVE1 = (21, "textWave1", "Wave 1 text.")
+    """Wave 1 text."""
+
+    TEXT_WAVE2 = (22, "textWave2", "Wave 2 text.")
+    """Wave 2 text."""
+
+    TEXT_DOUBLE_WAVE1 = (23, "textDoubleWave1", "Double wave 1 text.")
+    """Double wave 1 text."""
+
+    TEXT_WAVE4 = (24, "textWave4", "Wave 4 text.")
+    """Wave 4 text."""
+
+    TEXT_INFLATE = (25, "textInflate", "Inflate text.")
+    """Inflate text."""
+
+    TEXT_DEFLATE = (26, "textDeflate", "Deflate text.")
+    """Deflate text."""
+
+    TEXT_INFLATE_BOTTOM = (27, "textInflateBottom", "Inflate bottom text.")
+    """Inflate bottom text."""
+
+    TEXT_DEFLATE_BOTTOM = (28, "textDeflateBottom", "Deflate bottom text.")
+    """Deflate bottom text."""
+
+    TEXT_INFLATE_TOP = (29, "textInflateTop", "Inflate top text.")
+    """Inflate top text."""
+
+    TEXT_DEFLATE_TOP = (30, "textDeflateTop", "Deflate top text.")
+    """Deflate top text."""
+
+    TEXT_DEFLATE_INFLATE = (31, "textDeflateInflate", "Deflate-inflate text.")
+    """Deflate-inflate text."""
+
+    TEXT_DEFLATE_INFLATE_DEFLATE = (
+        32,
+        "textDeflateInflateDeflate",
+        "Deflate-inflate-deflate text.",
+    )
+    """Deflate-inflate-deflate text."""
+
+    TEXT_FADE_RIGHT = (33, "textFadeRight", "Fade right text.")
+    """Fade right text."""
+
+    TEXT_FADE_LEFT = (34, "textFadeLeft", "Fade left text.")
+    """Fade left text."""
+
+    TEXT_FADE_UP = (35, "textFadeUp", "Fade up text.")
+    """Fade up text."""
+
+    TEXT_FADE_DOWN = (36, "textFadeDown", "Fade down text.")
+    """Fade down text."""
+
+    TEXT_SLANT_UP = (37, "textSlantUp", "Slant up text.")
+    """Slant up text."""
+
+    TEXT_SLANT_DOWN = (38, "textSlantDown", "Slant down text.")
+    """Slant down text."""
+
+    TEXT_CASCADE_UP = (39, "textCascadeUp", "Cascade up text.")
+    """Cascade up text."""
+
+    TEXT_CASCADE_DOWN = (40, "textCascadeDown", "Cascade down text.")
+    """Cascade down text."""

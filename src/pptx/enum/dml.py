@@ -403,3 +403,69 @@ class MSO_THEME_COLOR_INDEX(BaseXmlEnum):
 
 
 MSO_THEME_COLOR = MSO_THEME_COLOR_INDEX
+
+
+class MSO_LINE_COMPOUND_TYPE(BaseXmlEnum):
+    """Specifies the compound line type for a line or shape border.
+
+    Used with the `cmpd` attribute on `a:ln` to control compound line style.
+
+    Example::
+
+        from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE
+
+        shape.line.compound_type = MSO_LINE_COMPOUND_TYPE.SINGLE
+
+    MS API Name: `MsoLineCompoundType` (approximate mapping)
+    """
+
+    SINGLE = (0, "sng", "Single line (default).")
+    """Single line (default)."""
+
+    DOUBLE = (1, "dbl", "Double lines of equal width.")
+    """Double lines of equal width."""
+
+    THICK_THIN = (2, "thickThin", "Thick line outside, thin line inside.")
+    """Thick line outside, thin line inside."""
+
+    THIN_THICK = (3, "thinThick", "Thin line outside, thick line inside.")
+    """Thin line outside, thick line inside."""
+
+    TRIPLE = (4, "tri", "Three lines, thin-thick-thin.")
+    """Three lines, thin-thick-thin."""
+
+
+class MSO_RECT_ALIGNMENT(BaseXmlEnum):
+    """Specifies alignment within a rectangle.
+
+    Used for shadow alignment (`algn` attribute on `a:outerShdw`).
+
+    MS API Name: approximate mapping to `MsoShadowStyle` positions
+    """
+
+    TOP_LEFT = (0, "tl", "Top-left alignment.")
+    """Top-left alignment."""
+
+    TOP = (1, "t", "Top-center alignment.")
+    """Top-center alignment."""
+
+    TOP_RIGHT = (2, "tr", "Top-right alignment.")
+    """Top-right alignment."""
+
+    LEFT = (3, "l", "Middle-left alignment.")
+    """Middle-left alignment."""
+
+    CENTER = (4, "ctr", "Center alignment.")
+    """Center alignment."""
+
+    RIGHT = (5, "r", "Middle-right alignment.")
+    """Middle-right alignment."""
+
+    BOTTOM_LEFT = (6, "bl", "Bottom-left alignment.")
+    """Bottom-left alignment."""
+
+    BOTTOM = (7, "b", "Bottom-center alignment.")
+    """Bottom-center alignment."""
+
+    BOTTOM_RIGHT = (8, "br", "Bottom-right alignment.")
+    """Bottom-right alignment."""

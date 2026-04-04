@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, Callable, cast
 from pptx.enum.lang import MSO_LANGUAGE_ID
 from pptx.enum.text import (
     MSO_AUTO_SIZE,
+    MSO_PRESET_TEXT_SHAPE,
+    MSO_TEXT_CAPS,
+    MSO_TEXT_FONT_ALIGN,
+    MSO_TEXT_STRIKE_TYPE,
     MSO_TEXT_UNDERLINE_TYPE,
+    MSO_TEXT_VERTICAL_TYPE,
     MSO_VERTICAL_ANCHOR,
     PP_PARAGRAPH_ALIGNMENT,
 )
@@ -32,7 +37,6 @@ from pptx.oxml.simpletypes import (
     ST_TextTypeface,
     ST_TextWrappingType,
     XsdBoolean,
-    XsdString,
 )
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -243,8 +247,8 @@ class CT_TextBodyProperties(BaseOxmlElement):
     wrap: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "wrap", ST_TextWrappingType
     )
-    vert: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "vert", XsdString
+    vert: MSO_TEXT_VERTICAL_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "vert", MSO_TEXT_VERTICAL_TYPE
     )
     numCol: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "numCol", ST_TextColumnCount
@@ -345,14 +349,14 @@ class CT_TextCharacterProperties(BaseOxmlElement):
     u: MSO_TEXT_UNDERLINE_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "u", MSO_TEXT_UNDERLINE_TYPE
     )
-    strike: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "strike", XsdString
+    strike: MSO_TEXT_STRIKE_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "strike", MSO_TEXT_STRIKE_TYPE
     )
     baseline: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "baseline", ST_Percentage
     )
-    cap: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "cap", XsdString
+    cap: MSO_TEXT_CAPS | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "cap", MSO_TEXT_CAPS
     )
     spc: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "spc", ST_TextPoint
@@ -552,8 +556,8 @@ class CT_TextParagraphProperties(BaseOxmlElement):
     hangingPunct: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "hangingPunct", XsdBoolean
     )
-    fontAlgn: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "fontAlgn", XsdString
+    fontAlgn: MSO_TEXT_FONT_ALIGN | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "fontAlgn", MSO_TEXT_FONT_ALIGN
     )
     del _tag_seq
 
@@ -674,6 +678,6 @@ class CT_PresetTextShape(BaseOxmlElement):
     """
 
     avLst = ZeroOrOne("a:avLst", successors=())
-    prst: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "prst", XsdString
+    prst: MSO_PRESET_TEXT_SHAPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "prst", MSO_PRESET_TEXT_SHAPE
     )
