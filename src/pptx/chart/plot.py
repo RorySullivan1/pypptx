@@ -7,6 +7,7 @@ each other, such as a line plot layered over a bar plot.
 from __future__ import annotations
 
 from pptx.chart.category import Categories
+from pptx.chart.chartlines import DropLines, HiLowLines, SeriesLines, UpDownBars
 from pptx.chart.datalabel import DataLabels
 from pptx.exc import ChartError
 from pptx.chart.series import SeriesCollection
@@ -122,15 +123,34 @@ class _BasePlot:
 
 
 class AreaPlot(_BasePlot):
-    """
-    An area plot.
-    """
+    """An area plot."""
+
+    @property
+    def has_drop_lines(self):
+        """Read/write boolean. |True| if drop lines are displayed."""
+        return self._element.dropLines is not None
+
+    @has_drop_lines.setter
+    def has_drop_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_dropLines()
+        else:
+            self._element._remove_dropLines()
+
+    @property
+    def drop_lines(self):
+        """A |DropLines| object for formatting drop lines.
+
+        Raises if no drop lines present; use :attr:`has_drop_lines` first.
+        """
+        dropLines = self._element.dropLines
+        if dropLines is None:
+            raise ChartError("plot has no drop lines")
+        return DropLines(dropLines)
 
 
 class Area3DPlot(_BasePlot):
-    """
-    A 3-dimensional area plot.
-    """
+    """A 3-dimensional area plot."""
 
 
 class Bar3DPlot(_BasePlot):
@@ -196,6 +216,26 @@ class BarPlot(_BasePlot):
             return
         self._element.get_or_add_overlap().val = value
 
+    @property
+    def has_series_lines(self):
+        """Read/write boolean. |True| if series connector lines are displayed."""
+        return self._element.serLines is not None
+
+    @has_series_lines.setter
+    def has_series_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_serLines()
+        else:
+            self._element._remove_serLines()
+
+    @property
+    def series_lines(self):
+        """A |SeriesLines| object. Raises if not present."""
+        serLines = self._element.serLines
+        if serLines is None:
+            raise ChartError("plot has no series lines")
+        return SeriesLines(serLines)
+
 
 class BubblePlot(_BasePlot):
     """
@@ -235,13 +275,91 @@ class Line3DPlot(_BasePlot):
 
 
 class LinePlot(_BasePlot):
-    """
-    A line chart-style plot.
-    """
+    """A line chart-style plot."""
+
+    @property
+    def has_drop_lines(self):
+        """Read/write boolean. |True| if drop lines are displayed."""
+        return self._element.dropLines is not None
+
+    @has_drop_lines.setter
+    def has_drop_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_dropLines()
+        else:
+            self._element._remove_dropLines()
+
+    @property
+    def drop_lines(self):
+        """A |DropLines| object. Raises if not present."""
+        dropLines = self._element.dropLines
+        if dropLines is None:
+            raise ChartError("plot has no drop lines")
+        return DropLines(dropLines)
+
+    @property
+    def has_hi_low_lines(self):
+        """Read/write boolean. |True| if high-low lines are displayed."""
+        return self._element.hiLowLines is not None
+
+    @has_hi_low_lines.setter
+    def has_hi_low_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_hiLowLines()
+        else:
+            self._element._remove_hiLowLines()
+
+    @property
+    def hi_low_lines(self):
+        """A |HiLowLines| object. Raises if not present."""
+        hiLowLines = self._element.hiLowLines
+        if hiLowLines is None:
+            raise ChartError("plot has no high-low lines")
+        return HiLowLines(hiLowLines)
+
+    @property
+    def has_up_down_bars(self):
+        """Read/write boolean. |True| if up/down bars are displayed."""
+        return self._element.upDownBars is not None
+
+    @has_up_down_bars.setter
+    def has_up_down_bars(self, value):
+        if bool(value):
+            self._element.get_or_add_upDownBars()
+        else:
+            self._element._remove_upDownBars()
+
+    @property
+    def up_down_bars(self):
+        """An |UpDownBars| object. Raises if not present."""
+        upDownBars = self._element.upDownBars
+        if upDownBars is None:
+            raise ChartError("plot has no up/down bars")
+        return UpDownBars(upDownBars)
 
 
 class OfPiePlot(_BasePlot):
     """A pie-of-pie or bar-of-pie plot."""
+
+    @property
+    def has_series_lines(self):
+        """Read/write boolean. |True| if series connector lines are displayed."""
+        return self._element.serLines is not None
+
+    @has_series_lines.setter
+    def has_series_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_serLines()
+        else:
+            self._element._remove_serLines()
+
+    @property
+    def series_lines(self):
+        """A |SeriesLines| object. Raises if not present."""
+        serLines = self._element.serLines
+        if serLines is None:
+            raise ChartError("plot has no series lines")
+        return SeriesLines(serLines)
 
 
 class Pie3DPlot(_BasePlot):
@@ -262,6 +380,66 @@ class RadarPlot(_BasePlot):
 
 class StockPlot(_BasePlot):
     """A stock (OHLC/HLC) chart plot."""
+
+    @property
+    def has_drop_lines(self):
+        """Read/write boolean. |True| if drop lines are displayed."""
+        return self._element.dropLines is not None
+
+    @has_drop_lines.setter
+    def has_drop_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_dropLines()
+        else:
+            self._element._remove_dropLines()
+
+    @property
+    def drop_lines(self):
+        """A |DropLines| object. Raises if not present."""
+        dropLines = self._element.dropLines
+        if dropLines is None:
+            raise ChartError("plot has no drop lines")
+        return DropLines(dropLines)
+
+    @property
+    def has_hi_low_lines(self):
+        """Read/write boolean. |True| if high-low lines are displayed."""
+        return self._element.hiLowLines is not None
+
+    @has_hi_low_lines.setter
+    def has_hi_low_lines(self, value):
+        if bool(value):
+            self._element.get_or_add_hiLowLines()
+        else:
+            self._element._remove_hiLowLines()
+
+    @property
+    def hi_low_lines(self):
+        """A |HiLowLines| object. Raises if not present."""
+        hiLowLines = self._element.hiLowLines
+        if hiLowLines is None:
+            raise ChartError("plot has no high-low lines")
+        return HiLowLines(hiLowLines)
+
+    @property
+    def has_up_down_bars(self):
+        """Read/write boolean. |True| if up/down bars are displayed."""
+        return self._element.upDownBars is not None
+
+    @has_up_down_bars.setter
+    def has_up_down_bars(self, value):
+        if bool(value):
+            self._element.get_or_add_upDownBars()
+        else:
+            self._element._remove_upDownBars()
+
+    @property
+    def up_down_bars(self):
+        """An |UpDownBars| object. Raises if not present."""
+        upDownBars = self._element.upDownBars
+        if upDownBars is None:
+            raise ChartError("plot has no up/down bars")
+        return UpDownBars(upDownBars)
 
 
 class Surface3DPlot(_BasePlot):

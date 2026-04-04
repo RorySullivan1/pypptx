@@ -149,6 +149,7 @@ class CT_AreaChart(BaseChartElement):
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[5:])
     del _tag_seq
 
 
@@ -210,6 +211,7 @@ class CT_BarChart(BaseChartElement):
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[5:])
     gapWidth = ZeroOrOne("c:gapWidth", successors=_tag_seq[6:])
     overlap = ZeroOrOne("c:overlap", successors=_tag_seq[7:])
+    serLines = ZeroOrOne("c:serLines", successors=_tag_seq[8:])
     del _tag_seq
 
     @property
@@ -323,6 +325,7 @@ class CT_Line3DChart(BaseChartElement):
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[5:])
     del _tag_seq
 
 
@@ -348,6 +351,9 @@ class CT_LineChart(BaseChartElement):
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=(_tag_seq[4:]))
+    dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[5:])
+    hiLowLines = ZeroOrOne("c:hiLowLines", successors=_tag_seq[6:])
+    upDownBars = ZeroOrOne("c:upDownBars", successors=_tag_seq[7:])
     del _tag_seq
 
 
@@ -379,6 +385,7 @@ class CT_OfPieChart(BaseChartElement):
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    serLines = ZeroOrOne("c:serLines", successors=_tag_seq[10:])
     del _tag_seq
 
 
@@ -455,6 +462,9 @@ class CT_StockChart(BaseChartElement):
     )
     ser = ZeroOrMore("c:ser", successors=_tag_seq[1:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[2:])
+    dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[3:])
+    hiLowLines = ZeroOrOne("c:hiLowLines", successors=_tag_seq[4:])
+    upDownBars = ZeroOrOne("c:upDownBars", successors=_tag_seq[5:])
     del _tag_seq
 
 

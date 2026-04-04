@@ -486,13 +486,14 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] `Chart.plot_area` property exposing `PlotArea` object
 - [x] Registered `c:h`, `c:hMode`, `c:w`, `c:wMode`, `c:y`, `c:yMode`, `c:dispBlanksAs`
 
-### 18.8 Line/Area/Bar Chart Special Elements
+### 18.8 Line/Area/Bar Chart Special Elements (DONE)
 
-- [ ] `c:hiLowLines` — high-low lines on line/stock charts (spPr for formatting)
-- [ ] `c:upDownBars` — up/down bars on line/stock charts (gapWidth, upBars, downBars with spPr)
-- [ ] `c:dropLines` — drop lines on line/area charts (spPr for formatting)
-- [ ] `c:serLines` — series connector lines on bar/pie charts (spPr for formatting)
-- [ ] Expose on relevant plot types as properties with formatting access
+- [x] `c:dropLines` — registered as CT_ChartLines, descriptors on AreaChart, LineChart, Line3DChart, StockChart
+- [x] `c:hiLowLines` — registered as CT_ChartLines, descriptors on LineChart, StockChart
+- [x] `c:upDownBars` — CT_UpDownBars with gapWidth/upBars/downBars, descriptors on LineChart, StockChart
+- [x] `c:serLines` — registered as CT_ChartLines, descriptors on BarChart, OfPieChart
+- [x] API: DropLines, HiLowLines, SeriesLines (format), UpDownBars (gap_width, up/down bars format)
+- [x] has_drop_lines/has_hi_low_lines/has_up_down_bars/has_series_lines toggle properties on plots
 
 ### 18.9 Data Label Enhancements
 
