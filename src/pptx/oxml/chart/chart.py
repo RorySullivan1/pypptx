@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import cast
 
+from lxml import etree
+
 from pptx.oxml import parse_xml
 from pptx.oxml.chart.shared import CT_Title
-from pptx.oxml.ns import nsdecls, qn
+from pptx.oxml.ns import nsdecls, nsmap, qn
 from pptx.oxml.simpletypes import ST_Style, XsdString
 from pptx.oxml.text import CT_TextBody
 from pptx.oxml.xmlchemy import (
@@ -272,6 +274,79 @@ class CT_PlotArea(BaseOxmlElement):
         chart, in document order.
         """
         return tuple(self.iter_xCharts())
+
+    def _max_axis_id(self):
+        """Return the maximum axis ID value used in this plotArea, or 0."""
+        axId_vals = [
+            int(axId.get("val"))
+            for axId in self.xpath(
+                "(c:catAx | c:dateAx | c:valAx)/c:axId"
+            )
+        ]
+        return max(axId_vals) if axId_vals else 0
+
+    def add_secondary_axes(self):
+        """Add secondary category and value axes, returning (catAx_id, valAx_id).
+
+        Creates a hidden secondary category axis (delete=1) and a visible
+        secondary value axis positioned on the right. Returns the integer
+        axis IDs as a tuple for use in axId references on the overlay plot.
+        """
+        base_id = self._max_axis_id()
+        cat_ax_id = base_id + 1
+        val_ax_id = base_id + 2
+
+        cat_ax_xml = (
+            f'<c:catAx {nsdecls("c")}>'
+            f'  <c:axId val="{cat_ax_id}"/>'
+            f"  <c:scaling><c:orientation val=\"minMax\"/></c:scaling>"
+            f'  <c:delete val="1"/>'
+            f'  <c:axPos val="b"/>'
+            f'  <c:crossAx val="{val_ax_id}"/>'
+            f"</c:catAx>"
+        )
+        val_ax_xml = (
+            f'<c:valAx {nsdecls("c")}>'
+            f'  <c:axId val="{val_ax_id}"/>'
+            f"  <c:scaling><c:orientation val=\"minMax\"/></c:scaling>"
+            f'  <c:delete val="0"/>'
+            f'  <c:axPos val="r"/>'
+            f'  <c:crossAx val="{cat_ax_id}"/>'
+            f"</c:valAx>"
+        )
+        self.append(parse_xml(cat_ax_xml))
+        self.append(parse_xml(val_ax_xml))
+        return cat_ax_id, val_ax_id
+
+    def add_xChart(self, tag, cat_ax_id, val_ax_id, grouping=None):
+        """Add a new xChart element with the given tag and axis references.
+
+        *tag* is the qualified tag name, e.g. ``qn("c:lineChart")``.
+        *cat_ax_id* and *val_ax_id* are integer axis IDs to reference.
+        *grouping* is an optional grouping value (e.g. "standard", "stacked").
+
+        Returns the newly created xChart element.
+        """
+        # Build the xChart element with required children
+        grouping_attr = f' val="{grouping}"' if grouping else ' val="standard"'
+        # Extract the local name for building XML
+        local_name = tag.split("}")[-1] if "}" in tag else tag
+        xml_str = (
+            f"<c:{local_name} {nsdecls('c')}>"
+            f"  <c:grouping{grouping_attr}/>"
+            f'  <c:axId val="{cat_ax_id}"/>'
+            f'  <c:axId val="{val_ax_id}"/>'
+            f"</c:{local_name}>"
+        )
+        xChart = parse_xml(xml_str)
+
+        # Insert before axis elements (after existing xChart elements)
+        axes = self.xpath("c:catAx | c:dateAx | c:valAx | c:serAx")
+        if axes:
+            axes[0].addprevious(xChart)
+        else:
+            self.append(xChart)
+        return xChart
 
 
 class CT_Style(BaseOxmlElement):

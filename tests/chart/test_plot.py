@@ -31,6 +31,16 @@ from ..unitutil.mock import class_mock, instance_mock
 
 
 class Describe_BasePlot:
+    def it_provides_access_to_axis_ids(self):
+        xChart = element("c:barChart/(c:axId{val=100},c:axId{val=200})")
+        plot = _BasePlot(xChart, None)
+        assert plot.axis_ids == (100, 200)
+
+    def it_returns_empty_axis_ids_for_pie(self):
+        xChart = element("c:pieChart")
+        plot = _BasePlot(xChart, None)
+        assert plot.axis_ids == ()
+
     def it_knows_which_chart_it_belongs_to(self, chart_fixture):
         plot, expected_value = chart_fixture
         assert plot.chart == expected_value

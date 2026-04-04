@@ -11,9 +11,18 @@ from pptx.chart.plot import PlotFactory, PlotTypeInspector
 from pptx.chart.series import SeriesCollection
 from pptx.chart.xmlwriter import SeriesXmlRewriterFactory
 from pptx.dml.chtfmt import ChartFormat
+from pptx.oxml.ns import qn
 from pptx.shared import ElementProxy, PartElementProxy
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
+
+#: Maps overlay plot type names to their qualified XML tag names.
+_OVERLAY_PLOT_TAGS = {
+    "line": qn("c:lineChart"),
+    "bar": qn("c:barChart"),
+    "area": qn("c:areaChart"),
+    "scatter": qn("c:scatterChart"),
+}
 
 
 class Chart(PartElementProxy):
@@ -22,6 +31,49 @@ class Chart(PartElementProxy):
     def __init__(self, chartSpace, chart_part):
         super(Chart, self).__init__(chartSpace, chart_part)
         self._chartSpace = chartSpace
+
+    def add_plot(self, plot_type="line", use_secondary_axis=True, grouping="standard"):
+        """Add an overlay plot to this chart, creating a combo chart.
+
+        *plot_type* is one of ``"line"``, ``"bar"``, ``"area"``, or
+        ``"scatter"``.
+
+        When *use_secondary_axis* is True (the default), a secondary category
+        axis and value axis are created for the new plot. Set to False to share
+        the primary axes.
+
+        *grouping* specifies the series grouping, e.g. ``"standard"``,
+        ``"stacked"``, or ``"percentStacked"``.
+
+        Returns the new |Plot| object. Series can be added to the plot
+        via the chart's data management.
+        """
+        tag = _OVERLAY_PLOT_TAGS.get(plot_type)
+        if tag is None:
+            raise ChartError(
+                f"unsupported overlay plot type '{plot_type}', "
+                f"must be one of: {', '.join(sorted(_OVERLAY_PLOT_TAGS))}"
+            )
+
+        plotArea = self._chartSpace.chart.plotArea
+
+        if use_secondary_axis:
+            cat_ax_id, val_ax_id = plotArea.add_secondary_axes()
+        else:
+            # Reuse primary axes — get IDs from first plot
+            xCharts = plotArea.xCharts
+            if not xCharts:
+                raise ChartError("chart has no existing plot to share axes with")
+            ax_ids = xCharts[0].axId_vals
+            if len(ax_ids) < 2:
+                raise ChartError("primary plot has no axis references")
+            cat_ax_id, val_ax_id = ax_ids[0], ax_ids[1]
+
+        xChart = plotArea.add_xChart(tag, cat_ax_id, val_ax_id, grouping)
+        # Clear lazyproperty cache for plots so new plot appears
+        if "plots" in self.__dict__:
+            del self.__dict__["plots"]
+        return PlotFactory(xChart, self)
 
     @property
     def category_axis(self):

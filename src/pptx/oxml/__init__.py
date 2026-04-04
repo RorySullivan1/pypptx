@@ -220,6 +220,7 @@ from pptx.oxml.chart.shared import (  # noqa: E402
     CT_UnsignedInt,
 )
 
+register_element_cls("c:axId", CT_UnsignedInt)
 register_element_cls("c:autoTitleDeleted", CT_Boolean_Explicit)
 register_element_cls("c:autoUpdate", CT_Boolean)
 register_element_cls("c:backward", CT_Double)

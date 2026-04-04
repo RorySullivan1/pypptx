@@ -28,6 +28,16 @@ class _BasePlot:
         self._element = xChart
         self._chart = chart
 
+    @property
+    def axis_ids(self):
+        """Tuple of integer axis IDs this plot references.
+
+        Each xChart element contains ``c:axId`` children that identify which
+        axes it uses. Returns an empty tuple for chart types that have no axes
+        (e.g. pie charts).
+        """
+        return tuple(self._element.axId_vals)
+
     @lazyproperty
     def categories(self):
         """
