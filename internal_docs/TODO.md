@@ -501,31 +501,31 @@ _OXML descriptors must exist before API properties can be built on them._
 
 Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless noted.
 
-- [ ] `CT_Area3DChart` — convert to `_tag_seq` pattern; add `varyColors`, `ser` (ZeroOrMore), `dLbls`, `dropLines`, `gapDepth` descriptors
-- [ ] `CT_Bar3DChart` — add `c:gapDepth`, `c:shape` descriptors
-- [ ] `CT_BubbleChart` — add `c:varyColors`, `c:showNegBubbles`, `c:sizeRepresents` descriptors
-- [ ] `CT_DoughnutChart` — add `c:firstSliceAng`, `c:holeSize` descriptors
-- [ ] `CT_PieChart` — add `c:firstSliceAng` descriptor
-- [ ] `CT_OfPieChart` — add `c:ofPieType`, `c:gapWidth`, `c:splitType`, `c:splitPos`, `c:custSplit`, `c:secondPieSize` descriptors
-- [ ] `CT_LineChart` — add `c:marker`, `c:smooth` descriptors
-- [ ] `CT_Line3DChart` — add `c:gapDepth` descriptor
-- [ ] `CT_RadarChart` — add `c:radarStyle` descriptor
-- [ ] `CT_ScatterChart` — add `c:scatterStyle`, `c:dLbls` descriptors
-- [ ] `CT_Surface3DChart` — add `c:wireframe`, `c:bandFmts` descriptors
-- [ ] `CT_SurfaceChart` — add `c:wireframe`, `c:bandFmts` descriptors
+- [x] `CT_Area3DChart` — convert to `_tag_seq` pattern; add `varyColors`, `ser` (ZeroOrMore), `dLbls`, `dropLines`, `gapDepth` descriptors
+- [x] `CT_Bar3DChart` — add `c:gapDepth`, `c:shape` descriptors
+- [x] `CT_BubbleChart` — add `c:varyColors`, `c:showNegBubbles`, `c:sizeRepresents` descriptors
+- [x] `CT_DoughnutChart` — add `c:firstSliceAng`, `c:holeSize` descriptors
+- [x] `CT_PieChart` — add `c:firstSliceAng` descriptor
+- [x] `CT_OfPieChart` — add `c:ofPieType`, `c:gapWidth`, `c:splitType`, `c:splitPos`, `c:custSplit`, `c:secondPieSize` descriptors
+- [x] `CT_LineChart` — add `c:marker`, `c:smooth` descriptors
+- [x] `CT_Line3DChart` — add `c:gapDepth` descriptor
+- [x] `CT_RadarChart` — add `c:radarStyle` descriptor
+- [x] `CT_ScatterChart` — add `c:scatterStyle`, `c:dLbls` descriptors
+- [x] `CT_Surface3DChart` — add `c:wireframe`, `c:bandFmts` descriptors
+- [x] `CT_SurfaceChart` — add `c:wireframe`, `c:bandFmts` descriptors
 
 ### 18.10 OXML Foundation — Series, Legend & Chart-Level Descriptor Gaps
 
-- [ ] `CT_SeriesComposite` — add `c:explosion` descriptor (pie/doughnut slice explosion)
-- [ ] `CT_SeriesComposite` — add `c:shape` descriptor (bar shape: box, cone, cylinder, pyramid)
-- [ ] `CT_SeriesComposite` — add `c:bubble3D` descriptor (3D bubble effect)
-- [ ] `CT_DPt` — add `c:explosion`, `c:bubble3D` descriptors (per-point overrides)
-- [ ] `CT_Legend` — add `c:legendEntry` (ZeroOrMore) descriptor (per-entry formatting)
-- [ ] `CT_Legend` — add `c:spPr` descriptor (legend box formatting)
-- [ ] `CT_TrendlineLabel` — add `c:layout`, `c:tx`, `c:txPr` descriptors
-- [ ] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
-- [ ] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
-- [ ] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
+- [x] `CT_SeriesComposite` — add `c:explosion` descriptor (pie/doughnut slice explosion)
+- [x] `CT_SeriesComposite` — add `c:shape` descriptor (bar shape: box, cone, cylinder, pyramid)
+- [x] `CT_SeriesComposite` — add `c:bubble3D` descriptor (3D bubble effect)
+- [x] `CT_DPt` — add `c:explosion`, `c:bubble3D` descriptors (per-point overrides)
+- [x] `CT_Legend` — add `c:legendEntry` (ZeroOrMore) descriptor (per-entry formatting)
+- [x] `CT_Legend` — add `c:spPr` descriptor (legend box formatting)
+- [x] `CT_TrendlineLabel` — add `c:layout`, `c:tx`, `c:txPr` descriptors
+- [x] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
+- [x] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
+- [x] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
 
 ### 18.11 OXML Foundation — Data Label Descriptor Gaps
 

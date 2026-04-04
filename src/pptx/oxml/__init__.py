@@ -164,16 +164,25 @@ from pptx.oxml.chart.plot import (  # noqa: E402
     CT_BubbleChart,
     CT_BubbleScale,
     CT_DoughnutChart,
+    CT_FirstSliceAng,
     CT_GapAmount,
     CT_Grouping,
+    CT_HoleSize,
     CT_Line3DChart,
     CT_LineChart,
     CT_OfPieChart,
+    CT_OfPieType,
     CT_Overlap,
     CT_Pie3DChart,
     CT_PieChart,
     CT_RadarChart,
+    CT_RadarStyle,
     CT_ScatterChart,
+    CT_ScatterStyle,
+    CT_SecondPieSize,
+    CT_Shape,
+    CT_SizeRepresents,
+    CT_SplitType,
     CT_StockChart,
     CT_Surface3DChart,
     CT_SurfaceChart,
@@ -187,16 +196,26 @@ register_element_cls("c:barDir", CT_BarDir)
 register_element_cls("c:bubbleChart", CT_BubbleChart)
 register_element_cls("c:bubbleScale", CT_BubbleScale)
 register_element_cls("c:doughnutChart", CT_DoughnutChart)
+register_element_cls("c:firstSliceAng", CT_FirstSliceAng)
+register_element_cls("c:gapDepth", CT_GapAmount)
 register_element_cls("c:gapWidth", CT_GapAmount)
 register_element_cls("c:grouping", CT_Grouping)
+register_element_cls("c:holeSize", CT_HoleSize)
 register_element_cls("c:line3DChart", CT_Line3DChart)
 register_element_cls("c:lineChart", CT_LineChart)
 register_element_cls("c:ofPieChart", CT_OfPieChart)
+register_element_cls("c:ofPieType", CT_OfPieType)
 register_element_cls("c:overlap", CT_Overlap)
 register_element_cls("c:pie3DChart", CT_Pie3DChart)
 register_element_cls("c:pieChart", CT_PieChart)
 register_element_cls("c:radarChart", CT_RadarChart)
+register_element_cls("c:radarStyle", CT_RadarStyle)
 register_element_cls("c:scatterChart", CT_ScatterChart)
+register_element_cls("c:scatterStyle", CT_ScatterStyle)
+register_element_cls("c:secondPieSize", CT_SecondPieSize)
+register_element_cls("c:shape", CT_Shape)
+register_element_cls("c:sizeRepresents", CT_SizeRepresents)
+register_element_cls("c:splitType", CT_SplitType)
 register_element_cls("c:stockChart", CT_StockChart)
 register_element_cls("c:surface3DChart", CT_Surface3DChart)
 register_element_cls("c:surfaceChart", CT_SurfaceChart)
@@ -245,6 +264,7 @@ register_element_cls("c:crossesAt", CT_Double)
 register_element_cls("c:date1904", CT_Boolean)
 register_element_cls("c:delete", CT_Boolean)
 register_element_cls("c:dispEq", CT_Boolean)
+register_element_cls("c:explosion", CT_UnsignedInt)
 register_element_cls("c:dispRSqr", CT_Boolean)
 register_element_cls("c:forward", CT_Double)
 register_element_cls("c:idx", CT_UnsignedInt)
@@ -259,16 +279,22 @@ register_element_cls("c:numFmt", CT_NumFmt)
 register_element_cls("c:order", CT_UnsignedInt)
 register_element_cls("c:overlay", CT_Boolean_Explicit)
 register_element_cls("c:period", CT_UnsignedInt)
+register_element_cls("c:plotVisOnly", CT_Boolean)
+register_element_cls("c:roundedCorners", CT_Boolean)
 register_element_cls("c:ptCount", CT_UnsignedInt)
 register_element_cls("c:showCatName", CT_Boolean_Explicit)
 register_element_cls("c:showLegendKey", CT_Boolean_Explicit)
 register_element_cls("c:showPercent", CT_Boolean_Explicit)
 register_element_cls("c:showSerName", CT_Boolean_Explicit)
+register_element_cls("c:showDLblsOverMax", CT_Boolean)
+register_element_cls("c:showNegBubbles", CT_Boolean)
 register_element_cls("c:showVal", CT_Boolean_Explicit)
 register_element_cls("c:smooth", CT_Boolean)
+register_element_cls("c:splitPos", CT_Double)
 register_element_cls("c:title", CT_Title)
 register_element_cls("c:tx", CT_Tx)
 register_element_cls("c:varyColors", CT_Boolean)
+register_element_cls("c:wireframe", CT_Boolean)
 register_element_cls("c:h", CT_Double)
 register_element_cls("c:hMode", CT_LayoutMode)
 register_element_cls("c:w", CT_Double)

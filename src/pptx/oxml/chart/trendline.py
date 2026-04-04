@@ -79,6 +79,9 @@ class CT_TrendlineLabel(BaseOxmlElement):
         "c:txPr",
         "c:extLst",
     )
+    layout = ZeroOrOne("c:layout", successors=_tag_seq[1:])
+    tx = ZeroOrOne("c:tx", successors=_tag_seq[2:])
     numFmt = ZeroOrOne("c:numFmt", successors=_tag_seq[3:])
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[4:])
+    txPr = ZeroOrOne("c:txPr", successors=_tag_seq[5:])
     del _tag_seq

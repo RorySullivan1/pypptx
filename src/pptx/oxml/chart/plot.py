@@ -9,6 +9,12 @@ from pptx.oxml.simpletypes import (
     ST_GapAmount,
     ST_Grouping,
     ST_Overlap,
+    XsdBoolean,
+    XsdDouble,
+    XsdString,
+    XsdUnsignedByte,
+    XsdUnsignedInt,
+    XsdUnsignedShort,
 )
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -114,21 +120,25 @@ class BaseChartElement(BaseOxmlElement):
 
 
 class CT_Area3DChart(BaseChartElement):
-    """
-    ``<c:area3DChart>`` element.
-    """
+    """``<c:area3DChart>`` element."""
 
-    grouping = ZeroOrOne(
+    _tag_seq = (
         "c:grouping",
-        successors=(
-            "c:varyColors",
-            "c:ser",
-            "c:dLbls",
-            "c:dropLines",
-            "c:gapDepth",
-            "c:axId",
-        ),
+        "c:varyColors",
+        "c:ser",
+        "c:dLbls",
+        "c:dropLines",
+        "c:gapDepth",
+        "c:axId",
+        "c:extLst",
     )
+    grouping = ZeroOrOne("c:grouping", successors=_tag_seq[1:])
+    varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[5:])
+    gapDepth = ZeroOrOne("c:gapDepth", successors=_tag_seq[6:])
+    del _tag_seq
 
 
 class CT_AreaChart(BaseChartElement):
@@ -174,6 +184,8 @@ class CT_Bar3DChart(BaseChartElement):
     ser = ZeroOrMore("c:ser", successors=_tag_seq[4:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[5:])
     gapWidth = ZeroOrOne("c:gapWidth", successors=_tag_seq[6:])
+    gapDepth = ZeroOrOne("c:gapDepth", successors=_tag_seq[7:])
+    shape = ZeroOrOne("c:shape", successors=_tag_seq[8:])
     del _tag_seq
 
     @property
@@ -255,10 +267,13 @@ class CT_BubbleChart(BaseChartElement):
         "c:axId",
         "c:extLst",
     )
+    varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[1:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[3:])
     bubble3D = ZeroOrOne("c:bubble3D", successors=_tag_seq[5:])
     bubbleScale = ZeroOrOne("c:bubbleScale", successors=_tag_seq[6:])
+    showNegBubbles = ZeroOrOne("c:showNegBubbles", successors=_tag_seq[7:])
+    sizeRepresents = ZeroOrOne("c:sizeRepresents", successors=_tag_seq[8:])
     del _tag_seq
 
 
@@ -286,6 +301,8 @@ class CT_DoughnutChart(BaseChartElement):
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[1:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[3:])
+    firstSliceAng = ZeroOrOne("c:firstSliceAng", successors=_tag_seq[4:])
+    holeSize = ZeroOrOne("c:holeSize", successors=_tag_seq[5:])
     del _tag_seq
 
 
@@ -308,6 +325,60 @@ class CT_Grouping(BaseOxmlElement):
     val = OptionalAttribute("val", ST_Grouping)
 
 
+class CT_FirstSliceAng(BaseOxmlElement):
+    """``<c:firstSliceAng>`` element — first slice angle for pie/doughnut charts."""
+
+    val = OptionalAttribute("val", XsdUnsignedShort, default=0)
+
+
+class CT_HoleSize(BaseOxmlElement):
+    """``<c:holeSize>`` element — hole size percentage for doughnut charts."""
+
+    val = OptionalAttribute("val", XsdUnsignedByte, default=10)
+
+
+class CT_OfPieType(BaseOxmlElement):
+    """``<c:ofPieType>`` element — specifies pie or bar for ofPie charts."""
+
+    val = OptionalAttribute("val", XsdString, default="pie")
+
+
+class CT_SplitType(BaseOxmlElement):
+    """``<c:splitType>`` element — how to split data between primary and secondary pie."""
+
+    val = OptionalAttribute("val", XsdString, default="auto")
+
+
+class CT_SecondPieSize(BaseOxmlElement):
+    """``<c:secondPieSize>`` element — size of secondary pie as percentage."""
+
+    val = OptionalAttribute("val", XsdUnsignedShort, default=75)
+
+
+class CT_RadarStyle(BaseOxmlElement):
+    """``<c:radarStyle>`` element — style of radar chart."""
+
+    val = OptionalAttribute("val", XsdString)
+
+
+class CT_ScatterStyle(BaseOxmlElement):
+    """``<c:scatterStyle>`` element — style of scatter chart."""
+
+    val = OptionalAttribute("val", XsdString)
+
+
+class CT_Shape(BaseOxmlElement):
+    """``<c:shape>`` element — 3D bar shape."""
+
+    val = OptionalAttribute("val", XsdString, default="box")
+
+
+class CT_SizeRepresents(BaseOxmlElement):
+    """``<c:sizeRepresents>`` element — what bubble size represents."""
+
+    val = OptionalAttribute("val", XsdString, default="area")
+
+
 class CT_Line3DChart(BaseChartElement):
     """``<c:line3DChart>`` element."""
 
@@ -326,6 +397,7 @@ class CT_Line3DChart(BaseChartElement):
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
     dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[5:])
+    gapDepth = ZeroOrOne("c:gapDepth", successors=_tag_seq[6:])
     del _tag_seq
 
 
@@ -354,6 +426,8 @@ class CT_LineChart(BaseChartElement):
     dropLines = ZeroOrOne("c:dropLines", successors=_tag_seq[5:])
     hiLowLines = ZeroOrOne("c:hiLowLines", successors=_tag_seq[6:])
     upDownBars = ZeroOrOne("c:upDownBars", successors=_tag_seq[7:])
+    marker = ZeroOrOne("c:marker", successors=_tag_seq[8:])
+    smooth = ZeroOrOne("c:smooth", successors=_tag_seq[9:])
     del _tag_seq
 
 
@@ -382,9 +456,15 @@ class CT_OfPieChart(BaseChartElement):
         "c:serLines",
         "c:extLst",
     )
+    ofPieType = ZeroOrOne("c:ofPieType", successors=_tag_seq[1:])
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    gapWidth = ZeroOrOne("c:gapWidth", successors=_tag_seq[5:])
+    splitType = ZeroOrOne("c:splitType", successors=_tag_seq[6:])
+    splitPos = ZeroOrOne("c:splitPos", successors=_tag_seq[7:])
+    custSplit = ZeroOrOne("c:custSplit", successors=_tag_seq[8:])
+    secondPieSize = ZeroOrOne("c:secondPieSize", successors=_tag_seq[9:])
     serLines = ZeroOrOne("c:serLines", successors=_tag_seq[10:])
     del _tag_seq
 
@@ -408,6 +488,7 @@ class CT_PieChart(BaseChartElement):
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[1:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[3:])
+    firstSliceAng = ZeroOrOne("c:firstSliceAng", successors=_tag_seq[4:])
     del _tag_seq
 
 
@@ -424,6 +505,7 @@ class CT_RadarChart(BaseChartElement):
         "c:axId",
         "c:extLst",
     )
+    radarStyle = ZeroOrOne("c:radarStyle", successors=_tag_seq[1:])
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
     dLbls = ZeroOrOne("c:dLbls", successors=(_tag_seq[4:]))
@@ -443,8 +525,10 @@ class CT_ScatterChart(BaseChartElement):
         "c:axId",
         "c:extLst",
     )
+    scatterStyle = ZeroOrOne("c:scatterStyle", successors=_tag_seq[1:])
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
     del _tag_seq
 
 
@@ -478,7 +562,9 @@ class CT_Surface3DChart(BaseChartElement):
         "c:axId",
         "c:extLst",
     )
+    wireframe = ZeroOrOne("c:wireframe", successors=_tag_seq[1:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
+    bandFmts = ZeroOrOne("c:bandFmts", successors=_tag_seq[3:])
     del _tag_seq
 
 
@@ -492,5 +578,7 @@ class CT_SurfaceChart(BaseChartElement):
         "c:axId",
         "c:extLst",
     )
+    wireframe = ZeroOrOne("c:wireframe", successors=_tag_seq[1:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
+    bandFmts = ZeroOrOne("c:bandFmts", successors=_tag_seq[3:])
     del _tag_seq

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pptx.enum.chart import XL_LEGEND_POSITION
 from pptx.oxml.text import CT_TextBody
-from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrOne
+from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrMore, ZeroOrOne
 
 
 class CT_Legend(BaseOxmlElement):
@@ -22,8 +22,10 @@ class CT_Legend(BaseOxmlElement):
         "c:extLst",
     )
     legendPos = ZeroOrOne("c:legendPos", successors=_tag_seq[1:])
+    legendEntry = ZeroOrMore("c:legendEntry", successors=_tag_seq[2:])
     layout = ZeroOrOne("c:layout", successors=_tag_seq[3:])
     overlay = ZeroOrOne("c:overlay", successors=_tag_seq[4:])
+    spPr = ZeroOrOne("c:spPr", successors=_tag_seq[5:])
     txPr = ZeroOrOne("c:txPr", successors=_tag_seq[6:])
     del _tag_seq
 

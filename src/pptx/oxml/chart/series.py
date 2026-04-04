@@ -51,6 +51,8 @@ class CT_DPt(BaseOxmlElement):
     )
     idx = OneAndOnlyOne("c:idx")
     marker = ZeroOrOne("c:marker", successors=_tag_seq[3:])
+    bubble3D = ZeroOrOne("c:bubble3D", successors=_tag_seq[4:])
+    explosion = ZeroOrOne("c:explosion", successors=_tag_seq[5:])
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[6:])
     del _tag_seq
 
@@ -141,6 +143,7 @@ class CT_SeriesComposite(BaseOxmlElement):
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[4:])
     invertIfNegative = ZeroOrOne("c:invertIfNegative", successors=_tag_seq[5:])
     marker = ZeroOrOne("c:marker", successors=_tag_seq[7:])
+    explosion = ZeroOrOne("c:explosion", successors=_tag_seq[8:])
     dPt = ZeroOrMore("c:dPt", successors=_tag_seq[9:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[10:])
     trendline = ZeroOrMore("c:trendline", successors=_tag_seq[11:])
@@ -149,8 +152,10 @@ class CT_SeriesComposite(BaseOxmlElement):
     val = ZeroOrOne("c:val", successors=_tag_seq[14:])
     xVal = ZeroOrOne("c:xVal", successors=_tag_seq[15:])
     yVal = ZeroOrOne("c:yVal", successors=_tag_seq[16:])
+    shape = ZeroOrOne("c:shape", successors=_tag_seq[17:])
     smooth = ZeroOrOne("c:smooth", successors=_tag_seq[18:])
     bubbleSize = ZeroOrOne("c:bubbleSize", successors=_tag_seq[19:])
+    bubble3D = ZeroOrOne("c:bubble3D", successors=_tag_seq[20:])
     del _tag_seq
 
     @property
