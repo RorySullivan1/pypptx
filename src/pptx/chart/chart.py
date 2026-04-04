@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
+from pptx.chart.plotarea import PlotArea
 from pptx.chart.view3d import ChartSurface, View3D
 from pptx.exc import ChartError
 from pptx.chart.plot import PlotFactory, PlotTypeInspector
@@ -129,6 +130,15 @@ class Chart(PartElementProxy):
             return
         self._chartSpace._add_style(val=value)
 
+    @lazyproperty
+    def chart_format(self):
+        """|ChartFormat| object providing access to chart area formatting.
+
+        Controls the fill and line properties of the overall chart area
+        (the ``c:chartSpace/c:spPr`` element).
+        """
+        return ChartFormat(self._chartSpace)
+
     @property
     def chart_title(self):
         """A |ChartTitle| object providing access to title properties.
@@ -149,6 +159,30 @@ class Chart(PartElementProxy):
         """
         first_plot = self.plots[0]
         return PlotTypeInspector.chart_type(first_plot)
+
+    @property
+    def display_blanks_as(self):
+        """Read/write string specifying how blank cells are plotted.
+
+        One of ``"gap"``, ``"zero"``, or ``"span"``. Default is ``"gap"``
+        when no ``c:dispBlanksAs`` element is present.
+        """
+        chart = self._chartSpace.chart
+        dispBlanksAs = chart.dispBlanksAs
+        if dispBlanksAs is None:
+            return "gap"
+        return dispBlanksAs.val
+
+    @display_blanks_as.setter
+    def display_blanks_as(self, value):
+        if value not in ("gap", "zero", "span"):
+            raise ChartError(
+                f"display_blanks_as must be 'gap', 'zero', or 'span', got '{value}'"
+            )
+        chart = self._chartSpace.chart
+        chart._remove_dispBlanksAs()
+        if value != "gap":
+            chart._add_dispBlanksAs(val=value)
 
     @property
     def floor(self):
@@ -213,6 +247,14 @@ class Chart(PartElementProxy):
         if legend_elm is None:
             return None
         return Legend(legend_elm)
+
+    @lazyproperty
+    def plot_area(self):
+        """A |PlotArea| object providing access to plot area properties.
+
+        Includes manual layout (position/size) and shape formatting (fill/line).
+        """
+        return PlotArea(self._chartSpace.chart.plotArea)
 
     @lazyproperty
     def plots(self):
