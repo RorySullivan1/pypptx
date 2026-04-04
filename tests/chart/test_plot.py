@@ -8,6 +8,7 @@ import pytest
 
 from pptx.chart.category import Categories
 from pptx.chart.chart import Chart
+from pptx.chart.chartlines import DropLines, HiLowLines, SeriesLines, UpDownBars
 from pptx.chart.plot import (
     Area3DPlot,
     AreaPlot,
@@ -16,14 +17,17 @@ from pptx.chart.plot import (
     DataLabels,
     DoughnutPlot,
     LinePlot,
+    OfPiePlot,
     PiePlot,
     PlotFactory,
     PlotTypeInspector,
     RadarPlot,
+    StockPlot,
     XyPlot,
     _BasePlot,
 )
 from pptx.chart.series import SeriesCollection
+from pptx.exc import ChartError
 from pptx.enum.chart import XL_CHART_TYPE as XL
 
 from ..unitutil.cxml import element, xml
@@ -479,3 +483,86 @@ class DescribePlotTypeInspector:
         xChart_cxml, expected_chart_type = request.param
         plot = PlotFactory(element(xChart_cxml), None)
         return plot, expected_chart_type
+
+
+class DescribeLinePlot:
+    def it_can_toggle_drop_lines(self):
+        xChart = element("c:lineChart")
+        plot = LinePlot(xChart, None)
+        assert plot.has_drop_lines is False
+        plot.has_drop_lines = True
+        assert plot.has_drop_lines is True
+        assert isinstance(plot.drop_lines, DropLines)
+        plot.has_drop_lines = False
+        assert plot.has_drop_lines is False
+        with pytest.raises(ChartError):
+            plot.drop_lines
+
+    def it_can_toggle_hi_low_lines(self):
+        xChart = element("c:lineChart")
+        plot = LinePlot(xChart, None)
+        assert plot.has_hi_low_lines is False
+        plot.has_hi_low_lines = True
+        assert plot.has_hi_low_lines is True
+        assert isinstance(plot.hi_low_lines, HiLowLines)
+        plot.has_hi_low_lines = False
+        assert plot.has_hi_low_lines is False
+
+    def it_can_toggle_up_down_bars(self):
+        xChart = element("c:lineChart")
+        plot = LinePlot(xChart, None)
+        assert plot.has_up_down_bars is False
+        plot.has_up_down_bars = True
+        assert plot.has_up_down_bars is True
+        udb = plot.up_down_bars
+        assert isinstance(udb, UpDownBars)
+        assert udb.gap_width == 150
+        plot.has_up_down_bars = False
+        assert plot.has_up_down_bars is False
+
+
+class DescribeAreaPlot:
+    def it_can_toggle_drop_lines(self):
+        xChart = element("c:areaChart")
+        plot = AreaPlot(xChart, None)
+        assert plot.has_drop_lines is False
+        plot.has_drop_lines = True
+        assert plot.has_drop_lines is True
+        assert isinstance(plot.drop_lines, DropLines)
+
+
+class DescribeBarPlotSeriesLines:
+    def it_can_toggle_series_lines(self):
+        xChart = element("c:barChart/c:barDir{val=col}")
+        plot = BarPlot(xChart, None)
+        assert plot.has_series_lines is False
+        plot.has_series_lines = True
+        assert plot.has_series_lines is True
+        assert isinstance(plot.series_lines, SeriesLines)
+        plot.has_series_lines = False
+        assert plot.has_series_lines is False
+
+
+class DescribeStockPlot:
+    def it_can_toggle_hi_low_lines(self):
+        xChart = element("c:stockChart")
+        plot = StockPlot(xChart, None)
+        assert plot.has_hi_low_lines is False
+        plot.has_hi_low_lines = True
+        assert plot.has_hi_low_lines is True
+        assert isinstance(plot.hi_low_lines, HiLowLines)
+
+    def it_can_toggle_up_down_bars(self):
+        xChart = element("c:stockChart")
+        plot = StockPlot(xChart, None)
+        plot.has_up_down_bars = True
+        assert isinstance(plot.up_down_bars, UpDownBars)
+
+
+class DescribeOfPiePlot:
+    def it_can_toggle_series_lines(self):
+        xChart = element("c:ofPieChart")
+        plot = OfPiePlot(xChart, None)
+        assert plot.has_series_lines is False
+        plot.has_series_lines = True
+        assert isinstance(plot.series_lines, SeriesLines)

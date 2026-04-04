@@ -73,12 +73,25 @@ register_element_cls("c:lblOffset", CT_LblOffset)
 register_element_cls("c:majorGridlines", CT_ChartLines)
 register_element_cls("c:majorTickMark", CT_TickMark)
 register_element_cls("c:majorUnit", CT_AxisUnit)
+register_element_cls("c:minorGridlines", CT_ChartLines)
 register_element_cls("c:minorTickMark", CT_TickMark)
 register_element_cls("c:minorUnit", CT_AxisUnit)
 register_element_cls("c:orientation", CT_Orientation)
 register_element_cls("c:scaling", CT_Scaling)
 register_element_cls("c:tickLblPos", CT_TickLblPos)
 register_element_cls("c:valAx", CT_ValAx)
+
+# Reuse CT_ChartLines for dropLines, hiLowLines, serLines (all just spPr containers)
+register_element_cls("c:dropLines", CT_ChartLines)
+register_element_cls("c:hiLowLines", CT_ChartLines)
+register_element_cls("c:serLines", CT_ChartLines)
+
+
+from pptx.oxml.chart.chartlines import CT_UpDownBar, CT_UpDownBars  # noqa: E402
+
+register_element_cls("c:downBars", CT_UpDownBar)
+register_element_cls("c:upBars", CT_UpDownBar)
+register_element_cls("c:upDownBars", CT_UpDownBars)
 
 
 from pptx.oxml.chart.chart import (  # noqa: E402
