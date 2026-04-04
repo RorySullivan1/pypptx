@@ -53,28 +53,38 @@ register_element_cls("a:hlinkHover", CT_Hyperlink)
 
 
 from pptx.oxml.chart.axis import (  # noqa: E402
+    CT_AxPos,
     CT_AxisUnit,
     CT_CatAx,
     CT_ChartLines,
+    CT_CrossBetween,
     CT_Crosses,
     CT_DateAx,
+    CT_LblAlgn,
     CT_LblOffset,
     CT_Orientation,
     CT_Scaling,
     CT_TickLblPos,
     CT_TickMark,
+    CT_TimeUnit,
     CT_ValAx,
 )
 
+register_element_cls("c:axPos", CT_AxPos)
+register_element_cls("c:baseTimeUnit", CT_TimeUnit)
 register_element_cls("c:catAx", CT_CatAx)
+register_element_cls("c:crossBetween", CT_CrossBetween)
 register_element_cls("c:crosses", CT_Crosses)
 register_element_cls("c:dateAx", CT_DateAx)
+register_element_cls("c:lblAlgn", CT_LblAlgn)
 register_element_cls("c:lblOffset", CT_LblOffset)
 register_element_cls("c:majorGridlines", CT_ChartLines)
 register_element_cls("c:majorTickMark", CT_TickMark)
+register_element_cls("c:majorTimeUnit", CT_TimeUnit)
 register_element_cls("c:majorUnit", CT_AxisUnit)
 register_element_cls("c:minorGridlines", CT_ChartLines)
 register_element_cls("c:minorTickMark", CT_TickMark)
+register_element_cls("c:minorTimeUnit", CT_TimeUnit)
 register_element_cls("c:minorUnit", CT_AxisUnit)
 register_element_cls("c:orientation", CT_Orientation)
 register_element_cls("c:scaling", CT_Scaling)
@@ -256,6 +266,7 @@ from pptx.oxml.chart.shared import (  # noqa: E402
 )
 
 register_element_cls("c:axId", CT_UnsignedInt)
+register_element_cls("c:auto", CT_Boolean)
 register_element_cls("c:autoTitleDeleted", CT_Boolean_Explicit)
 register_element_cls("c:autoUpdate", CT_Boolean)
 register_element_cls("c:backward", CT_Double)
@@ -273,9 +284,11 @@ register_element_cls("c:intercept", CT_Double)
 register_element_cls("c:invertIfNegative", CT_Boolean_Explicit)
 register_element_cls("c:layout", CT_Layout)
 register_element_cls("c:manualLayout", CT_ManualLayout)
+register_element_cls("c:logBase", CT_Double)
 register_element_cls("c:max", CT_Double)
 register_element_cls("c:min", CT_Double)
 register_element_cls("c:noEndCap", CT_Boolean)
+register_element_cls("c:noMultiLvlLbl", CT_Boolean)
 register_element_cls("c:numFmt", CT_NumFmt)
 register_element_cls("c:order", CT_UnsignedInt)
 register_element_cls("c:overlay", CT_Boolean_Explicit)
@@ -294,6 +307,8 @@ register_element_cls("c:showNegBubbles", CT_Boolean)
 register_element_cls("c:showVal", CT_Boolean_Explicit)
 register_element_cls("c:smooth", CT_Boolean)
 register_element_cls("c:splitPos", CT_Double)
+register_element_cls("c:tickLblSkip", CT_UnsignedInt)
+register_element_cls("c:tickMarkSkip", CT_UnsignedInt)
 register_element_cls("c:title", CT_Title)
 register_element_cls("c:tx", CT_Tx)
 register_element_cls("c:varyColors", CT_Boolean)
