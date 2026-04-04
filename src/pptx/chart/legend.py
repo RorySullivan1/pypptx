@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pptx.dml.chtfmt import ChartFormat
 from pptx.enum.chart import XL_LEGEND_POSITION
 from pptx.text.text import Font
 from pptx.util import lazyproperty
@@ -25,6 +26,11 @@ class Legend:
         defRPr = self._element.defRPr
         font = Font(defRPr)
         return font
+
+    @lazyproperty
+    def format(self):
+        """|ChartFormat| providing access to legend box formatting (fill/line)."""
+        return ChartFormat(self._element)
 
     @property
     def horz_offset(self):

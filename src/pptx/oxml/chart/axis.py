@@ -60,6 +60,26 @@ class CT_AxisUnit(BaseOxmlElement):
     val = RequiredAttribute("val", ST_AxisUnit)
 
 
+class CT_BuiltInUnit(BaseOxmlElement):
+    """``<c:builtInUnit>`` element — predefined display unit."""
+
+    val = OptionalAttribute("val", XsdString, default="thousands")
+
+
+class CT_DispUnits(BaseOxmlElement):
+    """``<c:dispUnits>`` element — display units for a value axis."""
+
+    _tag_seq = (
+        "c:builtInUnit",
+        "c:custUnit",
+        "c:dispUnitsLbl",
+        "c:extLst",
+    )
+    builtInUnit = ZeroOrOne("c:builtInUnit", successors=_tag_seq[1:])
+    custUnit = ZeroOrOne("c:custUnit", successors=_tag_seq[2:])
+    del _tag_seq
+
+
 class CT_AxPos(BaseOxmlElement):
     """``<c:axPos>`` element — axis position (l, r, t, b)."""
 

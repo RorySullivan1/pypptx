@@ -128,6 +128,22 @@ class BarSeries(_BaseCategorySeries):
     """A data point series belonging to a bar plot."""
 
     @property
+    def bar_shape(self):
+        """Read/write string. Shape of the bars in a 3D bar chart.
+
+        One of ``"box"``, ``"cone"``, ``"coneToMax"``, ``"cylinder"``,
+        ``"pyramid"``, ``"pyramidToMax"``. Returns ``"box"`` if not set.
+        """
+        shape = self._element.shape
+        if shape is None:
+            return "box"
+        return shape.val
+
+    @bar_shape.setter
+    def bar_shape(self, value):
+        self._element.get_or_add_shape().val = value
+
+    @property
     def invert_if_negative(self):
         """
         |True| if a point having a value less than zero should appear with a
@@ -173,9 +189,25 @@ class LineSeries(_BaseCategorySeries, _MarkerMixin):
 
 
 class PieSeries(_BaseCategorySeries):
-    """
-    A data point series belonging to a pie plot.
-    """
+    """A data point series belonging to a pie plot."""
+
+    @property
+    def explosion(self):
+        """Read/write integer. Distance of slice from center as percentage.
+
+        Returns 0 if not explicitly set. A value of 25 means the slice is
+        exploded 25% of the pie radius from center.
+        """
+        explosion = self._element.explosion
+        if explosion is None:
+            return 0
+        return explosion.val
+
+    @explosion.setter
+    def explosion(self, value):
+        self._element._remove_explosion()
+        if value and value != 0:
+            self._element._add_explosion(val=value)
 
 
 class RadarSeries(_BaseCategorySeries, _MarkerMixin):
@@ -220,9 +252,22 @@ class XySeries(_BaseSeries, _MarkerMixin):
 
 
 class BubbleSeries(XySeries):
-    """
-    A data point series belonging to a bubble plot.
-    """
+    """A data point series belonging to a bubble plot."""
+
+    @property
+    def bubble_3d(self):
+        """Read/write boolean. True if bubbles have a 3D effect.
+
+        Returns False if not explicitly set.
+        """
+        bubble3D = self._element.bubble3D
+        if bubble3D is None:
+            return False
+        return bubble3D.val
+
+    @bubble_3d.setter
+    def bubble_3d(self, value):
+        self._element.get_or_add_bubble3D().val = bool(value)
 
     @lazyproperty
     def points(self):

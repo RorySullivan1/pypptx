@@ -256,6 +256,21 @@ class Chart(PartElementProxy):
         """
         return PlotArea(self._chartSpace.chart.plotArea)
 
+    @property
+    def plot_visible_only(self):
+        """Read/write boolean. True if only visible cells are plotted.
+
+        Returns True if not explicitly set (the PowerPoint default).
+        """
+        plotVisOnly = self._chartSpace.chart.plotVisOnly
+        if plotVisOnly is None:
+            return True
+        return plotVisOnly.val
+
+    @plot_visible_only.setter
+    def plot_visible_only(self, value):
+        self._chartSpace.chart.get_or_add_plotVisOnly().val = bool(value)
+
     @lazyproperty
     def plots(self):
         """
@@ -272,6 +287,21 @@ class Chart(PartElementProxy):
         plotArea = self._chartSpace.chart.plotArea
         return _Plots(plotArea, self)
 
+    @property
+    def rounded_corners(self):
+        """Read/write boolean. True if the chart has rounded corners.
+
+        Returns False if not explicitly set.
+        """
+        roundedCorners = self._chartSpace.roundedCorners
+        if roundedCorners is None:
+            return False
+        return roundedCorners.val
+
+    @rounded_corners.setter
+    def rounded_corners(self, value):
+        self._chartSpace.get_or_add_roundedCorners().val = bool(value)
+
     def replace_data(self, chart_data):
         """
         Use the categories and series values in the |ChartData| object
@@ -281,6 +311,21 @@ class Chart(PartElementProxy):
         rewriter = SeriesXmlRewriterFactory(self.chart_type, chart_data)
         rewriter.replace_series_data(self._chartSpace)
         self._workbook.update_from_xlsx_blob(chart_data.xlsx_blob)
+
+    @property
+    def show_data_labels_over_max(self):
+        """Read/write boolean. True if data labels display over the maximum.
+
+        Returns False if not explicitly set.
+        """
+        showDLblsOverMax = self._chartSpace.chart.showDLblsOverMax
+        if showDLblsOverMax is None:
+            return False
+        return showDLblsOverMax.val
+
+    @show_data_labels_over_max.setter
+    def show_data_labels_over_max(self, value):
+        self._chartSpace.chart.get_or_add_showDLblsOverMax().val = bool(value)
 
     @lazyproperty
     def series(self):
