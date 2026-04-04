@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from pptx.chart.datalabel import DataLabels
+from pptx.chart.errbar import ErrorBarsCollection
 from pptx.chart.marker import Marker
 from pptx.chart.point import BubblePoints, CategoryPoints, XyPoints
 from pptx.chart.trendline import TrendlineCollection
@@ -49,6 +50,14 @@ class _BaseSeries:
         names = self._element.xpath("./c:tx//c:pt/c:v/text()")
         name = names[0] if names else ""
         return name
+
+    @lazyproperty
+    def error_bars(self):
+        """The |ErrorBarsCollection| for this series.
+
+        Provides access to error bars, and supports adding new ones.
+        """
+        return ErrorBarsCollection(self._ser)
 
     @lazyproperty
     def trendlines(self):

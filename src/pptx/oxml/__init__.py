@@ -116,6 +116,19 @@ register_element_cls("c:size", CT_MarkerSize)
 register_element_cls("c:symbol", CT_MarkerStyle)
 
 
+from pptx.oxml.chart.errbar import (  # noqa: E402
+    CT_ErrBarType,
+    CT_ErrBars,
+    CT_ErrDir,
+    CT_ErrValType,
+)
+
+register_element_cls("c:errBarType", CT_ErrBarType)
+register_element_cls("c:errBars", CT_ErrBars)
+register_element_cls("c:errDir", CT_ErrDir)
+register_element_cls("c:errValType", CT_ErrValType)
+
+
 from pptx.oxml.chart.trendline import (  # noqa: E402
     CT_Trendline,
     CT_TrendlineLabel,
@@ -225,6 +238,7 @@ register_element_cls("c:layout", CT_Layout)
 register_element_cls("c:manualLayout", CT_ManualLayout)
 register_element_cls("c:max", CT_Double)
 register_element_cls("c:min", CT_Double)
+register_element_cls("c:noEndCap", CT_Boolean)
 register_element_cls("c:numFmt", CT_NumFmt)
 register_element_cls("c:order", CT_UnsignedInt)
 register_element_cls("c:overlay", CT_Boolean_Explicit)
