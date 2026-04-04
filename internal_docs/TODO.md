@@ -432,15 +432,18 @@ Most-requested chart feature for reporting automation.
 - [x] `XL_TRENDLINE_TYPE` enumeration (EXPONENTIAL, LINEAR, LOGARITHMIC, MOVING_AVERAGE, POLYNOMIAL, POWER)
 - [x] Fixed `_SeriesFactory` to handle all 16 chart types (was missing area3D, bar3D, line3D, pie3D, ofPie, stock, surface, surface3D)
 
-### 18.3 Error Bars — OXML + API
+### 18.3 Error Bars — OXML + API (DONE)
 
-- [ ] `CT_ErrBars` (`c:errBars`) — `errDir`, `errBarType`, `errValType`, `noEndCap`, `plus`, `minus`, `val`, `spPr` children
-- [ ] `CT_ErrBarType` / `CT_ErrValType` / `CT_ErrDir` — val-attribute elements for error bar configuration
-- [ ] Declare `c:errBars` as `ZeroOrMore` on `CT_SeriesComposite` (already in `_tag_seq`)
-- [ ] Register new classes in `__init__.py`
-- [ ] `ErrorBars` API class — direction, bar type (both/plus/minus), value type (fixedVal/percentage/stdDev/stdErr/custom), value, formatting
-- [ ] Access via `series.error_bars` property
-- [ ] `XL_ERROR_BAR_TYPE` / `XL_ERROR_BAR_DIRECTION` enumerations
+- [x] `CT_ErrBars` (`c:errBars`) — `errDir`, `errBarType`, `errValType`, `noEndCap`, `plus`, `minus`, `spPr` children + `val_val` property for `c:val` (tag conflict with `CT_NumDataSource`)
+- [x] `CT_ErrBarType` / `CT_ErrValType` / `CT_ErrDir` — val-attribute elements for error bar configuration
+- [x] `c:errBars` declared as `ZeroOrMore` on `CT_SeriesComposite` (done in 18.2)
+- [x] Register new classes in `__init__.py` (+ `c:noEndCap` as `CT_Boolean`)
+- [x] `ErrorBars` API class — type, direction, include (both/plus/minus), value, has_end_cap, format
+- [x] `ErrorBarsCollection` — has_error_bars, add(type, value), remove, iteration
+- [x] Access via `series.error_bars` property on all series types
+- [x] `XL_ERROR_BAR_TYPE` (CUSTOM, FIXED_VALUE, PERCENT, ST_DEV, ST_ERROR)
+- [x] `XL_ERROR_BAR_DIRECTION` (X, Y)
+- [x] `XL_ERROR_BAR_INCLUDE` (BOTH, MINUS_VALUES, PLUS_VALUES)
 
 ### 18.4 Secondary Axis — API
 

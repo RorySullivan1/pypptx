@@ -32,6 +32,59 @@ class XL_AXIS_CROSSES(BaseXmlEnum):
     """The axis crosses at the minimum value."""
 
 
+class XL_ERROR_BAR_DIRECTION(BaseXmlEnum):
+    """Specifies the direction of error bars on a chart series.
+
+    MS API Name: `XlErrorBarDirection`
+    """
+
+    X = (1, "x", "Error bars in the X direction.")
+    """Error bars in the X direction (horizontal)."""
+
+    Y = (2, "y", "Error bars in the Y direction.")
+    """Error bars in the Y direction (vertical)."""
+
+
+class XL_ERROR_BAR_INCLUDE(BaseXmlEnum):
+    """Specifies which error bars to include.
+
+    MS API Name: `XlErrorBarInclude`
+    """
+
+    BOTH = (1, "both", "Both positive and negative error bars.")
+    """Both positive and negative error bars."""
+
+    MINUS_VALUES = (3, "minus", "Only negative error bars.")
+    """Only negative (minus) error bars."""
+
+    PLUS_VALUES = (2, "plus", "Only positive error bars.")
+    """Only positive (plus) error bars."""
+
+
+class XL_ERROR_BAR_TYPE(BaseXmlEnum):
+    """Specifies the range marked by error bars.
+
+    MS API Name: `XlErrorBarType`
+
+    https://learn.microsoft.com/en-us/office/vba/api/excel.xlerrorbartype
+    """
+
+    CUSTOM = (-4114, "cust", "Range is set by custom Plus and Minus values.")
+    """Range is set by custom Plus and Minus values."""
+
+    FIXED_VALUE = (1, "fixedVal", "Fixed-length error bars.")
+    """Fixed-length error bars."""
+
+    PERCENT = (2, "percentage", "Percentage of range to show as error.")
+    """Percentage of range to show as error."""
+
+    ST_DEV = (-4155, "stdDev", "Shows range for specified number of standard deviations.")
+    """Shows range for specified number of standard deviations."""
+
+    ST_ERROR = (4, "stdErr", "Shows standard error range.")
+    """Shows standard error range."""
+
+
 class XL_CATEGORY_TYPE(BaseEnum):
     """Specifies the type of the category axis.
 
