@@ -123,6 +123,22 @@ class Area3DPlot(_BasePlot):
     """
 
 
+class Bar3DPlot(_BasePlot):
+    """A 3-dimensional bar chart-style plot."""
+
+    @property
+    def gap_width(self):
+        gapWidth = self._element.gapWidth
+        if gapWidth is None:
+            return 150
+        return gapWidth.val
+
+    @gap_width.setter
+    def gap_width(self, value):
+        gapWidth = self._element.get_or_add_gapWidth()
+        gapWidth.val = value
+
+
 class BarPlot(_BasePlot):
     """
     A bar chart-style plot.
@@ -204,10 +220,22 @@ class DoughnutPlot(_BasePlot):
     """
 
 
+class Line3DPlot(_BasePlot):
+    """A 3-dimensional line plot."""
+
+
 class LinePlot(_BasePlot):
     """
     A line chart-style plot.
     """
+
+
+class OfPiePlot(_BasePlot):
+    """A pie-of-pie or bar-of-pie plot."""
+
+
+class Pie3DPlot(_BasePlot):
+    """A 3-dimensional pie plot."""
 
 
 class PiePlot(_BasePlot):
@@ -220,6 +248,18 @@ class RadarPlot(_BasePlot):
     """
     A radar-style plot.
     """
+
+
+class StockPlot(_BasePlot):
+    """A stock (OHLC/HLC) chart plot."""
+
+
+class Surface3DPlot(_BasePlot):
+    """A 3-dimensional surface plot."""
+
+
+class SurfacePlot(_BasePlot):
+    """A surface (top-view) plot."""
 
 
 class XyPlot(_BasePlot):
@@ -237,13 +277,20 @@ def PlotFactory(xChart, chart):
         PlotCls = {
             qn("c:areaChart"): AreaPlot,
             qn("c:area3DChart"): Area3DPlot,
+            qn("c:bar3DChart"): Bar3DPlot,
             qn("c:barChart"): BarPlot,
             qn("c:bubbleChart"): BubblePlot,
             qn("c:doughnutChart"): DoughnutPlot,
+            qn("c:line3DChart"): Line3DPlot,
             qn("c:lineChart"): LinePlot,
+            qn("c:ofPieChart"): OfPiePlot,
+            qn("c:pie3DChart"): Pie3DPlot,
             qn("c:pieChart"): PiePlot,
             qn("c:radarChart"): RadarPlot,
             qn("c:scatterChart"): XyPlot,
+            qn("c:stockChart"): StockPlot,
+            qn("c:surface3DChart"): Surface3DPlot,
+            qn("c:surfaceChart"): SurfacePlot,
         }[xChart.tag]
     except KeyError:
         raise ChartError("unsupported plot type %s" % xChart.tag)
@@ -267,12 +314,19 @@ class PlotTypeInspector:
             chart_type_method = {
                 "AreaPlot": cls._differentiate_area_chart_type,
                 "Area3DPlot": cls._differentiate_area_3d_chart_type,
+                "Bar3DPlot": cls._differentiate_bar_3d_chart_type,
                 "BarPlot": cls._differentiate_bar_chart_type,
                 "BubblePlot": cls._differentiate_bubble_chart_type,
                 "DoughnutPlot": cls._differentiate_doughnut_chart_type,
+                "Line3DPlot": cls._differentiate_line_3d_chart_type,
                 "LinePlot": cls._differentiate_line_chart_type,
+                "OfPiePlot": cls._differentiate_of_pie_chart_type,
+                "Pie3DPlot": cls._differentiate_pie_3d_chart_type,
                 "PiePlot": cls._differentiate_pie_chart_type,
                 "RadarPlot": cls._differentiate_radar_chart_type,
+                "StockPlot": cls._differentiate_stock_chart_type,
+                "Surface3DPlot": cls._differentiate_surface_3d_chart_type,
+                "SurfacePlot": cls._differentiate_surface_chart_type,
                 "XyPlot": cls._differentiate_xy_chart_type,
             }[plot.__class__.__name__]
         except KeyError:
@@ -288,6 +342,21 @@ class PlotTypeInspector:
             ST_Grouping.STACKED: XL.THREE_D_AREA_STACKED,
             ST_Grouping.PERCENT_STACKED: XL.THREE_D_AREA_STACKED_100,
         }[plot._element.grouping_val]
+
+    @classmethod
+    def _differentiate_bar_3d_chart_type(cls, plot):
+        barChart = plot._element
+        if barChart.barDir.val == ST_BarDir.BAR:
+            return {
+                ST_Grouping.CLUSTERED: XL.THREE_D_BAR_CLUSTERED,
+                ST_Grouping.STACKED: XL.THREE_D_BAR_STACKED,
+                ST_Grouping.PERCENT_STACKED: XL.THREE_D_BAR_STACKED_100,
+            }[barChart.grouping_val]
+        return {
+            ST_Grouping.CLUSTERED: XL.THREE_D_COLUMN_CLUSTERED,
+            ST_Grouping.STACKED: XL.THREE_D_COLUMN_STACKED,
+            ST_Grouping.PERCENT_STACKED: XL.THREE_D_COLUMN_STACKED_100,
+        }[barChart.grouping_val]
 
     @classmethod
     def _differentiate_area_chart_type(cls, plot):
@@ -411,3 +480,43 @@ class PlotTypeInspector:
             return XL.XY_SCATTER_SMOOTH
 
         return XL.XY_SCATTER
+
+    @classmethod
+    def _differentiate_line_3d_chart_type(cls, plot):
+        return XL.THREE_D_LINE
+
+    @classmethod
+    def _differentiate_of_pie_chart_type(cls, plot):
+        ofPieType = plot._element.xpath("c:ofPieType")
+        if ofPieType and ofPieType[0].get("val") == "bar":
+            return XL.BAR_OF_PIE
+        return XL.PIE_OF_PIE
+
+    @classmethod
+    def _differentiate_pie_3d_chart_type(cls, plot):
+        pie3DChart = plot._element
+        explosion = pie3DChart.xpath("./c:ser/c:explosion")
+        return XL.THREE_D_PIE_EXPLODED if explosion else XL.THREE_D_PIE
+
+    @classmethod
+    def _differentiate_stock_chart_type(cls, plot):
+        stockChart = plot._element
+        ser_count = len(stockChart.xpath("c:ser"))
+        has_bar_sibling = bool(stockChart.xpath("preceding-sibling::c:barChart | following-sibling::c:barChart"))
+        if has_bar_sibling:
+            return XL.STOCK_VOHLC if ser_count >= 4 else XL.STOCK_VHLC
+        return XL.STOCK_OHLC if ser_count >= 4 else XL.STOCK_HLC
+
+    @classmethod
+    def _differentiate_surface_3d_chart_type(cls, plot):
+        wireframe = plot._element.xpath("c:wireframe")
+        if wireframe and wireframe[0].get("val") in ("1", "true"):
+            return XL.SURFACE_WIREFRAME
+        return XL.SURFACE
+
+    @classmethod
+    def _differentiate_surface_chart_type(cls, plot):
+        wireframe = plot._element.xpath("c:wireframe")
+        if wireframe and wireframe[0].get("val") in ("1", "true"):
+            return XL.SURFACE_TOP_VIEW_WIREFRAME
+        return XL.SURFACE_TOP_VIEW
