@@ -143,6 +143,8 @@ class CT_SeriesComposite(BaseOxmlElement):
     marker = ZeroOrOne("c:marker", successors=_tag_seq[7:])
     dPt = ZeroOrMore("c:dPt", successors=_tag_seq[9:])
     dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[10:])
+    trendline = ZeroOrMore("c:trendline", successors=_tag_seq[11:])
+    errBars = ZeroOrMore("c:errBars", successors=_tag_seq[12:])
     cat = ZeroOrOne("c:cat", successors=_tag_seq[13:])
     val = ZeroOrOne("c:val", successors=_tag_seq[14:])
     xVal = ZeroOrOne("c:xVal", successors=_tag_seq[15:])

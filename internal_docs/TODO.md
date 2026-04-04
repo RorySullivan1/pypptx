@@ -418,18 +418,19 @@ implementation, then register them in `__init__.py`.
 - [x] Wire into `PlotFactory` / `PlotTypeInspector` so existing API recognizes them
 - [x] API plot classes: `Bar3DPlot`, `Line3DPlot`, `Pie3DPlot`, `StockPlot`, `SurfacePlot`, `Surface3DPlot`, `OfPiePlot`
 
-### 18.2 Trendlines — OXML + API
+### 18.2 Trendlines — OXML + API (DONE)
 
 Most-requested chart feature for reporting automation.
 
-- [ ] `CT_Trendline` (`c:trendline`) — `name`, `spPr`, `trendlineType`, `order`, `period`, `forward`, `backward`, `intercept`, `dispRSqr`, `dispEq`, `trendlineLbl` children
-- [ ] `CT_TrendlineType` (`c:trendlineType`) — `val` attribute (linear, exponential, logarithmic, movingAvg, polynomial, power)
-- [ ] `CT_TrendlineLabel` (`c:trendlineLbl`) — layout, `numFmt`, `spPr`, `txPr`, `tx` children
-- [ ] Declare `c:trendline` as `ZeroOrMore` on `CT_SeriesComposite` (already in `_tag_seq`)
-- [ ] Register new classes in `__init__.py`
-- [ ] `Trendline` API class — type, order, period, forward/backward, intercept, display R², display equation
-- [ ] `TrendlineCollection` on series — add/remove/iterate trendlines
-- [ ] `XL_TRENDLINE_TYPE` enumeration (linear, exponential, logarithmic, movingAvg, polynomial, power)
+- [x] `CT_Trendline` (`c:trendline`) — `name`, `spPr`, `trendlineType`, `order`, `period`, `forward`, `backward`, `intercept`, `dispRSqr`, `dispEq`, `trendlineLbl` children
+- [x] `CT_TrendlineType` (`c:trendlineType`) — `val` attribute (linear, exponential, logarithmic, movingAvg, polynomial, power)
+- [x] `CT_TrendlineLabel` (`c:trendlineLbl`) — layout, `numFmt`, `spPr`, `txPr`, `tx` children
+- [x] Declare `c:trendline` as `ZeroOrMore` on `CT_SeriesComposite` (+ `c:errBars`)
+- [x] Register new classes in `__init__.py` (+ `c:forward`, `c:backward`, `c:intercept`, `c:dispRSqr`, `c:dispEq`, `c:period`)
+- [x] `Trendline` API class — type, order, period, forward/backward, intercept, display R², display equation, name, format
+- [x] `TrendlineCollection` on series — add/remove/iterate trendlines via `series.trendlines`
+- [x] `XL_TRENDLINE_TYPE` enumeration (EXPONENTIAL, LINEAR, LOGARITHMIC, MOVING_AVERAGE, POLYNOMIAL, POWER)
+- [x] Fixed `_SeriesFactory` to handle all 16 chart types (was missing area3D, bar3D, line3D, pie3D, ofPie, stock, surface, surface3D)
 
 ### 18.3 Error Bars — OXML + API
 
