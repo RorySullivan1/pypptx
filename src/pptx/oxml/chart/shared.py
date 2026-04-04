@@ -118,7 +118,13 @@ class CT_ManualLayout(BaseOxmlElement):
         "c:extLst",
     )
     xMode = ZeroOrOne("c:xMode", successors=_tag_seq[2:])
+    yMode = ZeroOrOne("c:yMode", successors=_tag_seq[3:])
+    wMode = ZeroOrOne("c:wMode", successors=_tag_seq[4:])
+    hMode = ZeroOrOne("c:hMode", successors=_tag_seq[5:])
     x = ZeroOrOne("c:x", successors=_tag_seq[6:])
+    y = ZeroOrOne("c:y", successors=_tag_seq[7:])
+    w = ZeroOrOne("c:w", successors=_tag_seq[8:])
+    h = ZeroOrOne("c:h", successors=_tag_seq[9:])
     del _tag_seq
 
     @property
@@ -139,6 +145,65 @@ class CT_ManualLayout(BaseOxmlElement):
         """
         self.get_or_add_xMode().val = ST_LayoutMode.FACTOR
         self.get_or_add_x().val = offset
+
+    def _get_layout_val(self, val_attr, mode_attr):
+        """Return float value of a layout dimension, or None."""
+        val_elm = getattr(self, val_attr)
+        if val_elm is None:
+            return None
+        mode_elm = getattr(self, mode_attr)
+        if mode_elm is not None and mode_elm.val != ST_LayoutMode.FACTOR:
+            return None
+        return val_elm.val
+
+    def _set_layout_val(self, val_attr, mode_attr, value):
+        """Set a layout dimension value, or remove it if None."""
+        remover = getattr(self, f"_remove_{val_attr}")
+        mode_remover = getattr(self, f"_remove_{mode_attr}")
+        if value is None:
+            remover()
+            mode_remover()
+            return
+        adder = getattr(self, f"get_or_add_{mode_attr}")
+        adder().val = ST_LayoutMode.FACTOR
+        val_adder = getattr(self, f"get_or_add_{val_attr}")
+        val_adder().val = value
+
+    @property
+    def left(self):
+        """Float x position (0.0-1.0) as fraction of chart width, or None."""
+        return self._get_layout_val("x", "xMode")
+
+    @left.setter
+    def left(self, value):
+        self._set_layout_val("x", "xMode", value)
+
+    @property
+    def top(self):
+        """Float y position (0.0-1.0) as fraction of chart height, or None."""
+        return self._get_layout_val("y", "yMode")
+
+    @top.setter
+    def top(self, value):
+        self._set_layout_val("y", "yMode", value)
+
+    @property
+    def width(self):
+        """Float width (0.0-1.0) as fraction of chart width, or None."""
+        return self._get_layout_val("w", "wMode")
+
+    @width.setter
+    def width(self, value):
+        self._set_layout_val("w", "wMode", value)
+
+    @property
+    def height(self):
+        """Float height (0.0-1.0) as fraction of chart height, or None."""
+        return self._get_layout_val("h", "hMode")
+
+    @height.setter
+    def height(self, value):
+        self._set_layout_val("h", "hMode", value)
 
 
 class CT_NumFmt(BaseOxmlElement):

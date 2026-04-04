@@ -46,6 +46,7 @@ class CT_Chart(BaseOxmlElement):
     backWall = ZeroOrOne("c:backWall", successors=_tag_seq[7:])
     plotArea = OneAndOnlyOne("c:plotArea")
     legend = ZeroOrOne("c:legend", successors=_tag_seq[9:])
+    dispBlanksAs = ZeroOrOne("c:dispBlanksAs", successors=_tag_seq[11:])
     rId: str = RequiredAttribute("r:id", XsdString)  # pyright: ignore[reportAssignmentType]
 
     @property
@@ -103,6 +104,7 @@ class CT_ChartSpace(BaseOxmlElement):
     date1904 = ZeroOrOne("c:date1904", successors=_tag_seq[1:])
     style = ZeroOrOne("c:style", successors=_tag_seq[4:])
     chart = OneAndOnlyOne("c:chart")
+    spPr = ZeroOrOne("c:spPr", successors=_tag_seq[9:])
     txPr = ZeroOrOne("c:txPr", successors=_tag_seq[10:])
     externalData = ZeroOrOne("c:externalData", successors=_tag_seq[11:])
     del _tag_seq
@@ -169,6 +171,12 @@ class CT_ChartSpace(BaseOxmlElement):
         return CT_TextBody.new_txPr()
 
 
+class CT_DispBlanksAs(BaseOxmlElement):
+    """`c:dispBlanksAs` element, specifying how blank cells are plotted."""
+
+    val = RequiredAttribute("val", XsdString)
+
+
 class CT_ExternalData(BaseOxmlElement):
     """
     `<c:externalData>` element, defining link to embedded Excel package part
@@ -184,8 +192,16 @@ class CT_PlotArea(BaseOxmlElement):
     ``<c:plotArea>`` element.
     """
 
+    layout = ZeroOrOne("c:layout", successors=(
+        "c:areaChart", "c:area3DChart", "c:barChart", "c:bar3DChart",
+        "c:bubbleChart", "c:doughnutChart", "c:lineChart", "c:line3DChart",
+        "c:ofPieChart", "c:pieChart", "c:pie3DChart", "c:radarChart",
+        "c:scatterChart", "c:stockChart", "c:surfaceChart", "c:surface3DChart",
+        "c:catAx", "c:dateAx", "c:valAx", "c:serAx", "c:spPr", "c:extLst",
+    ))
     catAx = ZeroOrMore("c:catAx")
     valAx = ZeroOrMore("c:valAx")
+    spPr = ZeroOrOne("c:spPr", successors=("c:extLst",))
 
     def iter_sers(self):
         """

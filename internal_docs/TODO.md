@@ -476,12 +476,15 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] `Chart.view_3d` API — `View3D` with rot_x, rot_y, right_angle_axes, perspective, depth_percent, height_percent
 - [x] `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` — `ChartSurface` with format and thickness
 
-### 18.7 Chart & Plot Area Formatting
+### 18.7 Chart & Plot Area Formatting (DONE)
 
-- [ ] Plot area position — manual layout via `c:layout` / `c:manualLayout` (x, y, w, h)
-- [ ] Plot area formatting — fill and line via `c:spPr` on `c:plotArea`
-- [ ] Chart area formatting — fill and line via `c:spPr` on `c:chartSpace`
-- [ ] `c:dispBlanksAs` — gap, zero, span for missing data points
+- [x] `CT_ManualLayout` — added `y`, `w`, `h`, `yMode`, `wMode`, `hMode` descriptors + left/top/width/height properties
+- [x] Plot area layout — `PlotArea` API with left, top, width, height (fraction of chart dimensions)
+- [x] Plot area formatting — `PlotArea.format` via `c:spPr` on `c:plotArea`
+- [x] Chart area formatting — `Chart.chart_format` via `c:spPr` on `c:chartSpace`
+- [x] `Chart.display_blanks_as` — read/write "gap"/"zero"/"span" for missing data points
+- [x] `Chart.plot_area` property exposing `PlotArea` object
+- [x] Registered `c:h`, `c:hMode`, `c:w`, `c:wMode`, `c:y`, `c:yMode`, `c:dispBlanksAs`
 
 ### 18.8 Line/Area/Bar Chart Special Elements
 

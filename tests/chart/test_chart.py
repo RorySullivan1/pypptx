@@ -202,6 +202,62 @@ class DescribeChart:
         floor.thickness = None
         assert floor.thickness is None
 
+    def it_provides_access_to_display_blanks_as(self):
+        chartSpace = element("c:chartSpace/c:chart")
+        chart = Chart(chartSpace, None)
+
+        # Default is "gap" when element absent
+        assert chart.display_blanks_as == "gap"
+
+        # Setting to "zero" adds element
+        chart.display_blanks_as = "zero"
+        assert chart.display_blanks_as == "zero"
+
+        # Setting to "span"
+        chart.display_blanks_as = "span"
+        assert chart.display_blanks_as == "span"
+
+        # Setting to "gap" removes element (default)
+        chart.display_blanks_as = "gap"
+        assert chart.display_blanks_as == "gap"
+
+        # Invalid value raises
+        with pytest.raises(ChartError):
+            chart.display_blanks_as = "invalid"
+
+    def it_provides_access_to_chart_area_format(self):
+        chartSpace = element("c:chartSpace/c:chart")
+        chart = Chart(chartSpace, None)
+
+        from pptx.dml.chtfmt import ChartFormat
+
+        fmt = chart.chart_format
+        assert isinstance(fmt, ChartFormat)
+
+    def it_provides_access_to_plot_area(self):
+        chartSpace = element("c:chartSpace/c:chart/c:plotArea")
+        chart = Chart(chartSpace, None)
+
+        from pptx.chart.plotarea import PlotArea
+
+        pa = chart.plot_area
+        assert isinstance(pa, PlotArea)
+
+        # Layout round-trips
+        assert pa.left is None
+        pa.left = 0.1
+        assert pa.left == 0.1
+        pa.top = 0.2
+        assert pa.top == 0.2
+        pa.width = 0.8
+        assert pa.width == 0.8
+        pa.height = 0.7
+        assert pa.height == 0.7
+
+        # Setting None clears
+        pa.left = None
+        assert pa.left is None
+
     def it_provides_access_to_its_series(self, series_fixture):
         chart, SeriesCollection_, plotArea, series_ = series_fixture
         series = chart.series
