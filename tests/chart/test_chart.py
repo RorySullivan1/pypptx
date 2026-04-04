@@ -154,6 +154,54 @@ class DescribeChart:
         with pytest.raises(ChartError, match="unsupported overlay plot type"):
             chart.add_plot("invalid_type")
 
+    def it_provides_access_to_3d_view_properties(self):
+        chartSpace = element("c:chartSpace/c:chart")
+        chart = Chart(chartSpace, None)
+        view = chart.view_3d
+
+        from pptx.chart.view3d import View3D
+
+        assert isinstance(view, View3D)
+
+        # Setting properties round-trips
+        view.rot_x = 15
+        assert view.rot_x == 15
+        view.rot_y = 20
+        assert view.rot_y == 20
+        view.perspective = 30
+        assert view.perspective == 30
+        view.right_angle_axes = True
+        assert view.right_angle_axes is True
+        view.depth_percent = 150
+        assert view.depth_percent == 150
+        view.height_percent = 200
+        assert view.height_percent == 200
+
+        # Setting to None removes the element
+        view.rot_x = None
+        assert view.rot_x is None
+
+    def it_provides_access_to_floor_and_walls(self):
+        chartSpace = element("c:chartSpace/c:chart")
+        chart = Chart(chartSpace, None)
+
+        from pptx.chart.view3d import ChartSurface
+
+        floor = chart.floor
+        assert isinstance(floor, ChartSurface)
+
+        back_wall = chart.back_wall
+        assert isinstance(back_wall, ChartSurface)
+
+        side_wall = chart.side_wall
+        assert isinstance(side_wall, ChartSurface)
+
+        # Thickness round-trips
+        floor.thickness = 5
+        assert floor.thickness == 5
+        floor.thickness = None
+        assert floor.thickness is None
+
     def it_provides_access_to_its_series(self, series_fixture):
         chart, SeriesCollection_, plotArea, series_ = series_fixture
         series = chart.series

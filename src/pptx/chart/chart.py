@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
+from pptx.chart.view3d import ChartSurface, View3D
 from pptx.exc import ChartError
 from pptx.chart.plot import PlotFactory, PlotTypeInspector
 from pptx.chart.series import SeriesCollection
@@ -76,6 +77,16 @@ class Chart(PartElementProxy):
         return PlotFactory(xChart, self)
 
     @property
+    def back_wall(self):
+        """A |ChartSurface| object providing access to back wall formatting.
+
+        Accessing this property is destructive in the sense it adds a
+        ``c:backWall`` element if not already present.
+        """
+        chart = self._chartSpace.chart
+        return ChartSurface(chart.get_or_add_backWall())
+
+    @property
     def category_axis(self):
         """
         The category axis of this chart. In the case of an XY or Bubble
@@ -138,6 +149,16 @@ class Chart(PartElementProxy):
         """
         first_plot = self.plots[0]
         return PlotTypeInspector.chart_type(first_plot)
+
+    @property
+    def floor(self):
+        """A |ChartSurface| object providing access to floor formatting.
+
+        Accessing this property is destructive in the sense it adds a
+        ``c:floor`` element if not already present.
+        """
+        chart = self._chartSpace.chart
+        return ChartSurface(chart.get_or_add_floor())
 
     @lazyproperty
     def font(self):
@@ -230,6 +251,16 @@ class Chart(PartElementProxy):
         return SeriesCollection(self._chartSpace.plotArea)
 
     @property
+    def side_wall(self):
+        """A |ChartSurface| object providing access to side wall formatting.
+
+        Accessing this property is destructive in the sense it adds a
+        ``c:sideWall`` element if not already present.
+        """
+        chart = self._chartSpace.chart
+        return ChartSurface(chart.get_or_add_sideWall())
+
+    @property
     def value_axis(self):
         """The primary |ValueAxis| of this chart.
 
@@ -268,6 +299,16 @@ class Chart(PartElementProxy):
             return DateAxis(dateAx_lst[1])
 
         raise ChartError("chart has no secondary category axis")
+
+    @property
+    def view_3d(self):
+        """A |View3D| object providing access to 3D view properties.
+
+        Accessing this property is destructive in the sense it adds a
+        ``c:view3D`` element if not already present.
+        """
+        chart = self._chartSpace.chart
+        return View3D(chart.get_or_add_view3D())
 
     @property
     def _workbook(self):

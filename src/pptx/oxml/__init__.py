@@ -258,6 +258,30 @@ register_element_cls("c:x", CT_Double)
 register_element_cls("c:xMode", CT_LayoutMode)
 
 
+from pptx.oxml.chart.view3d import (  # noqa: E402
+    CT_DepthPercent,
+    CT_HPercent,
+    CT_Perspective,
+    CT_RotX,
+    CT_RotY,
+    CT_Surface,
+    CT_Thickness,
+    CT_View3D,
+)
+
+register_element_cls("c:backWall", CT_Surface)
+register_element_cls("c:depthPercent", CT_DepthPercent)
+register_element_cls("c:floor", CT_Surface)
+register_element_cls("c:hPercent", CT_HPercent)
+register_element_cls("c:perspective", CT_Perspective)
+register_element_cls("c:rAngAx", CT_Boolean)
+register_element_cls("c:rotX", CT_RotX)
+register_element_cls("c:rotY", CT_RotY)
+register_element_cls("c:sideWall", CT_Surface)
+register_element_cls("c:thickness", CT_Thickness)
+register_element_cls("c:view3D", CT_View3D)
+
+
 from pptx.oxml.coreprops import CT_CoreProperties  # noqa: E402
 
 register_element_cls("cp:coreProperties", CT_CoreProperties)
