@@ -414,6 +414,8 @@ class CT_ShapeProperties(BaseOxmlElement):
         "a:ln", successors=_tag_seq[10:]
     )
     effectLst = ZeroOrOne("a:effectLst", successors=_tag_seq[11:])
+    scene3d = ZeroOrOne("a:scene3d", successors=_tag_seq[13:])
+    sp3d = ZeroOrOne("a:sp3d", successors=_tag_seq[14:])
     del _tag_seq
 
     @property
