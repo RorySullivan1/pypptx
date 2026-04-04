@@ -22,6 +22,7 @@ from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.simpletypes import (
+    ST_Angle,
     ST_Coordinate32,
     ST_Percentage,
     ST_PositiveCoordinate32,
@@ -243,6 +244,9 @@ class CT_TextBodyProperties(BaseOxmlElement):
     )
     anchor: MSO_VERTICAL_ANCHOR | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "anchor", MSO_VERTICAL_ANCHOR
+    )
+    rot: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "rot", ST_Angle
     )
     wrap: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "wrap", ST_TextWrappingType

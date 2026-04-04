@@ -55,11 +55,13 @@ register_element_cls("a:hlinkHover", CT_Hyperlink)
 from pptx.oxml.chart.axis import (  # noqa: E402
     CT_AxPos,
     CT_AxisUnit,
+    CT_BuiltInUnit,
     CT_CatAx,
     CT_ChartLines,
     CT_CrossBetween,
     CT_Crosses,
     CT_DateAx,
+    CT_DispUnits,
     CT_LblAlgn,
     CT_LblOffset,
     CT_Orientation,
@@ -72,10 +74,12 @@ from pptx.oxml.chart.axis import (  # noqa: E402
 
 register_element_cls("c:axPos", CT_AxPos)
 register_element_cls("c:baseTimeUnit", CT_TimeUnit)
+register_element_cls("c:builtInUnit", CT_BuiltInUnit)
 register_element_cls("c:catAx", CT_CatAx)
 register_element_cls("c:crossBetween", CT_CrossBetween)
 register_element_cls("c:crosses", CT_Crosses)
 register_element_cls("c:dateAx", CT_DateAx)
+register_element_cls("c:dispUnits", CT_DispUnits)
 register_element_cls("c:lblAlgn", CT_LblAlgn)
 register_element_cls("c:lblOffset", CT_LblOffset)
 register_element_cls("c:majorGridlines", CT_ChartLines)

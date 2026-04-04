@@ -578,9 +578,9 @@ _Prerequisites: 18.12 (axis descriptors)_
 - [x] Date axis time units — `DateAxis.base_time_unit`, `DateAxis.major_time_unit`, `DateAxis.minor_time_unit`
 - [x] Chart-level API — `Chart.plot_visible_only`, `Chart.show_data_labels_over_max`, `Chart.rounded_corners`
 - [x] Legend API — `Legend.format` (ChartFormat for legend box formatting)
-- [ ] Axis label rotation — `c:txPr` on axis with `a:bodyPr` rot attribute
-- [ ] Display units — `c:dispUnits` (hundreds, thousands, millions, etc.)
-- [ ] Series API — `Series.explosion`, `Series.shape`, `Series.bubble_3d`
+- [x] Axis label rotation — `TickLabels.label_rotation` (rot on a:bodyPr, degrees)
+- [x] Display units — `CT_DispUnits`, `CT_BuiltInUnit` + `ValueAxis.display_units`
+- [x] Series API — `PieSeries.explosion`, `BarSeries.bar_shape`, `BubbleSeries.bubble_3d`
 
 ---
 

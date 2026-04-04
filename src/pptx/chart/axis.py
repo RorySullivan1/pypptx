@@ -445,6 +445,31 @@ class TickLabels:
         return font
 
     @property
+    def label_rotation(self):
+        """Read/write float. Rotation of tick labels in degrees (-90.0 to 90.0).
+
+        Returns None if no rotation is explicitly set. Stored internally
+        in 60,000ths of a degree on the ``a:bodyPr`` ``rot`` attribute.
+        """
+        txPr = self._element.txPr
+        if txPr is None:
+            return None
+        rot = txPr.bodyPr.rot
+        if rot is None:
+            return None
+        return rot / 60000.0
+
+    @label_rotation.setter
+    def label_rotation(self, value):
+        if value is None:
+            txPr = self._element.txPr
+            if txPr is not None:
+                txPr.bodyPr.rot = None
+            return
+        txPr = self._element.get_or_add_txPr()
+        txPr.bodyPr.rot = int(value * 60000)
+
+    @property
     def number_format(self):
         """
         Read/write string (e.g. "$#,##0.00") specifying the format for the
@@ -515,6 +540,30 @@ class ValueAxis(_BaseAxis):
     The vertical axis is generally a value axis, however both axes of an XY-type chart
     are value axes.
     """
+
+    @property
+    def display_units(self):
+        """Read/write string. Display units for this value axis.
+
+        One of ``"hundreds"``, ``"thousands"``, ``"tenThousands"``,
+        ``"hundredThousands"``, ``"millions"``, ``"tenMillions"``,
+        ``"hundredMillions"``, ``"billions"``, ``"trillions"``.
+        Returns None if no display units are set. Assigning None removes them.
+        """
+        dispUnits = self._element.dispUnits
+        if dispUnits is None:
+            return None
+        builtInUnit = dispUnits.builtInUnit
+        if builtInUnit is None:
+            return None
+        return builtInUnit.val
+
+    @display_units.setter
+    def display_units(self, value):
+        self._element._remove_dispUnits()
+        if value is not None:
+            dispUnits = self._element._add_dispUnits()
+            dispUnits._add_builtInUnit(val=value)
 
     @property
     def cross_between(self):
