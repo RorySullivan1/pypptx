@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 from pptx.action import ActionSetting
 from pptx.dml.effect import ShadowFormat
+from pptx.dml.threed import ThreeDFormat
 from pptx.exc import ShapeError
 from pptx.shared import ElementProxy
 from pptx.util import lazyproperty
@@ -174,6 +175,15 @@ class BaseShape:
         behavior).
         """
         return ShadowFormat(self._element.spPr)
+
+    @lazyproperty
+    def three_d(self) -> ThreeDFormat:
+        """|ThreeDFormat| object providing access to 3D formatting.
+
+        Controls extrusion depth, contour, material, bevels, and 3D scene
+        (camera and lighting). A |ThreeDFormat| object is always returned.
+        """
+        return ThreeDFormat(self._element.spPr)
 
     @property
     def shape_id(self) -> int:

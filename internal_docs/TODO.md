@@ -588,10 +588,10 @@ _Prerequisites: 18.12 (axis descriptors)_
 
 _Prerequisites: Section 4.8 (3D elements)_
 
-- [ ] Shape extrusion — `a:sp3d` (extrusion height, contour width, material)
-- [ ] Bevel — top and bottom bevel profiles (`a:bevelT`, `a:bevelB`)
-- [ ] 3D scene — camera preset, rotation, field of view (`a:scene3d` -> `a:camera`)
-- [ ] Lighting rig — type and direction (`a:scene3d` -> `a:lightRig`)
+- [x] Shape extrusion — `ThreeDFormat.extrusion_height`, `contour_width`, `material`
+- [x] Bevel — `ThreeDFormat.bevel_top`/`bevel_bottom` with `Bevel.width`, `height`, `preset`
+- [x] 3D scene — `Scene3D.camera` with `Camera.preset`, `field_of_view`
+- [x] Lighting rig — `Scene3D.light_rig` with `LightRig.rig_type`, `direction`
 
 ---
 
