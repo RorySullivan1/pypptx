@@ -142,6 +142,40 @@ class CT_AreaChart(BaseChartElement):
     del _tag_seq
 
 
+class CT_Bar3DChart(BaseChartElement):
+    """``<c:bar3DChart>`` element."""
+
+    _tag_seq = (
+        "c:barDir",
+        "c:grouping",
+        "c:varyColors",
+        "c:ser",
+        "c:dLbls",
+        "c:gapWidth",
+        "c:gapDepth",
+        "c:shape",
+        "c:axId",
+        "c:extLst",
+    )
+    barDir = OneAndOnlyOne("c:barDir")
+    grouping = ZeroOrOne("c:grouping", successors=_tag_seq[2:])
+    varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[3:])
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[4:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[5:])
+    gapWidth = ZeroOrOne("c:gapWidth", successors=_tag_seq[6:])
+    del _tag_seq
+
+    @property
+    def grouping_val(self):
+        grouping = self.grouping
+        if grouping is None:
+            return ST_Grouping.CLUSTERED
+        val = grouping.val
+        if val is None:
+            return ST_Grouping.CLUSTERED
+        return val
+
+
 class CT_BarChart(BaseChartElement):
     """
     ``<c:barChart>`` element.
@@ -262,6 +296,26 @@ class CT_Grouping(BaseOxmlElement):
     val = OptionalAttribute("val", ST_Grouping)
 
 
+class CT_Line3DChart(BaseChartElement):
+    """``<c:line3DChart>`` element."""
+
+    _tag_seq = (
+        "c:grouping",
+        "c:varyColors",
+        "c:ser",
+        "c:dLbls",
+        "c:dropLines",
+        "c:gapDepth",
+        "c:axId",
+        "c:extLst",
+    )
+    grouping = ZeroOrOne("c:grouping", successors=_tag_seq[1:])
+    varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    del _tag_seq
+
+
 class CT_LineChart(BaseChartElement):
     """
     ``<c:lineChart>`` custom element class
@@ -294,6 +348,38 @@ class CT_Overlap(BaseOxmlElement):
     """
 
     val = OptionalAttribute("val", ST_Overlap, default=0)
+
+
+class CT_OfPieChart(BaseChartElement):
+    """``<c:ofPieChart>`` element (pie-of-pie or bar-of-pie)."""
+
+    _tag_seq = (
+        "c:ofPieType",
+        "c:varyColors",
+        "c:ser",
+        "c:dLbls",
+        "c:gapWidth",
+        "c:splitType",
+        "c:splitPos",
+        "c:custSplit",
+        "c:secondPieSize",
+        "c:serLines",
+        "c:extLst",
+    )
+    varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[4:])
+    del _tag_seq
+
+
+class CT_Pie3DChart(BaseChartElement):
+    """``<c:pie3DChart>`` element."""
+
+    _tag_seq = ("c:varyColors", "c:ser", "c:dLbls", "c:extLst")
+    varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[1:])
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[3:])
+    del _tag_seq
 
 
 class CT_PieChart(BaseChartElement):
@@ -342,4 +428,49 @@ class CT_ScatterChart(BaseChartElement):
     )
     varyColors = ZeroOrOne("c:varyColors", successors=_tag_seq[2:])
     ser = ZeroOrMore("c:ser", successors=_tag_seq[3:])
+    del _tag_seq
+
+
+class CT_StockChart(BaseChartElement):
+    """``<c:stockChart>`` element."""
+
+    _tag_seq = (
+        "c:ser",
+        "c:dLbls",
+        "c:dropLines",
+        "c:hiLowLines",
+        "c:upDownBars",
+        "c:axId",
+        "c:extLst",
+    )
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[1:])
+    dLbls = ZeroOrOne("c:dLbls", successors=_tag_seq[2:])
+    del _tag_seq
+
+
+class CT_Surface3DChart(BaseChartElement):
+    """``<c:surface3DChart>`` element."""
+
+    _tag_seq = (
+        "c:wireframe",
+        "c:ser",
+        "c:bandFmts",
+        "c:axId",
+        "c:extLst",
+    )
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
+    del _tag_seq
+
+
+class CT_SurfaceChart(BaseChartElement):
+    """``<c:surfaceChart>`` element."""
+
+    _tag_seq = (
+        "c:wireframe",
+        "c:ser",
+        "c:bandFmts",
+        "c:axId",
+        "c:extLst",
+    )
+    ser = ZeroOrMore("c:ser", successors=_tag_seq[2:])
     del _tag_seq

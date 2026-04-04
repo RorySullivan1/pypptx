@@ -402,20 +402,21 @@ formatting APIs. This section closes all gaps.
 
 _Prerequisites: None — chart OXML and API are self-contained subsystems._
 
-### 18.1 Missing OXML Chart Type Classes
+### 18.1 Missing OXML Chart Type Classes (DONE)
 
 Define CT_* element classes for chart types that have enumerations but no OXML
 implementation, then register them in `__init__.py`.
 
-- [ ] `CT_Bar3DChart` (`c:bar3DChart`) — `barDir`, `grouping`, `varyColors`, `ser`, `gapWidth`, `gapDepth`, `shape`, `axId` children
-- [ ] `CT_Line3DChart` (`c:line3DChart`) — `grouping`, `varyColors`, `ser`, `gapDepth`, `axId` children
-- [ ] `CT_Pie3DChart` (`c:pie3DChart`) — `varyColors`, `ser` children
-- [ ] `CT_StockChart` (`c:stockChart`) — `ser`, `axId`, `hiLowLines`, `upDownBars` children
-- [ ] `CT_SurfaceChart` (`c:surfaceChart`) — `wireframe`, `ser`, `bandFmts`, `axId` children
-- [ ] `CT_Surface3DChart` (`c:surface3DChart`) — same structure as surface
-- [ ] `CT_OfPieChart` (`c:ofPieChart`) — `ofPieType`, `varyColors`, `ser`, `gapWidth`, `splitType`, `splitPos`, `custSplit`, `secondPieSize`, `serLines` children
-- [ ] Register all new classes in `oxml/__init__.py`
-- [ ] Wire into `PlotFactory` / `PlotTypeInspector` so existing API recognizes them
+- [x] `CT_Bar3DChart` (`c:bar3DChart`) — `barDir`, `grouping`, `varyColors`, `ser`, `gapWidth`, `gapDepth`, `shape`, `axId` children
+- [x] `CT_Line3DChart` (`c:line3DChart`) — `grouping`, `varyColors`, `ser`, `gapDepth`, `axId` children
+- [x] `CT_Pie3DChart` (`c:pie3DChart`) — `varyColors`, `ser` children
+- [x] `CT_StockChart` (`c:stockChart`) — `ser`, `axId`, `hiLowLines`, `upDownBars` children
+- [x] `CT_SurfaceChart` (`c:surfaceChart`) — `wireframe`, `ser`, `bandFmts`, `axId` children
+- [x] `CT_Surface3DChart` (`c:surface3DChart`) — same structure as surface
+- [x] `CT_OfPieChart` (`c:ofPieChart`) — `ofPieType`, `varyColors`, `ser`, `gapWidth`, `splitType`, `splitPos`, `custSplit`, `secondPieSize`, `serLines` children
+- [x] Register all new classes in `oxml/__init__.py`
+- [x] Wire into `PlotFactory` / `PlotTypeInspector` so existing API recognizes them
+- [x] API plot classes: `Bar3DPlot`, `Line3DPlot`, `Pie3DPlot`, `StockPlot`, `SurfacePlot`, `Surface3DPlot`, `OfPiePlot`
 
 ### 18.2 Trendlines — OXML + API
 

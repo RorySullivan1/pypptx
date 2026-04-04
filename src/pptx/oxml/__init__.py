@@ -119,6 +119,7 @@ register_element_cls("c:symbol", CT_MarkerStyle)
 from pptx.oxml.chart.plot import (  # noqa: E402
     CT_Area3DChart,
     CT_AreaChart,
+    CT_Bar3DChart,
     CT_BarChart,
     CT_BarDir,
     CT_BubbleChart,
@@ -126,15 +127,22 @@ from pptx.oxml.chart.plot import (  # noqa: E402
     CT_DoughnutChart,
     CT_GapAmount,
     CT_Grouping,
+    CT_Line3DChart,
     CT_LineChart,
+    CT_OfPieChart,
     CT_Overlap,
+    CT_Pie3DChart,
     CT_PieChart,
     CT_RadarChart,
     CT_ScatterChart,
+    CT_StockChart,
+    CT_Surface3DChart,
+    CT_SurfaceChart,
 )
 
 register_element_cls("c:area3DChart", CT_Area3DChart)
 register_element_cls("c:areaChart", CT_AreaChart)
+register_element_cls("c:bar3DChart", CT_Bar3DChart)
 register_element_cls("c:barChart", CT_BarChart)
 register_element_cls("c:barDir", CT_BarDir)
 register_element_cls("c:bubbleChart", CT_BubbleChart)
@@ -142,11 +150,17 @@ register_element_cls("c:bubbleScale", CT_BubbleScale)
 register_element_cls("c:doughnutChart", CT_DoughnutChart)
 register_element_cls("c:gapWidth", CT_GapAmount)
 register_element_cls("c:grouping", CT_Grouping)
+register_element_cls("c:line3DChart", CT_Line3DChart)
 register_element_cls("c:lineChart", CT_LineChart)
+register_element_cls("c:ofPieChart", CT_OfPieChart)
 register_element_cls("c:overlap", CT_Overlap)
+register_element_cls("c:pie3DChart", CT_Pie3DChart)
 register_element_cls("c:pieChart", CT_PieChart)
 register_element_cls("c:radarChart", CT_RadarChart)
 register_element_cls("c:scatterChart", CT_ScatterChart)
+register_element_cls("c:stockChart", CT_StockChart)
+register_element_cls("c:surface3DChart", CT_Surface3DChart)
+register_element_cls("c:surfaceChart", CT_SurfaceChart)
 
 
 from pptx.oxml.chart.series import (  # noqa: E402
