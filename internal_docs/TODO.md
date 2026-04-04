@@ -555,16 +555,16 @@ Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless
 
 _Prerequisites: 18.11 (data label descriptors)_
 
-- [ ] Separator text — `c:separator` element on `c:dLbls`
-- [ ] Leader line formatting — `c:leaderLines` spPr on `c:dLbls`
-- [ ] Individual data label override — `c:dLbl` per-point customization (already partially implemented)
-- [ ] `DataLabels.separator` — read/write separator string property
-- [ ] `DataLabels.show_leader_lines` — read/write boolean
-- [ ] `DataLabels.leader_lines` — ChartFormat for leader line formatting
-- [ ] `DataLabels.show_bubble_size` — read/write boolean
-- [ ] Per-point data label API — `DataLabel` class with show* overrides, separator, format, position
-- [ ] Pie/doughnut API — `DoughnutPlot.hole_size`, `PiePlot.first_slice_angle`, `DoughnutPlot.first_slice_angle`
-- [ ] Of-pie API — `OfPiePlot.split_type`, `OfPiePlot.split_pos`, `OfPiePlot.second_pie_size`, `OfPiePlot.gap_width`
+- [x] Separator text — `c:separator` element on `c:dLbls`
+- [x] Leader line formatting — `c:leaderLines` spPr on `c:dLbls`
+- [x] Individual data label override — `c:dLbl` per-point customization (already partially implemented)
+- [x] `DataLabels.separator` — read/write separator string property
+- [x] `DataLabels.show_leader_lines` — read/write boolean
+- [x] `DataLabels.leader_lines` — ChartFormat for leader line formatting
+- [x] `DataLabels.show_bubble_size` — read/write boolean
+- [x] Per-point data label API — `DataLabel` class with show* overrides, separator, format, position
+- [x] Pie/doughnut API — `DoughnutPlot.hole_size`, `PiePlot.first_slice_angle`, `DoughnutPlot.first_slice_angle`
+- [x] Of-pie API — `OfPiePlot.split_type`, `OfPiePlot.split_pos`, `OfPiePlot.second_pie_size`, `OfPiePlot.gap_width`
 
 ### 18.14 API — Axis Enhancements
 
