@@ -328,21 +328,21 @@ _Prerequisites: Sections 3.3, 3.4, 3.5 (text attributes), Section 5 (enumeration
 - [x] Character spacing — `font.spacing` via `spc` attribute on `a:rPr`
 - [x] Kerning — `font.kerning` via `kern` attribute on `a:rPr`
 - [ ] Font shadow — effect list child on `a:rPr`
-- [ ] East Asian font name — `a:ea` element on `a:rPr`
-- [ ] Complex script font name — `a:cs` element on `a:rPr`
+- [x] East Asian font name — `font.east_asian_name` via `a:ea` element on `a:rPr`
+- [x] Complex script font name — `font.complex_script_name` via `a:cs` element on `a:rPr`
 
 ### 9.2 Paragraph Properties (DONE)
 - [x] Bullet formatting — `paragraph.bullet_char`, `paragraph.bullet_type`
 - [x] First-line indent — `paragraph.indent` via `indent` attribute on `a:pPr`
 - [x] Left margin — `paragraph.margin_left` via `marL` attribute on `a:pPr`
-- [ ] Tab stops — `a:tabLst` with `a:tab` children (position, alignment)
+- [x] Tab stops — `paragraph.tab_stops`, `add_tab_stop()`, `clear_tab_stops()`
 - [x] Text direction / RTL — `paragraph.rtl` via `rtl` attribute on `a:pPr`
-- [ ] Hanging punctuation — `hangingPunct` attribute on `a:pPr`
-- [ ] Baseline alignment — `fontAlgn` attribute on `a:pPr`
+- [x] Hanging punctuation — `paragraph.hanging_punctuation` via `hangingPunct` on `a:pPr`
+- [x] Baseline alignment — `paragraph.font_alignment` via `fontAlgn` on `a:pPr`
 
 ### 9.3 Text Frame Properties (DONE)
 - [x] Orientation — `text_frame.text_orientation` via `vert` attribute on `a:bodyPr`
-- [x] Text columns — `text_frame.columns` via `numCol` on `a:bodyPr`
+- [x] Text columns — `text_frame.columns` via `numCol`, `text_frame.column_spacing` via `spcCol`
 - [x] `has_text` property — boolean check for non-empty text content
 
 ---
@@ -364,7 +364,7 @@ _Prerequisites: Section 3.6 (`cmpd` attribute)_
 - [x] Arrowhead formatting — `begin/end_arrowhead_type/width/length` on `LineFormat`
 - [x] Compound line style — `LineFormat.compound_type` via `cmpd` attribute on `a:ln`
 - [ ] Line transparency — alpha modifier on line fill color
-- [ ] Line visibility — no-fill vs filled state
+- [x] Line visibility — `LineFormat.no_fill` read-only check
 - [ ] Line pattern — pattern fill on lines
 - [x] Query connected shapes — `Connector.begin_connection`/`end_connection`
 

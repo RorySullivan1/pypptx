@@ -561,6 +561,8 @@ class CT_TextParagraphProperties(BaseOxmlElement):
 
     get_or_add_buChar: Callable[[], BaseOxmlElement]
     get_or_add_defRPr: Callable[[], CT_TextCharacterProperties]
+    get_or_add_tabLst: Callable[[], CT_TabStopList]
+    _remove_tabLst: Callable[[], None]
     _add_lnSpc: Callable[[], CT_TextSpacing]
     _add_spcAft: Callable[[], CT_TextSpacing]
     _add_spcBef: Callable[[], CT_TextSpacing]
@@ -755,6 +757,7 @@ class CT_TabStop(BaseOxmlElement):
 class CT_TabStopList(BaseOxmlElement):
     """`a:tabLst` element, container for tab stop definitions."""
 
+    _add_tab: Callable[[], CT_TabStop]
     tab_lst: list[CT_TabStop]
 
     tab = ZeroOrMore("a:tab")

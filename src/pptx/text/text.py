@@ -777,6 +777,37 @@ class _Paragraph(Subshape):
         self._pPr.marL = value
 
     @property
+    def tab_stops(self) -> tuple[tuple[int, str | None], ...]:
+        """Sequence of tab stops defined for this paragraph.
+
+        Each tab stop is a ``(position, alignment)`` tuple where *position* is in EMU
+        and *alignment* is a string like ``"l"``, ``"r"``, ``"ctr"``, ``"dec"`` or |None|.
+        Read-only. Use :meth:`add_tab_stop` and :meth:`clear_tab_stops` to modify.
+        """
+        pPr = self._p.pPr
+        if pPr is None or pPr.tabLst is None:
+            return ()
+        return tuple((tab.pos or 0, tab.algn) for tab in pPr.tabLst.tab_lst)
+
+    def add_tab_stop(self, position: int, alignment: str = "l") -> None:
+        """Add a tab stop at `position` EMU with the given `alignment`.
+
+        `alignment` can be ``"l"`` (left), ``"r"`` (right), ``"ctr"`` (center),
+        or ``"dec"`` (decimal).
+        """
+        pPr = self._pPr
+        tabLst = pPr.get_or_add_tabLst()
+        tab = tabLst._add_tab()  # pyright: ignore[reportPrivateUsage]
+        tab.pos = position
+        tab.algn = alignment
+
+    def clear_tab_stops(self) -> None:
+        """Remove all tab stops from this paragraph."""
+        pPr = self._p.pPr
+        if pPr is not None and pPr.tabLst is not None:
+            pPr._remove_tabLst()  # pyright: ignore[reportPrivateUsage]
+
+    @property
     def rtl(self) -> bool | None:
         """Right-to-left text direction for this paragraph.
 

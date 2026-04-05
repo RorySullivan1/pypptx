@@ -1193,6 +1193,31 @@ class Describe_Paragraph:
         assert paragraph._element.xml == xml(expected_cxml)
 
     @pytest.mark.parametrize(
+        ("p_cxml", "expected_count"),
+        [
+            ("a:p", 0),
+            ("a:p/a:pPr", 0),
+            ("a:p/a:pPr/a:tabLst", 0),
+            ("a:p/a:pPr/a:tabLst/a:tab{pos=914400,algn=l}", 1),
+        ],
+    )
+    def it_knows_its_tab_stops(self, p_cxml: str, expected_count: int):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert len(paragraph.tab_stops) == expected_count
+
+    def it_can_add_a_tab_stop(self):
+        paragraph = _Paragraph(element("a:p"), None)
+        paragraph.add_tab_stop(914400, "ctr")
+        stops = paragraph.tab_stops
+        assert len(stops) == 1
+        assert stops[0] == (914400, "ctr")
+
+    def it_can_clear_tab_stops(self):
+        paragraph = _Paragraph(element("a:p/a:pPr/a:tabLst/a:tab{pos=914400}"), None)
+        paragraph.clear_tab_stops()
+        assert len(paragraph.tab_stops) == 0
+
+    @pytest.mark.parametrize(
         ("p_cxml", "expected_value"),
         [("a:p", None), ("a:p/a:pPr{hangingPunct=1}", True), ("a:p/a:pPr{hangingPunct=0}", False)],
     )
