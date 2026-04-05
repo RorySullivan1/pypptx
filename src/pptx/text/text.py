@@ -10,6 +10,7 @@ from pptx.enum.lang import MSO_LANGUAGE_ID
 from pptx.enum.text import (
     MSO_AUTO_SIZE,
     MSO_TEXT_CAPS,
+    MSO_TEXT_FONT_ALIGN,
     MSO_TEXT_STRIKE_TYPE,
     MSO_TEXT_VERTICAL_TYPE,
     MSO_UNDERLINE,
@@ -383,6 +384,44 @@ class Font:
         return FillFormat.from_fill_parent(self._rPr)
 
     @property
+    def east_asian_name(self) -> str | None:
+        """Typeface name for East Asian characters.
+
+        Read/write. Returns |None| when inherited from the theme.
+        """
+        ea = self._rPr.ea
+        if ea is None:
+            return None
+        return ea.typeface
+
+    @east_asian_name.setter
+    def east_asian_name(self, value: str | None):
+        if value is None:
+            self._rPr._remove_ea()  # pyright: ignore[reportPrivateUsage]
+        else:
+            ea = self._rPr.get_or_add_ea()
+            ea.typeface = value
+
+    @property
+    def complex_script_name(self) -> str | None:
+        """Typeface name for Complex Script (right-to-left) characters.
+
+        Read/write. Returns |None| when inherited from the theme.
+        """
+        cs = self._rPr.cs
+        if cs is None:
+            return None
+        return cs.typeface
+
+    @complex_script_name.setter
+    def complex_script_name(self, value: str | None):
+        if value is None:
+            self._rPr._remove_cs()  # pyright: ignore[reportPrivateUsage]
+        else:
+            cs = self._rPr.get_or_add_cs()
+            cs.typeface = value
+
+    @property
     def italic(self) -> bool | None:
         """Get or set boolean italic value of |Font| instance.
 
@@ -737,6 +776,30 @@ class _Paragraph(Subshape):
     @rtl.setter
     def rtl(self, value: bool | None):
         self._pPr.rtl = value
+
+    @property
+    def hanging_punctuation(self) -> bool | None:
+        """Whether hanging punctuation is enabled for this paragraph.
+
+        Read/write. |None| indicates the setting is inherited.
+        """
+        return self._pPr.hangingPunct
+
+    @hanging_punctuation.setter
+    def hanging_punctuation(self, value: bool | None):
+        self._pPr.hangingPunct = value
+
+    @property
+    def font_alignment(self) -> MSO_TEXT_FONT_ALIGN | None:
+        """Vertical alignment of text relative to the text body baseline.
+
+        Read/write. A member of :ref:`MsoTextFontAlign` or |None| if inherited.
+        """
+        return self._pPr.fontAlgn
+
+    @font_alignment.setter
+    def font_alignment(self, value: MSO_TEXT_FONT_ALIGN | None):
+        self._pPr.fontAlgn = value
 
     @property
     def runs(self) -> tuple[_Run, ...]:

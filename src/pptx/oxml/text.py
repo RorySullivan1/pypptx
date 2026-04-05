@@ -297,7 +297,11 @@ class CT_TextCharacterProperties(BaseOxmlElement):
 
     get_or_add_hlinkClick: Callable[[], CT_Hyperlink]
     get_or_add_latin: Callable[[], CT_TextFont]
+    get_or_add_ea: Callable[[], CT_TextFont]
+    get_or_add_cs: Callable[[], CT_TextFont]
     _remove_latin: Callable[[], None]
+    _remove_ea: Callable[[], None]
+    _remove_cs: Callable[[], None]
     _remove_hlinkClick: Callable[[], None]
 
     eg_fillProperties = ZeroOrOneChoice(

@@ -15,6 +15,7 @@ from pptx.enum.text import (
     MSO_ANCHOR,
     MSO_AUTO_SIZE,
     MSO_TEXT_CAPS,
+    MSO_TEXT_FONT_ALIGN,
     MSO_TEXT_STRIKE_TYPE,
     MSO_TEXT_VERTICAL_TYPE,
     MSO_UNDERLINE,
@@ -654,6 +655,50 @@ class DescribeFont:
 
     @pytest.mark.parametrize(
         ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr/a:ea{typeface=MS Gothic}", "MS Gothic")],
+    )
+    def it_knows_its_east_asian_name(self, rPr_cxml: str, expected_value: str | None):
+        font = Font(element(rPr_cxml))
+        assert font.east_asian_name == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", "MS Gothic", "a:rPr/a:ea{typeface=MS Gothic}"),
+            ("a:rPr/a:ea{typeface=MS Gothic}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_east_asian_name(
+        self, rPr_cxml: str, new_value: str | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.east_asian_name = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr/a:cs{typeface=Arial}", "Arial")],
+    )
+    def it_knows_its_complex_script_name(self, rPr_cxml: str, expected_value: str | None):
+        font = Font(element(rPr_cxml))
+        assert font.complex_script_name == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", "Arial", "a:rPr/a:cs{typeface=Arial}"),
+            ("a:rPr/a:cs{typeface=Arial}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_complex_script_name(
+        self, rPr_cxml: str, new_value: str | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.complex_script_name = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
         [("a:rPr", None), ("a:rPr{kern=1200}", Pt(12))],
     )
     def it_knows_its_kerning_setting(self, rPr_cxml: str, expected_value: int | None):
@@ -1123,6 +1168,52 @@ class Describe_Paragraph:
     ):
         paragraph = _Paragraph(element(p_cxml), None)
         paragraph.rtl = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [("a:p", None), ("a:p/a:pPr{hangingPunct=1}", True), ("a:p/a:pPr{hangingPunct=0}", False)],
+    )
+    def it_knows_its_hanging_punctuation(self, p_cxml: str, expected_value: bool | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.hanging_punctuation == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", True, "a:p/a:pPr{hangingPunct=1}"),
+            ("a:p/a:pPr{hangingPunct=1}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_hanging_punctuation(
+        self, p_cxml: str, new_value: bool | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.hanging_punctuation = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{fontAlgn=t}", MSO_TEXT_FONT_ALIGN.TOP),
+            ("a:p/a:pPr{fontAlgn=ctr}", MSO_TEXT_FONT_ALIGN.CENTER),
+        ],
+    )
+    def it_knows_its_font_alignment(self, p_cxml: str, expected_value):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.font_alignment == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", MSO_TEXT_FONT_ALIGN.BASELINE, "a:p/a:pPr{fontAlgn=base}"),
+            ("a:p/a:pPr{fontAlgn=t}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_font_alignment(self, p_cxml: str, new_value, expected_cxml: str):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.font_alignment = new_value
         assert paragraph._element.xml == xml(expected_cxml)
 
     def it_can_clear_itself_of_content(self, clear_fixture):
