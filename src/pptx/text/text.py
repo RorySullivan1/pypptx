@@ -7,7 +7,14 @@ from typing import TYPE_CHECKING, Iterator, cast
 from pptx.dml.fill import FillFormat
 from pptx.enum.dml import MSO_FILL
 from pptx.enum.lang import MSO_LANGUAGE_ID
-from pptx.enum.text import MSO_AUTO_SIZE, MSO_TEXT_CAPS, MSO_TEXT_STRIKE_TYPE, MSO_UNDERLINE, MSO_VERTICAL_ANCHOR
+from pptx.enum.text import (
+    MSO_AUTO_SIZE,
+    MSO_TEXT_CAPS,
+    MSO_TEXT_STRIKE_TYPE,
+    MSO_TEXT_VERTICAL_TYPE,
+    MSO_UNDERLINE,
+    MSO_VERTICAL_ANCHOR,
+)
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.simpletypes import ST_TextWrappingType
 from pptx.shapes import Subshape
@@ -142,6 +149,23 @@ class TextFrame(Subshape):
         self._bodyPr.tIns = emu
 
     @property
+    def columns(self) -> int | None:
+        """Number of text columns in this text frame.
+
+        Read/write. |None| indicates the default (1 column). Valid values are 1-16.
+        """
+        return self._bodyPr.numCol
+
+    @columns.setter
+    def columns(self, value: int | None):
+        self._bodyPr.numCol = value
+
+    @property
+    def has_text(self) -> bool:
+        """True when this text frame contains at least one non-empty paragraph."""
+        return any(p.text for p in self.paragraphs)
+
+    @property
     def paragraphs(self) -> tuple[_Paragraph, ...]:
         """Sequence of paragraphs in this text frame.
 
@@ -176,6 +200,20 @@ class TextFrame(Subshape):
         for p_text in text.split("\n"):
             p = txBody.add_p()
             p.append_text(p_text)
+
+    @property
+    def text_orientation(self) -> MSO_TEXT_VERTICAL_TYPE | None:
+        """Text direction/orientation within this text frame.
+
+        Read/write. A member of :ref:`MsoTextVerticalType` or |None|. |None| indicates the
+        default (horizontal text). Common values include ``MSO_TEXT_VERTICAL_TYPE.HORIZONTAL``,
+        ``MSO_TEXT_VERTICAL_TYPE.VERTICAL``, and ``MSO_TEXT_VERTICAL_TYPE.VERTICAL_270``.
+        """
+        return self._bodyPr.vert
+
+    @text_orientation.setter
+    def text_orientation(self, value: MSO_TEXT_VERTICAL_TYPE | None):
+        self._bodyPr.vert = value
 
     @property
     def vertical_anchor(self) -> MSO_VERTICAL_ANCHOR | None:

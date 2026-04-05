@@ -16,6 +16,7 @@ from pptx.enum.text import (
     MSO_AUTO_SIZE,
     MSO_TEXT_CAPS,
     MSO_TEXT_STRIKE_TYPE,
+    MSO_TEXT_VERTICAL_TYPE,
     MSO_UNDERLINE,
     PP_ALIGN,
 )
@@ -73,6 +74,74 @@ class DescribeTextFrame:
     ):
         text_frame = TextFrame(element(txBody_cxml), None)
         text_frame.auto_size = value
+        assert text_frame._txBody.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:bodyPr", None),
+            ("p:txBody/a:bodyPr{numCol=2}", 2),
+        ],
+    )
+    def it_knows_its_column_count(self, txBody_cxml: str, expected_value: int | None):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.columns == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:txBody/a:bodyPr", 3, "p:txBody/a:bodyPr{numCol=3}"),
+            ("p:txBody/a:bodyPr{numCol=3}", None, "p:txBody/a:bodyPr"),
+        ],
+    )
+    def it_can_change_its_column_count(
+        self, txBody_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        text_frame.columns = new_value
+        assert text_frame._txBody.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:p", False),
+            ('p:txBody/a:p/a:r/a:t"Hello"', True),
+        ],
+    )
+    def it_knows_whether_it_has_text(self, txBody_cxml: str, expected_value: bool):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.has_text is expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:bodyPr", None),
+            ("p:txBody/a:bodyPr{vert=vert}", MSO_TEXT_VERTICAL_TYPE.VERTICAL),
+            ("p:txBody/a:bodyPr{vert=vert270}", MSO_TEXT_VERTICAL_TYPE.VERTICAL_270),
+        ],
+    )
+    def it_knows_its_text_orientation(
+        self, txBody_cxml: str, expected_value: MSO_TEXT_VERTICAL_TYPE | None
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.text_orientation == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:txBody/a:bodyPr",
+                MSO_TEXT_VERTICAL_TYPE.VERTICAL,
+                "p:txBody/a:bodyPr{vert=vert}",
+            ),
+            ("p:txBody/a:bodyPr{vert=vert}", None, "p:txBody/a:bodyPr"),
+        ],
+    )
+    def it_can_change_its_text_orientation(
+        self, txBody_cxml: str, new_value: MSO_TEXT_VERTICAL_TYPE | None, expected_cxml: str
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        text_frame.text_orientation = new_value
         assert text_frame._txBody.xml == xml(expected_cxml)
 
     @pytest.mark.parametrize(
