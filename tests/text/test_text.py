@@ -943,6 +943,119 @@ class Describe_Paragraph:
         paragraph.alignment = new_value
         assert paragraph._element.xml == expected_xml
 
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr/a:buChar{char=-}", "-"),
+        ],
+    )
+    def it_knows_its_bullet_char(self, p_cxml: str, expected_value: str | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.bullet_char == expected_value
+
+    def it_can_change_its_bullet_char(self):
+        paragraph = _Paragraph(element("a:p"), None)
+        paragraph.bullet_char = "-"
+        buChar = paragraph._pPr.buChar
+        assert buChar is not None
+        assert buChar.get("char") == "-"
+
+    def it_can_remove_its_bullet_char(self):
+        paragraph = _Paragraph(element("a:p/a:pPr/a:buChar{char=-}"), None)
+        paragraph.bullet_char = None
+        assert paragraph._pPr.buChar is None
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr/a:buChar{char=-}", "char"),
+            ("a:p/a:pPr/a:buAutoNum{type=arabicPeriod}", "autoNum"),
+            ("a:p/a:pPr/a:buNone", "none"),
+        ],
+    )
+    def it_knows_its_bullet_type(self, p_cxml: str, expected_value: str | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.bullet_type == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{indent=457200}", Inches(0.5)),
+        ],
+    )
+    def it_knows_its_indent(self, p_cxml: str, expected_value: int | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.indent == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", Inches(0.5), "a:p/a:pPr{indent=457200}"),
+            ("a:p/a:pPr{indent=457200}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_indent(
+        self, p_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.indent = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{marL=457200}", Inches(0.5)),
+        ],
+    )
+    def it_knows_its_margin_left(self, p_cxml: str, expected_value: int | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.margin_left == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", Inches(0.5), "a:p/a:pPr{marL=457200}"),
+            ("a:p/a:pPr{marL=457200}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_margin_left(
+        self, p_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.margin_left = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{rtl=1}", True),
+            ("a:p/a:pPr{rtl=0}", False),
+        ],
+    )
+    def it_knows_its_rtl_setting(self, p_cxml: str, expected_value: bool | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.rtl == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", True, "a:p/a:pPr{rtl=1}"),
+            ("a:p/a:pPr{rtl=1}", False, "a:p/a:pPr{rtl=0}"),
+            ("a:p/a:pPr{rtl=0}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_rtl_setting(
+        self, p_cxml: str, new_value: bool | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.rtl = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
     def it_can_clear_itself_of_content(self, clear_fixture):
         paragraph, expected_xml = clear_fixture
         paragraph.clear()

@@ -560,6 +560,55 @@ class _Paragraph(Subshape):
     def alignment(self, value: PP_PARAGRAPH_ALIGNMENT | None):
         self._pPr.algn = value
 
+    @property
+    def bullet_char(self) -> str | None:
+        """Character used as the bullet for this paragraph.
+
+        Read/write. |None| when no character bullet is defined. Setting a character also
+        implicitly sets the bullet type to character. Setting to |None| removes the character
+        bullet (but does not disable bullets entirely; use ``bullet_type`` for that).
+        """
+        pPr = self._pPr
+        buChar = pPr.buChar
+        if buChar is None:
+            return None
+        return buChar.get("char")
+
+    @bullet_char.setter
+    def bullet_char(self, value: str | None):
+        pPr = self._pPr
+        if value is None:
+            buChar = pPr.buChar
+            if buChar is not None:
+                pPr.remove(buChar)
+            return
+        # Remove any existing bullet type elements
+        for tag in ("buNone", "buAutoNum", "buChar", "buBlip"):
+            existing = getattr(pPr, tag)
+            if existing is not None:
+                pPr.remove(existing)
+        buChar = pPr.get_or_add_buChar()
+        buChar.set("char", value)
+
+    @property
+    def bullet_type(self) -> str | None:
+        """The type of bullet for this paragraph.
+
+        Read-only. Returns ``"char"`` for character bullets, ``"autoNum"`` for numbered bullets,
+        ``"blip"`` for picture bullets, ``"none"`` when bullets are explicitly disabled,
+        or |None| when bullet type is inherited.
+        """
+        pPr = self._pPr
+        if pPr.buChar is not None:
+            return "char"
+        if pPr.buAutoNum is not None:
+            return "autoNum"
+        if pPr.buBlip is not None:
+            return "blip"
+        if pPr.buNone is not None:
+            return "none"
+        return None
+
     def clear(self):
         """Remove all content from this paragraph.
 
@@ -578,6 +627,19 @@ class _Paragraph(Subshape):
         properties set at the run level.
         """
         return Font(self._defRPr)
+
+    @property
+    def indent(self) -> Length | None:
+        """First-line indent of this paragraph in EMU.
+
+        Read/write. A positive value indents the first line; a negative value creates a hanging
+        indent. |None| indicates the setting is inherited.
+        """
+        return self._pPr.indent
+
+    @indent.setter
+    def indent(self, value: Length | None):
+        self._pPr.indent = value
 
     @property
     def level(self) -> int:
@@ -612,6 +674,31 @@ class _Paragraph(Subshape):
     def line_spacing(self, value: int | float | Length | None):
         pPr = self._p.get_or_add_pPr()
         pPr.line_spacing = value
+
+    @property
+    def margin_left(self) -> Length | None:
+        """Left margin of this paragraph in EMU.
+
+        Read/write. |None| indicates the setting is inherited.
+        """
+        return self._pPr.marL
+
+    @margin_left.setter
+    def margin_left(self, value: Length | None):
+        self._pPr.marL = value
+
+    @property
+    def rtl(self) -> bool | None:
+        """Right-to-left text direction for this paragraph.
+
+        Read/write. |True| indicates right-to-left, |False| left-to-right. |None| indicates
+        the setting is inherited.
+        """
+        return self._pPr.rtl
+
+    @rtl.setter
+    def rtl(self, value: bool | None):
+        self._pPr.rtl = value
 
     @property
     def runs(self) -> tuple[_Run, ...]:

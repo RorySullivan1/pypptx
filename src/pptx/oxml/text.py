@@ -555,6 +555,7 @@ class CT_TextParagraph(BaseOxmlElement):
 class CT_TextParagraphProperties(BaseOxmlElement):
     """`a:pPr` custom element class."""
 
+    get_or_add_buChar: Callable[[], BaseOxmlElement]
     get_or_add_defRPr: Callable[[], CT_TextCharacterProperties]
     _add_lnSpc: Callable[[], CT_TextSpacing]
     _add_spcAft: Callable[[], CT_TextSpacing]
