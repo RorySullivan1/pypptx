@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Iterator, cast
 from pptx.dml.fill import FillFormat
 from pptx.enum.dml import MSO_FILL
 from pptx.enum.lang import MSO_LANGUAGE_ID
-from pptx.enum.text import MSO_AUTO_SIZE, MSO_UNDERLINE, MSO_VERTICAL_ANCHOR
+from pptx.enum.text import MSO_AUTO_SIZE, MSO_TEXT_CAPS, MSO_TEXT_STRIKE_TYPE, MSO_UNDERLINE, MSO_VERTICAL_ANCHOR
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.simpletypes import ST_TextWrappingType
 from pptx.shapes import Subshape
@@ -289,6 +289,20 @@ class Font:
         self._element = self._rPr = rPr
 
     @property
+    def baseline(self) -> float | None:
+        """Vertical baseline offset as a percentage.
+
+        Read/write. Positive values move text up (superscript), negative values move text down
+        (subscript). A value of 30.0 represents a 30% superscript. |None| indicates the setting
+        is inherited.
+        """
+        return self._rPr.baseline
+
+    @baseline.setter
+    def baseline(self, value: float | None):
+        self._rPr.baseline = value
+
+    @property
     def bold(self) -> bool | None:
         """Get or set boolean bold value of |Font|, e.g. `paragraph.font.bold = True`.
 
@@ -301,6 +315,19 @@ class Font:
     @bold.setter
     def bold(self, value: bool | None):
         self._rPr.b = value
+
+    @property
+    def caps(self) -> MSO_TEXT_CAPS | None:
+        """Capitalization setting for this font.
+
+        Read/write. A member of :ref:`MsoTextCaps` or |None|. |None| indicates the setting is
+        inherited. Assigning |None| removes any directly-applied capitalization setting.
+        """
+        return self._rPr.cap
+
+    @caps.setter
+    def caps(self, value: MSO_TEXT_CAPS | None):
+        self._rPr.cap = value
 
     @lazyproperty
     def color(self) -> ColorFormat:
@@ -346,6 +373,19 @@ class Font:
         if value == MSO_LANGUAGE_ID.NONE:
             value = None
         self._rPr.lang = value
+
+    @property
+    def kerning(self) -> Length | None:
+        """Minimum font size at which kerning is applied, in EMU.
+
+        Read/write. |None| indicates the kerning setting is inherited. When set, text at or above
+        this font size will have kerning applied. Use ``Pt(12)`` to set a 12-point threshold.
+        """
+        return self._rPr.kern
+
+    @kerning.setter
+    def kerning(self, value: Length | None):
+        self._rPr.kern = value
 
     @property
     def name(self) -> str | None:
@@ -395,6 +435,32 @@ class Font:
         else:
             sz = Emu(emu).centipoints
             self._rPr.sz = sz
+
+    @property
+    def spacing(self) -> Length | None:
+        """Character spacing (tracking) in EMU.
+
+        Read/write. Positive values increase spacing, negative values decrease it. |None|
+        indicates the setting is inherited. Use ``Pt(1.5)`` to add 1.5 points of spacing.
+        """
+        return self._rPr.spc
+
+    @spacing.setter
+    def spacing(self, value: Length | None):
+        self._rPr.spc = value
+
+    @property
+    def strikethrough(self) -> MSO_TEXT_STRIKE_TYPE | None:
+        """Strikethrough setting for this font.
+
+        Read/write. A member of :ref:`MsoTextStrikeType` or |None|. |None| indicates the setting
+        is inherited. Assigning |None| removes any directly-applied strikethrough setting.
+        """
+        return self._rPr.strike
+
+    @strikethrough.setter
+    def strikethrough(self, value: MSO_TEXT_STRIKE_TYPE | None):
+        self._rPr.strike = value
 
     @property
     def underline(self) -> bool | MSO_TEXT_UNDERLINE_TYPE | None:

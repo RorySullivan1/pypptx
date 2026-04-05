@@ -11,7 +11,14 @@ import pytest
 from pptx.dml.color import ColorFormat
 from pptx.dml.fill import FillFormat
 from pptx.enum.lang import MSO_LANGUAGE_ID
-from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, MSO_UNDERLINE, PP_ALIGN
+from pptx.enum.text import (
+    MSO_ANCHOR,
+    MSO_AUTO_SIZE,
+    MSO_TEXT_CAPS,
+    MSO_TEXT_STRIKE_TYPE,
+    MSO_UNDERLINE,
+    PP_ALIGN,
+)
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
 from pptx.shapes.autoshape import Shape
@@ -524,6 +531,135 @@ class DescribeFont:
         font, new_value, expected_xml = name_set_fixture
         font.name = new_value
         assert font._element.xml == expected_xml
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr{baseline=30000}", 0.3)],
+    )
+    def it_knows_its_baseline_setting(self, rPr_cxml: str, expected_value: float | None):
+        font = Font(element(rPr_cxml))
+        assert font.baseline == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", 0.3, "a:rPr{baseline=30000}"),
+            ("a:rPr{baseline=30000}", -0.25, "a:rPr{baseline=-25000}"),
+            ("a:rPr{baseline=30000}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_baseline_setting(
+        self, rPr_cxml: str, new_value: float | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.baseline = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [
+            ("a:rPr", None),
+            ("a:rPr{cap=none}", MSO_TEXT_CAPS.NONE),
+            ("a:rPr{cap=all}", MSO_TEXT_CAPS.ALL),
+            ("a:rPr{cap=small}", MSO_TEXT_CAPS.SMALL),
+        ],
+    )
+    def it_knows_its_caps_setting(self, rPr_cxml: str, expected_value: MSO_TEXT_CAPS | None):
+        font = Font(element(rPr_cxml))
+        assert font.caps == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", MSO_TEXT_CAPS.ALL, "a:rPr{cap=all}"),
+            ("a:rPr{cap=all}", MSO_TEXT_CAPS.SMALL, "a:rPr{cap=small}"),
+            ("a:rPr{cap=small}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_caps_setting(
+        self, rPr_cxml: str, new_value: MSO_TEXT_CAPS | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.caps = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr{kern=1200}", Pt(12))],
+    )
+    def it_knows_its_kerning_setting(self, rPr_cxml: str, expected_value: int | None):
+        font = Font(element(rPr_cxml))
+        assert font.kerning == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", Pt(12), "a:rPr{kern=1200}"),
+            ("a:rPr{kern=1200}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_kerning_setting(
+        self, rPr_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.kerning = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr{spc=150}", Pt(1.5))],
+    )
+    def it_knows_its_spacing_setting(self, rPr_cxml: str, expected_value: int | None):
+        font = Font(element(rPr_cxml))
+        assert font.spacing == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", Pt(1.5), "a:rPr{spc=150}"),
+            ("a:rPr{spc=150}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_spacing_setting(
+        self, rPr_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.spacing = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [
+            ("a:rPr", None),
+            ("a:rPr{strike=noStrike}", MSO_TEXT_STRIKE_TYPE.NO_STRIKE),
+            ("a:rPr{strike=sngStrike}", MSO_TEXT_STRIKE_TYPE.SINGLE_STRIKE),
+            ("a:rPr{strike=dblStrike}", MSO_TEXT_STRIKE_TYPE.DOUBLE_STRIKE),
+        ],
+    )
+    def it_knows_its_strikethrough_setting(
+        self, rPr_cxml: str, expected_value: MSO_TEXT_STRIKE_TYPE | None
+    ):
+        font = Font(element(rPr_cxml))
+        assert font.strikethrough == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", MSO_TEXT_STRIKE_TYPE.SINGLE_STRIKE, "a:rPr{strike=sngStrike}"),
+            (
+                "a:rPr{strike=sngStrike}",
+                MSO_TEXT_STRIKE_TYPE.DOUBLE_STRIKE,
+                "a:rPr{strike=dblStrike}",
+            ),
+            ("a:rPr{strike=dblStrike}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_strikethrough_setting(
+        self, rPr_cxml: str, new_value: MSO_TEXT_STRIKE_TYPE | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.strikethrough = new_value
+        assert font._element.xml == xml(expected_cxml)
 
     def it_provides_access_to_its_color(self, font):
         assert isinstance(font.color, ColorFormat)
