@@ -23,11 +23,35 @@ from pptx.oxml.xmlchemy import (
 
 
 class CT_Blip(BaseOxmlElement):
-    """
-    <a:blip> element
-    """
+    """`a:blip` element, specifying an image resource and optional effects."""
+
+    _tag_seq = (
+        "a:alphaBiLevel",
+        "a:alphaCeiling",
+        "a:alphaFloor",
+        "a:alphaInv",
+        "a:alphaMod",
+        "a:alphaModFix",
+        "a:alphaRepl",
+        "a:biLevel",
+        "a:blur",
+        "a:clrChange",
+        "a:clrRepl",
+        "a:duotone",
+        "a:fillOverlay",
+        "a:grayscl",
+        "a:hsl",
+        "a:lum",
+        "a:tint",
+        "a:extLst",
+    )
+    duotone = ZeroOrOne("a:duotone", successors=_tag_seq[12:])
+    grayscl = ZeroOrOne("a:grayscl", successors=_tag_seq[14:])
+    lum = ZeroOrOne("a:lum", successors=_tag_seq[16:])
+    del _tag_seq
 
     rEmbed = OptionalAttribute("r:embed", ST_RelationshipId)
+    rLink = OptionalAttribute("r:link", ST_RelationshipId)
 
 
 class CT_BlipFillProperties(BaseOxmlElement):

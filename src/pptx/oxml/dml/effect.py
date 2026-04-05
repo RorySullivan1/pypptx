@@ -9,7 +9,13 @@ from pptx.oxml.simpletypes import (
     ST_PositiveFixedPercentage,
     XsdBoolean,
 )
-from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrOne
+from pptx.oxml.xmlchemy import (
+    BaseOxmlElement,
+    Choice,
+    OptionalAttribute,
+    ZeroOrOne,
+    ZeroOrOneChoice,
+)
 
 
 class CT_OuterShadowEffect(BaseOxmlElement):
@@ -22,6 +28,17 @@ class CT_OuterShadowEffect(BaseOxmlElement):
         "a:sysClr",
         "a:schemeClr",
         "a:prstClr",
+    )
+    eg_colorChoice = ZeroOrOneChoice(
+        (
+            Choice("a:scrgbClr"),
+            Choice("a:srgbClr"),
+            Choice("a:hslClr"),
+            Choice("a:sysClr"),
+            Choice("a:schemeClr"),
+            Choice("a:prstClr"),
+        ),
+        successors=(),
     )
     del _tag_seq
 
@@ -52,6 +69,17 @@ class CT_InnerShadowEffect(BaseOxmlElement):
         "a:sysClr",
         "a:schemeClr",
         "a:prstClr",
+    )
+    eg_colorChoice = ZeroOrOneChoice(
+        (
+            Choice("a:scrgbClr"),
+            Choice("a:srgbClr"),
+            Choice("a:hslClr"),
+            Choice("a:sysClr"),
+            Choice("a:schemeClr"),
+            Choice("a:prstClr"),
+        ),
+        successors=(),
     )
     del _tag_seq
 
@@ -102,6 +130,17 @@ class CT_GlowEffect(BaseOxmlElement):
         "a:sysClr",
         "a:schemeClr",
         "a:prstClr",
+    )
+    eg_colorChoice = ZeroOrOneChoice(
+        (
+            Choice("a:scrgbClr"),
+            Choice("a:srgbClr"),
+            Choice("a:hslClr"),
+            Choice("a:sysClr"),
+            Choice("a:schemeClr"),
+            Choice("a:prstClr"),
+        ),
+        successors=(),
     )
     del _tag_seq
 

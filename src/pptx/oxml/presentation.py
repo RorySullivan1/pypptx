@@ -24,24 +24,30 @@ class CT_Presentation(BaseOxmlElement):
     get_or_add_sldIdLst: Callable[[], CT_SlideIdList]
     get_or_add_sldMasterIdLst: Callable[[], CT_SlideMasterIdList]
 
-    sldMasterIdLst: CT_SlideMasterIdList | None = (
-        ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-            "p:sldMasterIdLst",
-            successors=(
-                "p:notesMasterIdLst",
-                "p:handoutMasterIdLst",
-                "p:sldIdLst",
-                "p:sldSz",
-                "p:notesSz",
-            ),
-        )
+    _tag_seq = (
+        "p:sldMasterIdLst",
+        "p:notesMasterIdLst",
+        "p:handoutMasterIdLst",
+        "p:sldIdLst",
+        "p:sldSz",
+        "p:notesSz",
+        "p:kinsoku",
+        "p:defaultTextStyle",
+        "p:extLst",
     )
+    sldMasterIdLst: CT_SlideMasterIdList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:sldMasterIdLst", successors=_tag_seq[1:]
+    )
+    notesMasterIdLst = ZeroOrOne("p:notesMasterIdLst", successors=_tag_seq[2:])
+    handoutMasterIdLst = ZeroOrOne("p:handoutMasterIdLst", successors=_tag_seq[3:])
     sldIdLst: CT_SlideIdList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "p:sldIdLst", successors=("p:sldSz", "p:notesSz")
+        "p:sldIdLst", successors=_tag_seq[4:]
     )
     sldSz: CT_SlideSize | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "p:sldSz", successors=("p:notesSz",)
+        "p:sldSz", successors=_tag_seq[5:]
     )
+    del _tag_seq
+
     firstSlideNum: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "firstSlideNum", XsdInt
     )

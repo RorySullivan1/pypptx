@@ -233,6 +233,42 @@ programmatically.
 
 ---
 
+## 5.2 OXML Gap Remediation (DONE)
+
+Close remaining OXML descriptor gaps discovered during audit before
+building Python API layers (Sections 6-17).
+
+### Line end elements (DONE)
+- [x] `CT_LineEndProperties` class with `type`, `w`, `len` attributes
+- [x] `headEnd` and `tailEnd` ZeroOrOne descriptors on `CT_LineProperties`
+- [x] Registered `a:headEnd` and `a:tailEnd`
+
+### Effect color children (DONE)
+- [x] `ZeroOrOneChoice` for `eg_colorChoice` on `CT_OuterShadowEffect`, `CT_InnerShadowEffect`, `CT_GlowEffect`
+
+### Blip effect chain (DONE)
+- [x] `duotone`, `grayscl`, `lum` ZeroOrOne descriptors on `CT_Blip`
+- [x] `rLink` attribute on `CT_Blip`
+
+### CT_DuotoneEffect (DONE)
+- [x] `color_elms` property for accessing the two color children
+
+### Tags OXML (DONE)
+- [x] `CT_TagList` and `CT_StringTag` in new `oxml/tags.py`
+- [x] Registered `p:tag` and `p:tagLst`
+
+### CT_Presentation cleanup (DONE)
+- [x] Full `_tag_seq` with proper child ordering
+- [x] `notesMasterIdLst` and `handoutMasterIdLst` ZeroOrOne descriptors
+
+### Color element attributes (DONE)
+- [x] `CT_HslColor` — `hue`, `sat`, `lum` required attributes
+- [x] `CT_PresetColor` — `val` required attribute
+- [x] `CT_ScRgbColor` — `r`, `g`, `b` required attributes
+- [x] `CT_SystemColor` — `val` required, `lastClr` optional attributes
+
+---
+
 ## 6. Python API — Slide Lifecycle (NEXT)
 
 _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_
