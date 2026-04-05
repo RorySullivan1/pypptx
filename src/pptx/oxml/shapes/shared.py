@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from pptx.dml.fill import CT_GradientFillProperties
-from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE, MSO_RECT_ALIGNMENT
+from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE, MSO_RECT_ALIGNMENT
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import (
@@ -252,14 +252,14 @@ class CT_Locking(BaseOxmlElement):
 class CT_LineEndProperties(BaseOxmlElement):
     """``a:headEnd`` or ``a:tailEnd`` element, specifying line end (arrowhead) properties."""
 
-    type: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "type", XsdString
+    type: MSO_LINE_END_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "type", MSO_LINE_END_TYPE
     )
-    w: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "w", XsdString
+    w: MSO_LINE_END_SIZE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "w", MSO_LINE_END_SIZE
     )
-    len: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "len", XsdString
+    len: MSO_LINE_END_SIZE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "len", MSO_LINE_END_SIZE
     )
 
 

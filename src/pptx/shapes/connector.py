@@ -218,6 +218,32 @@ class Connector(BaseShape):
                 cxnSp.y = new_y
                 cxnSp.cy = dy - cy
 
+    @property
+    def begin_connection(self) -> tuple[int, int] | None:
+        """Shape ID and connection point index at the begin point, or None.
+
+        Returns a ``(shape_id, connection_point_idx)`` tuple when a begin
+        connection exists, or |None| when the begin point is not connected.
+        """
+        cNvCxnSpPr = self._element.nvCxnSpPr.cNvCxnSpPr
+        stCxn = cNvCxnSpPr.stCxn
+        if stCxn is None:
+            return None
+        return (stCxn.id, stCxn.idx)
+
+    @property
+    def end_connection(self) -> tuple[int, int] | None:
+        """Shape ID and connection point index at the end point, or None.
+
+        Returns a ``(shape_id, connection_point_idx)`` tuple when an end
+        connection exists, or |None| when the end point is not connected.
+        """
+        cNvCxnSpPr = self._element.nvCxnSpPr.cNvCxnSpPr
+        endCxn = cNvCxnSpPr.endCxn
+        if endCxn is None:
+            return None
+        return (endCxn.id, endCxn.idx)
+
     def get_or_add_ln(self):
         """Helper method required by |LineFormat|."""
         return self._element.spPr.get_or_add_ln()

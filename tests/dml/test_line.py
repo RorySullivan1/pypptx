@@ -7,7 +7,7 @@ import pytest
 from pptx.dml.color import ColorFormat
 from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
-from pptx.enum.dml import MSO_FILL, MSO_LINE
+from pptx.enum.dml import MSO_FILL, MSO_LINE, MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE
 from pptx.oxml.shapes.shared import CT_LineProperties
 from pptx.shapes.autoshape import Shape
 
@@ -17,6 +17,97 @@ from ..unitutil.mock import call, class_mock, instance_mock, property_mock
 
 
 class DescribeLineFormat:
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", None),
+            ("p:spPr/a:ln", None),
+            ("p:spPr/a:ln/a:headEnd{type=triangle}", MSO_LINE_END_TYPE.TRIANGLE),
+        ],
+    )
+    def it_knows_its_begin_arrowhead_type(self, spPr_cxml: str, expected_value):
+        line = LineFormat(element(spPr_cxml))
+        assert line.begin_arrowhead_type == expected_value
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:spPr{a:b=c}",
+                MSO_LINE_END_TYPE.TRIANGLE,
+                "p:spPr{a:b=c}/a:ln/a:headEnd{type=triangle}",
+            ),
+            (
+                "p:spPr/a:ln/a:headEnd{type=triangle}",
+                None,
+                "p:spPr/a:ln/a:headEnd",
+            ),
+        ],
+    )
+    def it_can_change_its_begin_arrowhead_type(
+        self, spPr_cxml: str, new_value, expected_cxml: str
+    ):
+        spPr = element(spPr_cxml)
+        line = LineFormat(spPr)
+        line.begin_arrowhead_type = new_value
+        assert spPr.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", None),
+            ("p:spPr/a:ln/a:tailEnd{type=stealth}", MSO_LINE_END_TYPE.STEALTH),
+        ],
+    )
+    def it_knows_its_end_arrowhead_type(self, spPr_cxml: str, expected_value):
+        line = LineFormat(element(spPr_cxml))
+        assert line.end_arrowhead_type == expected_value
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:spPr{a:b=c}",
+                MSO_LINE_END_TYPE.STEALTH,
+                "p:spPr{a:b=c}/a:ln/a:tailEnd{type=stealth}",
+            ),
+        ],
+    )
+    def it_can_change_its_end_arrowhead_type(
+        self, spPr_cxml: str, new_value, expected_cxml: str
+    ):
+        spPr = element(spPr_cxml)
+        line = LineFormat(spPr)
+        line.end_arrowhead_type = new_value
+        assert spPr.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", None),
+            ("p:spPr/a:ln", None),
+            ("p:spPr/a:ln{cmpd=dbl}", MSO_LINE_COMPOUND_TYPE.DOUBLE),
+        ],
+    )
+    def it_knows_its_compound_type(self, spPr_cxml: str, expected_value):
+        line = LineFormat(element(spPr_cxml))
+        assert line.compound_type == expected_value
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:spPr{a:b=c}", MSO_LINE_COMPOUND_TYPE.DOUBLE, "p:spPr{a:b=c}/a:ln{cmpd=dbl}"),
+            ("p:spPr/a:ln{cmpd=dbl}", None, "p:spPr/a:ln"),
+        ],
+    )
+    def it_can_change_its_compound_type(
+        self, spPr_cxml: str, new_value, expected_cxml: str
+    ):
+        spPr = element(spPr_cxml)
+        line = LineFormat(spPr)
+        line.compound_type = new_value
+        assert spPr.xml == xml(expected_cxml)
+
     def it_knows_its_dash_style(self, dash_style_get_fixture):
         line, expected_value = dash_style_get_fixture
         assert line.dash_style == expected_value

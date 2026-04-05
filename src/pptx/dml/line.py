@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pptx.dml.fill import FillFormat
 from pptx.enum.dml import MSO_FILL
 from pptx.util import Emu, lazyproperty
+
+if TYPE_CHECKING:
+    from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE
 
 
 class LineFormat:
@@ -17,6 +22,69 @@ class LineFormat:
     def __init__(self, parent):
         super(LineFormat, self).__init__()
         self._parent = parent
+
+    @property
+    def begin_arrowhead_length(self) -> MSO_LINE_END_SIZE | None:
+        """Size of the arrowhead at the beginning of the line.
+
+        Read/write. A member of :ref:`MsoLineEndSize` or |None|.
+        """
+        ln = self._ln
+        if ln is None or ln.headEnd is None:
+            return None
+        return ln.headEnd.len
+
+    @begin_arrowhead_length.setter
+    def begin_arrowhead_length(self, value: MSO_LINE_END_SIZE | None):
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.headEnd is not None:
+                ln.headEnd.len = None
+            return
+        headEnd = self._get_or_add_ln().get_or_add_headEnd()
+        headEnd.len = value
+
+    @property
+    def begin_arrowhead_type(self) -> MSO_LINE_END_TYPE | None:
+        """Type of arrowhead at the beginning of the line.
+
+        Read/write. A member of :ref:`MsoLineEndType` or |None|.
+        """
+        ln = self._ln
+        if ln is None or ln.headEnd is None:
+            return None
+        return ln.headEnd.type
+
+    @begin_arrowhead_type.setter
+    def begin_arrowhead_type(self, value: MSO_LINE_END_TYPE | None):
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.headEnd is not None:
+                ln.headEnd.type = None
+            return
+        headEnd = self._get_or_add_ln().get_or_add_headEnd()
+        headEnd.type = value
+
+    @property
+    def begin_arrowhead_width(self) -> MSO_LINE_END_SIZE | None:
+        """Width of the arrowhead at the beginning of the line.
+
+        Read/write. A member of :ref:`MsoLineEndSize` or |None|.
+        """
+        ln = self._ln
+        if ln is None or ln.headEnd is None:
+            return None
+        return ln.headEnd.w
+
+    @begin_arrowhead_width.setter
+    def begin_arrowhead_width(self, value: MSO_LINE_END_SIZE | None):
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.headEnd is not None:
+                ln.headEnd.w = None
+            return
+        headEnd = self._get_or_add_ln().get_or_add_headEnd()
+        headEnd.w = value
 
     @lazyproperty
     def color(self):
@@ -31,6 +99,23 @@ class LineFormat:
         if self.fill.type != MSO_FILL.SOLID:
             self.fill.solid()
         return self.fill.fore_color
+
+    @property
+    def compound_type(self) -> MSO_LINE_COMPOUND_TYPE | None:
+        """Compound line type (single, double, thick-thin, etc.).
+
+        Read/write. A member of :ref:`MsoLineCompoundType` or |None|.
+        |None| indicates the default (single line).
+        """
+        ln = self._ln
+        if ln is None:
+            return None
+        return ln.cmpd
+
+    @compound_type.setter
+    def compound_type(self, value: MSO_LINE_COMPOUND_TYPE | None):
+        ln = self._get_or_add_ln()
+        ln.cmpd = value
 
     @property
     def dash_style(self):
@@ -58,6 +143,69 @@ class LineFormat:
             return
         ln = self._get_or_add_ln()
         ln.prstDash_val = dash_style
+
+    @property
+    def end_arrowhead_length(self) -> MSO_LINE_END_SIZE | None:
+        """Size of the arrowhead at the end of the line.
+
+        Read/write. A member of :ref:`MsoLineEndSize` or |None|.
+        """
+        ln = self._ln
+        if ln is None or ln.tailEnd is None:
+            return None
+        return ln.tailEnd.len
+
+    @end_arrowhead_length.setter
+    def end_arrowhead_length(self, value: MSO_LINE_END_SIZE | None):
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.tailEnd is not None:
+                ln.tailEnd.len = None
+            return
+        tailEnd = self._get_or_add_ln().get_or_add_tailEnd()
+        tailEnd.len = value
+
+    @property
+    def end_arrowhead_type(self) -> MSO_LINE_END_TYPE | None:
+        """Type of arrowhead at the end of the line.
+
+        Read/write. A member of :ref:`MsoLineEndType` or |None|.
+        """
+        ln = self._ln
+        if ln is None or ln.tailEnd is None:
+            return None
+        return ln.tailEnd.type
+
+    @end_arrowhead_type.setter
+    def end_arrowhead_type(self, value: MSO_LINE_END_TYPE | None):
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.tailEnd is not None:
+                ln.tailEnd.type = None
+            return
+        tailEnd = self._get_or_add_ln().get_or_add_tailEnd()
+        tailEnd.type = value
+
+    @property
+    def end_arrowhead_width(self) -> MSO_LINE_END_SIZE | None:
+        """Width of the arrowhead at the end of the line.
+
+        Read/write. A member of :ref:`MsoLineEndSize` or |None|.
+        """
+        ln = self._ln
+        if ln is None or ln.tailEnd is None:
+            return None
+        return ln.tailEnd.w
+
+    @end_arrowhead_width.setter
+    def end_arrowhead_width(self, value: MSO_LINE_END_SIZE | None):
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.tailEnd is not None:
+                ln.tailEnd.w = None
+            return
+        tailEnd = self._get_or_add_ln().get_or_add_tailEnd()
+        tailEnd.w = value
 
     @lazyproperty
     def fill(self):
