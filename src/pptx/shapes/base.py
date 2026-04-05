@@ -46,6 +46,19 @@ class BaseShape:
             return True
         return self._element is not other._element
 
+    @property
+    def alternative_text(self) -> str:
+        """Alternative text for this shape, used for accessibility.
+
+        Read/write. Returns an empty string when no alt text is set.
+        """
+        descr = self._element._nvXxPr.cNvPr.descr  # pyright: ignore[reportPrivateUsage]
+        return descr if descr is not None else ""
+
+    @alternative_text.setter
+    def alternative_text(self, value: str):
+        self._element._nvXxPr.cNvPr.descr = value  # pyright: ignore[reportPrivateUsage]
+
     @lazyproperty
     def click_action(self) -> ActionSetting:
         """|ActionSetting| instance providing access to click behaviors.
@@ -200,6 +213,19 @@ class BaseShape:
         Like ``MSO_SHAPE_TYPE.CHART``. Must be implemented by subclasses.
         """
         raise NotImplementedError(f"{type(self).__name__} does not implement `.shape_type`")
+
+    @property
+    def title(self) -> str:
+        """Title for this shape, used for accessibility.
+
+        Read/write. Returns an empty string when no title is set.
+        """
+        title = self._element._nvXxPr.cNvPr.title  # pyright: ignore[reportPrivateUsage]
+        return title if title is not None else ""
+
+    @title.setter
+    def title(self, value: str):
+        self._element._nvXxPr.cNvPr.title = value  # pyright: ignore[reportPrivateUsage]
 
     @property
     def top(self) -> Length:

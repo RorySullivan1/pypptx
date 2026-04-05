@@ -48,6 +48,72 @@ if TYPE_CHECKING:
 class DescribeBaseShape:
     """Unit-test suite for `pptx.shapes.base.BaseShape` objects."""
 
+    @pytest.mark.parametrize(
+        ("shape_cxml", "expected_value"),
+        [
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}", ""),
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,descr=Alt text}", "Alt text"),
+        ],
+    )
+    def it_knows_its_alternative_text(self, shape_cxml: str, expected_value: str):
+        shape = BaseShape(element(shape_cxml), None)
+        assert shape.alternative_text == expected_value
+
+    @pytest.mark.parametrize(
+        ("shape_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}",
+                "New alt text",
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,descr=New alt text}",
+            ),
+            (
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,descr=Old}",
+                "New",
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,descr=New}",
+            ),
+        ],
+    )
+    def it_can_change_its_alternative_text(
+        self, shape_cxml: str, new_value: str, expected_cxml: str
+    ):
+        shape = BaseShape(element(shape_cxml), None)
+        shape.alternative_text = new_value
+        assert shape._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("shape_cxml", "expected_value"),
+        [
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}", ""),
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,title=My Title}", "My Title"),
+        ],
+    )
+    def it_knows_its_title(self, shape_cxml: str, expected_value: str):
+        shape = BaseShape(element(shape_cxml), None)
+        assert shape.title == expected_value
+
+    @pytest.mark.parametrize(
+        ("shape_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}",
+                "New title",
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,title=New title}",
+            ),
+            (
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,title=Old}",
+                "New",
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,title=New}",
+            ),
+        ],
+    )
+    def it_can_change_its_title(
+        self, shape_cxml: str, new_value: str, expected_cxml: str
+    ):
+        shape = BaseShape(element(shape_cxml), None)
+        shape.title = new_value
+        assert shape._element.xml == xml(expected_cxml)
+
     def it_provides_access_to_its_click_action(self, click_action_fixture):
         shape, ActionSetting_, cNvPr, click_action_ = click_action_fixture
         click_action = shape.click_action
