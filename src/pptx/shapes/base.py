@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pptx.action import ActionSetting
-from pptx.dml.effect import ShadowFormat
+from pptx.dml.effect import GlowFormat, ReflectionFormat, ShadowFormat, SoftEdgeFormat
 from pptx.dml.threed import ThreeDFormat
 from pptx.exc import ShapeError
 from pptx.shared import ElementProxy
@@ -188,6 +188,21 @@ class BaseShape:
         behavior).
         """
         return ShadowFormat(self._element.spPr)
+
+    @lazyproperty
+    def glow(self) -> GlowFormat:
+        """|GlowFormat| object providing access to glow effect properties."""
+        return GlowFormat(self._element.spPr)
+
+    @lazyproperty
+    def reflection(self) -> ReflectionFormat:
+        """|ReflectionFormat| object providing access to reflection effect properties."""
+        return ReflectionFormat(self._element.spPr)
+
+    @lazyproperty
+    def soft_edge(self) -> SoftEdgeFormat:
+        """|SoftEdgeFormat| object providing access to soft edge effect properties."""
+        return SoftEdgeFormat(self._element.spPr)
 
     @lazyproperty
     def three_d(self) -> ThreeDFormat:

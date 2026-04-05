@@ -160,3 +160,163 @@ class ShadowFormat:
         if effectLst is None:
             return None
         return effectLst.outerShdw
+
+
+class GlowFormat:
+    """Provides access to glow effect on a shape."""
+
+    def __init__(self, spPr):
+        self._element = spPr
+
+    @property
+    def enabled(self) -> bool:
+        """True when a glow effect is explicitly defined."""
+        effectLst = self._element.effectLst
+        return effectLst is not None and effectLst.glow is not None
+
+    @property
+    def radius(self) -> Length | None:
+        """Radius of the glow in EMU.
+
+        Read/write. |None| when no glow is defined.
+        """
+        effectLst = self._element.effectLst
+        if effectLst is None or effectLst.glow is None:
+            return None
+        return effectLst.glow.rad
+
+    @radius.setter
+    def radius(self, value: Length | None):
+        effectLst = self._element.get_or_add_effectLst()
+        if value is None:
+            effectLst._remove_glow()
+            return
+        glow = effectLst.get_or_add_glow()
+        glow.rad = value
+
+    def clear(self):
+        """Remove any explicitly-defined glow effect."""
+        effectLst = self._element.effectLst
+        if effectLst is not None:
+            effectLst._remove_glow()
+
+
+class ReflectionFormat:
+    """Provides access to reflection effect on a shape."""
+
+    def __init__(self, spPr):
+        self._element = spPr
+
+    @property
+    def enabled(self) -> bool:
+        """True when a reflection effect is explicitly defined."""
+        effectLst = self._element.effectLst
+        return effectLst is not None and effectLst.reflection is not None
+
+    @property
+    def blur_radius(self) -> Length | None:
+        """Blur radius of the reflection in EMU."""
+        reflection = self._reflection
+        if reflection is None:
+            return None
+        return reflection.blurRad
+
+    @blur_radius.setter
+    def blur_radius(self, value: Length | None):
+        reflection = self._get_or_add_reflection()
+        reflection.blurRad = value
+
+    @property
+    def start_opacity(self) -> float | None:
+        """Starting opacity of the reflection (0.0 to 1.0)."""
+        reflection = self._reflection
+        if reflection is None:
+            return None
+        return reflection.stA
+
+    @start_opacity.setter
+    def start_opacity(self, value: float | None):
+        reflection = self._get_or_add_reflection()
+        reflection.stA = value
+
+    @property
+    def end_opacity(self) -> float | None:
+        """Ending opacity of the reflection (0.0 to 1.0)."""
+        reflection = self._reflection
+        if reflection is None:
+            return None
+        return reflection.endA
+
+    @end_opacity.setter
+    def end_opacity(self, value: float | None):
+        reflection = self._get_or_add_reflection()
+        reflection.endA = value
+
+    @property
+    def distance(self) -> Length | None:
+        """Distance of the reflection from the shape in EMU."""
+        reflection = self._reflection
+        if reflection is None:
+            return None
+        return reflection.dist
+
+    @distance.setter
+    def distance(self, value: Length | None):
+        reflection = self._get_or_add_reflection()
+        reflection.dist = value
+
+    def clear(self):
+        """Remove any explicitly-defined reflection effect."""
+        effectLst = self._element.effectLst
+        if effectLst is not None:
+            effectLst._remove_reflection()
+
+    def _get_or_add_reflection(self):
+        effectLst = self._element.get_or_add_effectLst()
+        return effectLst.get_or_add_reflection()
+
+    @property
+    def _reflection(self):
+        effectLst = self._element.effectLst
+        if effectLst is None:
+            return None
+        return effectLst.reflection
+
+
+class SoftEdgeFormat:
+    """Provides access to soft edge effect on a shape."""
+
+    def __init__(self, spPr):
+        self._element = spPr
+
+    @property
+    def enabled(self) -> bool:
+        """True when a soft edge effect is explicitly defined."""
+        effectLst = self._element.effectLst
+        return effectLst is not None and effectLst.softEdge is not None
+
+    @property
+    def radius(self) -> Length | None:
+        """Radius of the soft edge in EMU.
+
+        Read/write. |None| when no soft edge is defined.
+        """
+        effectLst = self._element.effectLst
+        if effectLst is None or effectLst.softEdge is None:
+            return None
+        return effectLst.softEdge.rad
+
+    @radius.setter
+    def radius(self, value: Length | None):
+        effectLst = self._element.get_or_add_effectLst()
+        if value is None:
+            effectLst._remove_softEdge()
+            return
+        softEdge = effectLst.get_or_add_softEdge()
+        softEdge.rad = value
+
+    def clear(self):
+        """Remove any explicitly-defined soft edge effect."""
+        effectLst = self._element.effectLst
+        if effectLst is not None:
+            effectLst._remove_softEdge()
