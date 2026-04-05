@@ -220,6 +220,61 @@ class DescribeMovie:
 
 
 class DescribePicture:
+    @pytest.mark.parametrize(
+        ("pic_cxml", "expected_value"),
+        [
+            ("p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),p:blipFill/a:blip,p:spPr)", 0.0),
+            (
+                "p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),"
+                "p:blipFill/a:blip/a:lum{bright=20000},p:spPr)",
+                0.2,
+            ),
+        ],
+    )
+    def it_knows_its_brightness(self, pic_cxml: str, expected_value: float):
+        picture = Picture(element(pic_cxml), None)
+        assert abs(picture.brightness - expected_value) < 0.001
+
+    @pytest.mark.parametrize(
+        ("pic_cxml", "expected_value"),
+        [
+            ("p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),p:blipFill/a:blip,p:spPr)", 0.0),
+            (
+                "p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),"
+                "p:blipFill/a:blip/a:lum{contrast=40000},p:spPr)",
+                0.4,
+            ),
+        ],
+    )
+    def it_knows_its_contrast(self, pic_cxml: str, expected_value: float):
+        picture = Picture(element(pic_cxml), None)
+        assert abs(picture.contrast - expected_value) < 0.001
+
+    @pytest.mark.parametrize(
+        ("pic_cxml", "expected_value"),
+        [
+            ("p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),p:blipFill/a:blip,p:spPr)", False),
+            (
+                "p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),"
+                "p:blipFill/a:blip/a:grayscl,p:spPr)",
+                True,
+            ),
+        ],
+    )
+    def it_knows_its_grayscale_setting(self, pic_cxml: str, expected_value: bool):
+        picture = Picture(element(pic_cxml), None)
+        assert picture.is_grayscale is expected_value
+
+    def it_can_change_its_grayscale_setting(self):
+        pic = element(
+            "p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),p:blipFill/a:blip,p:spPr)"
+        )
+        picture = Picture(pic, None)
+        picture.is_grayscale = True
+        assert picture.is_grayscale is True
+        picture.is_grayscale = False
+        assert picture.is_grayscale is False
+
     def it_knows_its_masking_shape(self, autoshape_get_fixture):
         picture, expected_value = autoshape_get_fixture
         auto_shape_type = picture.auto_shape_type

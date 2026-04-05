@@ -147,6 +147,80 @@ class Picture(_BasePicture):
     """
 
     @property
+    def brightness(self) -> float:
+        """Brightness adjustment as a float (-1.0 to 1.0).
+
+        Read/write. 0.0 means no adjustment. Positive values brighten, negative darken.
+        """
+        blip = self._pic.blipFill.blip
+        if blip is None or blip.lum is None:
+            return 0.0
+        return blip.lum.bright or 0.0
+
+    @brightness.setter
+    def brightness(self, value: float):
+        blip = self._pic.blipFill.blip
+        if blip is None:
+            return
+        if value == 0.0:
+            lum = blip.lum
+            if lum is not None and (lum.contrast is None or lum.contrast == 0.0):
+                blip._remove_lum()
+            elif lum is not None:
+                lum.bright = None
+            return
+        lum = blip.get_or_add_lum()
+        lum.bright = value
+
+    @property
+    def contrast(self) -> float:
+        """Contrast adjustment as a float (-1.0 to 1.0).
+
+        Read/write. 0.0 means no adjustment. Positive values increase contrast,
+        negative decrease.
+        """
+        blip = self._pic.blipFill.blip
+        if blip is None or blip.lum is None:
+            return 0.0
+        return blip.lum.contrast or 0.0
+
+    @contrast.setter
+    def contrast(self, value: float):
+        blip = self._pic.blipFill.blip
+        if blip is None:
+            return
+        if value == 0.0:
+            lum = blip.lum
+            if lum is not None and (lum.bright is None or lum.bright == 0.0):
+                blip._remove_lum()
+            elif lum is not None:
+                lum.contrast = None
+            return
+        lum = blip.get_or_add_lum()
+        lum.contrast = value
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Whether the picture is rendered in grayscale.
+
+        Read/write. Setting to |True| adds the grayscale effect; |False| removes it.
+        """
+        blip = self._pic.blipFill.blip
+        if blip is None:
+            return False
+        return blip.grayscl is not None
+
+    @is_grayscale.setter
+    def is_grayscale(self, value: bool):
+        blip = self._pic.blipFill.blip
+        if blip is None:
+            return
+        if value:
+            blip.get_or_add_grayscl()
+        else:
+            blip._remove_grayscl()
+
+    @property
     def auto_shape_type(self) -> MSO_SHAPE | None:
         """Member of MSO_SHAPE indicating masking shape.
 
