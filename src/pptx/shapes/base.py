@@ -109,6 +109,19 @@ class BaseShape:
         return False
 
     @property
+    def hidden(self) -> bool:
+        """True when this shape is hidden from display.
+
+        Read/write. A hidden shape is not visible on the slide but remains in the XML.
+        """
+        hidden = self._element._nvXxPr.cNvPr.hidden  # pyright: ignore[reportPrivateUsage]
+        return bool(hidden)
+
+    @hidden.setter
+    def hidden(self, value: bool):
+        self._element._nvXxPr.cNvPr.hidden = value if value else None  # pyright: ignore[reportPrivateUsage]
+
+    @property
     def height(self) -> Length:
         """Read/write. Integer distance between top and bottom extents of shape in EMUs."""
         return self._element.cy

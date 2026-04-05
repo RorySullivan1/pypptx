@@ -531,6 +531,47 @@ class Describe_BaseGroupShapes:
         with pytest.raises(ValueError):
             shapes.index(shape_)
 
+    def it_can_remove_a_shape(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=sp1},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=sp2})"
+        )
+        shapes = _BaseGroupShapes(spTree, None)
+        shape_to_remove = shapes[0]
+        shapes.remove_shape(shape_to_remove)
+        assert len(shapes) == 1
+        assert shapes[0].name == "sp2"
+
+    def it_can_move_a_shape_to_the_front(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=sp1},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=sp2},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=4,name=sp3})"
+        )
+        shapes = _BaseGroupShapes(spTree, None)
+        first_shape = shapes[0]
+        assert first_shape.name == "sp1"
+        shapes.move_shape_to_front(first_shape)
+        # sp1 should now be last (front of z-order)
+        assert shapes[0].name == "sp2"
+        assert shapes[1].name == "sp3"
+        assert shapes[2].name == "sp1"
+
+    def it_can_move_a_shape_to_the_back(self):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=sp1},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=sp2},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=4,name=sp3})"
+        )
+        shapes = _BaseGroupShapes(spTree, None)
+        last_shape = shapes[2]
+        assert last_shape.name == "sp3"
+        shapes.move_shape_to_back(last_shape)
+        # sp3 should now be first (back of z-order)
+        assert shapes[0].name == "sp3"
+        assert shapes[1].name == "sp1"
+        assert shapes[2].name == "sp2"
+
     def it_adds_a_chart_graphicFrame_to_help(self, add_cht_gr_frm_fixture):
         shapes, rId, x, y, cx, cy, expected_xml = add_cht_gr_frm_fixture
 

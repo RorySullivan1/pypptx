@@ -51,6 +51,40 @@ class DescribeBaseShape:
     @pytest.mark.parametrize(
         ("shape_cxml", "expected_value"),
         [
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}", False),
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,hidden=1}", True),
+            ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,hidden=0}", False),
+        ],
+    )
+    def it_knows_its_hidden_setting(self, shape_cxml: str, expected_value: bool):
+        shape = BaseShape(element(shape_cxml), None)
+        assert shape.hidden is expected_value
+
+    @pytest.mark.parametrize(
+        ("shape_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}",
+                True,
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,hidden=1}",
+            ),
+            (
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,hidden=1}",
+                False,
+                "p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}",
+            ),
+        ],
+    )
+    def it_can_change_its_hidden_setting(
+        self, shape_cxml: str, new_value: bool, expected_cxml: str
+    ):
+        shape = BaseShape(element(shape_cxml), None)
+        shape.hidden = new_value
+        assert shape._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("shape_cxml", "expected_value"),
+        [
             ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1}", ""),
             ("p:sp/p:nvSpPr/p:cNvPr{id=1,name=sp1,descr=Alt text}", "Alt text"),
         ],
