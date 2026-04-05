@@ -26,6 +26,7 @@ from pptx.shapes.shapetree import (
     SlideShapes,
 )
 from pptx.slide import (
+    HeaderFooter,
     NotesMaster,
     NotesSlide,
     Slide,
@@ -635,6 +636,60 @@ class DescribeSlides:
     @pytest.fixture
     def slide_layout_(self, request):
         return instance_mock(request, SlideLayout)
+
+
+class DescribeHeaderFooter:
+    """Unit-test suite for `pptx.slide.HeaderFooter` objects."""
+
+    @pytest.mark.parametrize(
+        ("hf_cxml", "prop", "expected"),
+        [
+            ("p:sldLayout/p:cSld", "show_date", True),
+            ("p:sldLayout/(p:cSld,p:hf)", "show_date", True),
+            ("p:sldLayout/(p:cSld,p:hf{dt=0})", "show_date", False),
+            ("p:sldLayout/(p:cSld,p:hf{dt=1})", "show_date", True),
+            ("p:sldLayout/p:cSld", "show_footer", True),
+            ("p:sldLayout/(p:cSld,p:hf{ftr=0})", "show_footer", False),
+            ("p:sldLayout/p:cSld", "show_header", True),
+            ("p:sldLayout/(p:cSld,p:hf{hdr=0})", "show_header", False),
+            ("p:sldLayout/p:cSld", "show_slide_number", True),
+            ("p:sldLayout/(p:cSld,p:hf{sldNum=0})", "show_slide_number", False),
+        ],
+    )
+    def it_knows_visibility_settings(self, hf_cxml: str, prop: str, expected: bool):
+        elm = element(hf_cxml)
+        hf = HeaderFooter(elm)
+        assert getattr(hf, prop) is expected
+
+    @pytest.mark.parametrize(
+        ("prop", "value", "expected_cxml"),
+        [
+            ("show_date", False, "p:sldLayout/(p:cSld,p:hf{dt=0})"),
+            ("show_date", True, "p:sldLayout/(p:cSld,p:hf{dt=1})"),
+            ("show_footer", False, "p:sldLayout/(p:cSld,p:hf{ftr=0})"),
+            ("show_header", False, "p:sldLayout/(p:cSld,p:hf{hdr=0})"),
+            ("show_slide_number", False, "p:sldLayout/(p:cSld,p:hf{sldNum=0})"),
+        ],
+    )
+    def it_can_change_visibility_settings(self, prop: str, value: bool, expected_cxml: str):
+        elm = element("p:sldLayout/p:cSld")
+        hf = HeaderFooter(elm)
+        setattr(hf, prop, value)
+        assert elm.xml == xml(expected_cxml)
+
+    def it_works_on_slide_master(self):
+        elm = element("p:sldMaster/(p:cSld,p:clrMap)")
+        hf = HeaderFooter(elm)
+        assert hf.show_date is True
+        hf.show_date = False
+        assert hf.show_date is False
+
+    def it_works_on_notes_master(self):
+        elm = element("p:notesMaster/(p:cSld,p:clrMap)")
+        hf = HeaderFooter(elm)
+        assert hf.show_footer is True
+        hf.show_footer = False
+        assert hf.show_footer is False
 
 
 class DescribeSlideLayout:

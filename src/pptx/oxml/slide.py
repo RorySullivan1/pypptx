@@ -149,6 +149,8 @@ class CT_HeaderFooter(BaseOxmlElement):
 class CT_NotesMaster(_BaseSlideElement):
     """`p:notesMaster` element, root of a notes master part."""
 
+    get_or_add_hf: Callable[[], CT_HeaderFooter]
+
     _tag_seq = ("p:cSld", "p:clrMap", "p:hf", "p:notesStyle", "p:extLst")
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
     hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
@@ -278,6 +280,8 @@ class CT_Slide(_BaseSlideElement):
 class CT_SlideLayout(_BaseSlideElement):
     """`p:sldLayout` element, root of a slide layout part."""
 
+    get_or_add_hf: Callable[[], CT_HeaderFooter]
+
     _tag_seq = ("p:cSld", "p:clrMapOvr", "p:transition", "p:timing", "p:hf", "p:extLst")
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
     transition = ZeroOrOne("p:transition", successors=_tag_seq[3:])
@@ -310,6 +314,7 @@ class CT_SlideLayoutIdListEntry(BaseOxmlElement):
 class CT_SlideMaster(_BaseSlideElement):
     """`p:sldMaster` element, root of a slide master part."""
 
+    get_or_add_hf: Callable[[], CT_HeaderFooter]
     get_or_add_sldLayoutIdLst: Callable[[], CT_SlideLayoutIdList]
 
     _tag_seq = (

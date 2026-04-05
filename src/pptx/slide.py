@@ -25,8 +25,10 @@ if TYPE_CHECKING:
     from pptx.oxml.presentation import CT_SlideIdList, CT_SlideMasterIdList
     from pptx.oxml.slide import (
         CT_CommonSlideData,
+        CT_NotesMaster,
         CT_NotesSlide,
         CT_Slide,
+        CT_SlideLayout,
         CT_SlideLayoutIdList,
         CT_SlideMaster,
     )
@@ -98,6 +100,13 @@ class NotesMaster(_BaseMaster):
 
     Provides access to shapes, the most commonly used of which are placeholders.
     """
+
+    _element: CT_NotesMaster  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on notes."""
+        return HeaderFooter(self._element)
 
 
 class NotesSlide(_BaseSlide):
@@ -342,7 +351,13 @@ class SlideLayout(_BaseSlide):
     Provides access to placeholders, regular shapes, and slide layout-level properties.
     """
 
+    _element: CT_SlideLayout  # pyright: ignore[reportIncompatibleVariableOverride]
     part: SlideLayoutPart  # pyright: ignore[reportIncompatibleMethodOverride]
+
+    @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on this layout."""
+        return HeaderFooter(self._element)
 
     def iter_cloneable_placeholders(self) -> Iterator[LayoutPlaceholder]:
         """Generate layout-placeholders on this slide-layout that should be cloned to a new slide.
@@ -464,6 +479,11 @@ class SlideMaster(_BaseMaster):
     _element: CT_SlideMaster  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on this master."""
+        return HeaderFooter(self._element)
+
+    @lazyproperty
     def slide_layouts(self) -> SlideLayouts:
         """|SlideLayouts| object providing access to this slide-master's layouts."""
         return SlideLayouts(self._element.get_or_add_sldLayoutIdLst(), self)
@@ -505,6 +525,69 @@ class SlideMasters(ParentedElementProxy):
     def __len__(self):
         """Support len() built-in function, e.g. `len(slide_masters) == 4`."""
         return len(self._sldMasterIdLst)
+
+
+class HeaderFooter:
+    """Provides access to header/footer visibility settings.
+
+    Controls whether date/time, footer, header, and slide number placeholders
+    are shown on slides inheriting from this layout or master.
+    """
+
+    def __init__(self, slide_elm: CT_SlideLayout | CT_SlideMaster | CT_NotesMaster):
+        self._slide_elm = slide_elm
+
+    @property
+    def show_date(self) -> bool:
+        """Whether the date/time placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.dt is not False
+
+    @show_date.setter
+    def show_date(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.dt = value
+
+    @property
+    def show_footer(self) -> bool:
+        """Whether the footer placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.ftr is not False
+
+    @show_footer.setter
+    def show_footer(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.ftr = value
+
+    @property
+    def show_header(self) -> bool:
+        """Whether the header placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.hdr is not False
+
+    @show_header.setter
+    def show_header(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.hdr = value
+
+    @property
+    def show_slide_number(self) -> bool:
+        """Whether the slide number placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.sldNum is not False
+
+    @show_slide_number.setter
+    def show_slide_number(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.sldNum = value
 
 
 class _Background(ElementProxy):
