@@ -495,6 +495,52 @@ class DescribeSlides:
         prs_part_.get_slide.assert_called_once_with(slide_id)
         assert slide is expected_value
 
+    def it_can_delete_a_slide(self, part_prop_, prs_part_):
+        sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
+        slides = Slides(sldIdLst, None)
+        sld_elm = element("p:sld")
+        slide_to_delete = Slide(sld_elm, None)
+        other_slide = Slide(element("p:sld"), None)
+        prs_part_.related_slide.side_effect = lambda rId: (
+            slide_to_delete if rId == "rId2" else other_slide
+        )
+        slides.delete(slide_to_delete)
+        assert len(slides) == 1
+        assert sldIdLst.sldId_lst[0].rId == "rId1"
+        prs_part_.drop_rel.assert_called_once_with("rId2")
+
+    def it_can_move_a_slide(self):
+        sldIdLst = element(
+            "p:sldIdLst/(p:sldId{r:id=rId1,id=256},"
+            "p:sldId{r:id=rId2,id=257},"
+            "p:sldId{r:id=rId3,id=258})"
+        )
+        slides = Slides(sldIdLst, None)
+        # Move first slide to last position
+        slides.move(0, 2)
+        rIds = [s.rId for s in sldIdLst.sldId_lst]
+        assert rIds == ["rId2", "rId3", "rId1"]
+
+    def it_can_move_a_slide_backward(self):
+        sldIdLst = element(
+            "p:sldIdLst/(p:sldId{r:id=rId1,id=256},"
+            "p:sldId{r:id=rId2,id=257},"
+            "p:sldId{r:id=rId3,id=258})"
+        )
+        slides = Slides(sldIdLst, None)
+        # Move last slide to first position
+        slides.move(2, 0)
+        rIds = [s.rId for s in sldIdLst.sldId_lst]
+        assert rIds == ["rId3", "rId1", "rId2"]
+
+    def it_raises_on_move_out_of_range(self):
+        sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
+        slides = Slides(sldIdLst, None)
+        with pytest.raises(IndexError):
+            slides.move(0, 5)
+        with pytest.raises(IndexError):
+            slides.move(5, 0)
+
     # fixtures -------------------------------------------------------
 
     @pytest.fixture

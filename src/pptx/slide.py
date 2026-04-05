@@ -236,6 +236,17 @@ class Slide(_BaseSlide):
         """|SlideLayout| object this slide inherits appearance from."""
         return self.part.slide_layout
 
+    @property
+    def slide_number(self) -> int:
+        """The display slide number for this slide.
+
+        Computed from the slide's position in the presentation and the presentation's
+        ``first_slide_number`` setting. Read-only.
+        """
+        prs = cast("Presentation", self._parent)
+        first_num = prs._element.firstSlideNum
+        return prs.slides.index(self) + (first_num if first_num is not None else 1)
+
 
 class Slides(ParentedElementProxy):
     """Sequence of slides belonging to an instance of |Presentation|.
@@ -293,6 +304,36 @@ class Slides(ParentedElementProxy):
             if this_slide == slide:
                 return idx
         raise SlideError("%s is not in slide collection" % slide)
+
+    def delete(self, slide: Slide) -> None:
+        """Remove `slide` from the presentation.
+
+        The slide part and its relationship are removed. Raises |ValueError| if `slide` is not
+        in this collection.
+        """
+        idx = self.index(slide)
+        sldId = self._sldIdLst.sldId_lst[idx]
+        rId = sldId.rId
+        self._sldIdLst.remove(sldId)
+        self.part.drop_rel(rId)
+
+    def move(self, old_idx: int, new_idx: int) -> None:
+        """Move the slide at position `old_idx` to position `new_idx`.
+
+        Both indices are zero-based. Raises |IndexError| if either index is out of range.
+        """
+        sldId_lst = self._sldIdLst.sldId_lst
+        if old_idx < 0 or old_idx >= len(sldId_lst):
+            raise IndexError("old_idx out of range")
+        if new_idx < 0 or new_idx >= len(sldId_lst):
+            raise IndexError("new_idx out of range")
+        sldId = sldId_lst[old_idx]
+        if new_idx >= len(sldId_lst) - 1:
+            # Move to end
+            self._sldIdLst.append(sldId)
+        else:
+            target = sldId_lst[new_idx] if new_idx < old_idx else sldId_lst[new_idx + 1]
+            target.addprevious(sldId)
 
 
 class SlideLayout(_BaseSlide):
