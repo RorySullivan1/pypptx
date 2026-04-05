@@ -23,6 +23,7 @@ from pptx.oxml.xmlchemy import (
 from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.oxml.shapes.shared import CT_LineProperties
     from pptx.util import Length
 
 
@@ -362,6 +363,11 @@ class CT_TableCell(BaseOxmlElement):
 
 class CT_TableCellProperties(BaseOxmlElement):
     """`a:tcPr` custom element class"""
+
+    get_or_add_lnL: Callable[[], CT_LineProperties]
+    get_or_add_lnR: Callable[[], CT_LineProperties]
+    get_or_add_lnT: Callable[[], CT_LineProperties]
+    get_or_add_lnB: Callable[[], CT_LineProperties]
 
     _tag_seq = (
         "a:lnL",

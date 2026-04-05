@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 from pptx.dml.fill import FillFormat
+from pptx.dml.line import LineFormat
 from pptx.exc import TableError
 from pptx.oxml.table import TcRange
 from pptx.shapes import Subshape
@@ -143,6 +144,23 @@ class Table:
         """The package part containing this table."""
         return self._graphic_frame.part
 
+    @property
+    def table_style_id(self) -> str | None:
+        """GUID string identifying the table style applied to this table.
+
+        Read/write. |None| when no table style is applied. The style ID is a GUID like
+        ``'{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}'``. Setting to |None| removes the style.
+        """
+        tblPr = self._tbl.tblPr
+        if tblPr is None:
+            return None
+        return tblPr.tblStyle
+
+    @table_style_id.setter
+    def table_style_id(self, value: str | None):
+        tblPr = self._tbl.get_or_add_tblPr()
+        tblPr.tblStyle = value
+
     @lazyproperty
     def rows(self):
         """|_RowCollection| instance for this table.
@@ -187,6 +205,26 @@ class _Cell(Subshape):
         if not isinstance(other, type(self)):
             return True
         return self._tc is not other._tc
+
+    @lazyproperty
+    def border_bottom(self) -> LineFormat:
+        """|LineFormat| for the bottom border of this cell."""
+        return LineFormat(_CellBorderAdapter(self._tc, "lnB"))
+
+    @lazyproperty
+    def border_left(self) -> LineFormat:
+        """|LineFormat| for the left border of this cell."""
+        return LineFormat(_CellBorderAdapter(self._tc, "lnL"))
+
+    @lazyproperty
+    def border_right(self) -> LineFormat:
+        """|LineFormat| for the right border of this cell."""
+        return LineFormat(_CellBorderAdapter(self._tc, "lnR"))
+
+    @lazyproperty
+    def border_top(self) -> LineFormat:
+        """|LineFormat| for the top border of this cell."""
+        return LineFormat(_CellBorderAdapter(self._tc, "lnT"))
 
     @lazyproperty
     def fill(self) -> FillFormat:
@@ -495,3 +533,28 @@ class _RowCollection(Subshape):
     def notify_height_changed(self):
         """Called by a row when its height changes. Pass along to parent."""
         self._parent.notify_height_changed()
+
+
+class _CellBorderAdapter:
+    """Adapter providing `ln`/`get_or_add_ln()` interface for a cell border.
+
+    Allows `LineFormat` to work with cell border elements (lnL, lnR, lnT, lnB).
+    """
+
+    def __init__(self, tc: CT_TableCell, border_tag: str):
+        self._tc = tc
+        self._border_tag = border_tag
+
+    @property
+    def ln(self):
+        """Return the border line element, or None."""
+        tcPr = self._tc.tcPr
+        if tcPr is None:
+            return None
+        return getattr(tcPr, self._border_tag)
+
+    def get_or_add_ln(self):
+        """Return the border line element, creating it if necessary."""
+        tcPr = self._tc.get_or_add_tcPr()
+        get_or_add = getattr(tcPr, f"get_or_add_{self._border_tag}")
+        return get_or_add()
