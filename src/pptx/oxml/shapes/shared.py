@@ -249,6 +249,20 @@ class CT_Locking(BaseOxmlElement):
     )
 
 
+class CT_LineEndProperties(BaseOxmlElement):
+    """``a:headEnd`` or ``a:tailEnd`` element, specifying line end (arrowhead) properties."""
+
+    type: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "type", XsdString
+    )
+    w: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "w", XsdString
+    )
+    len: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "len", XsdString
+    )
+
+
 class CT_LineProperties(BaseOxmlElement):
     """Custom element class for <a:ln> element"""
 
@@ -277,6 +291,12 @@ class CT_LineProperties(BaseOxmlElement):
     )
     prstDash = ZeroOrOne("a:prstDash", successors=_tag_seq[5:])
     custDash = ZeroOrOne("a:custDash", successors=_tag_seq[6:])
+    headEnd: CT_LineEndProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:headEnd", successors=_tag_seq[10:]
+    )
+    tailEnd: CT_LineEndProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:tailEnd", successors=_tag_seq[11:]
+    )
     del _tag_seq
     w = OptionalAttribute("w", ST_LineWidth, default=Emu(0))
     cmpd: MSO_LINE_COMPOUND_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]

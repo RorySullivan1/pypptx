@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 from pptx.enum.dml import MSO_THEME_COLOR
-from pptx.oxml.simpletypes import ST_HexColorRGB, ST_Percentage
+from pptx.oxml.simpletypes import (
+    ST_HexColorRGB,
+    ST_Percentage,
+    ST_PositiveFixedAngle,
+    XsdString,
+)
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     Choice,
+    OptionalAttribute,
     RequiredAttribute,
     ZeroOrOne,
     ZeroOrOneChoice,
@@ -69,9 +75,11 @@ class CT_Color(BaseOxmlElement):
 
 
 class CT_HslColor(_BaseColorElement):
-    """
-    Custom element class for <a:hslClr> element.
-    """
+    """Custom element class for `a:hslClr` element."""
+
+    hue: float = RequiredAttribute("hue", ST_PositiveFixedAngle)  # pyright: ignore[reportAssignmentType]
+    sat: float = RequiredAttribute("sat", ST_Percentage)  # pyright: ignore[reportAssignmentType]
+    lum: float = RequiredAttribute("lum", ST_Percentage)  # pyright: ignore[reportAssignmentType]
 
 
 class CT_Percentage(BaseOxmlElement):
@@ -83,9 +91,9 @@ class CT_Percentage(BaseOxmlElement):
 
 
 class CT_PresetColor(_BaseColorElement):
-    """
-    Custom element class for <a:prstClr> element.
-    """
+    """Custom element class for `a:prstClr` element."""
+
+    val: str = RequiredAttribute("val", XsdString)  # pyright: ignore[reportAssignmentType]
 
 
 class CT_SchemeColor(_BaseColorElement):
@@ -97,9 +105,11 @@ class CT_SchemeColor(_BaseColorElement):
 
 
 class CT_ScRgbColor(_BaseColorElement):
-    """
-    Custom element class for <a:scrgbClr> element.
-    """
+    """Custom element class for `a:scrgbClr` element."""
+
+    r: float = RequiredAttribute("r", ST_Percentage)  # pyright: ignore[reportAssignmentType]
+    g: float = RequiredAttribute("g", ST_Percentage)  # pyright: ignore[reportAssignmentType]
+    b: float = RequiredAttribute("b", ST_Percentage)  # pyright: ignore[reportAssignmentType]
 
 
 class CT_SRgbColor(_BaseColorElement):
@@ -111,6 +121,9 @@ class CT_SRgbColor(_BaseColorElement):
 
 
 class CT_SystemColor(_BaseColorElement):
-    """
-    Custom element class for <a:sysClr> element.
-    """
+    """Custom element class for `a:sysClr` element."""
+
+    val: str = RequiredAttribute("val", XsdString)  # pyright: ignore[reportAssignmentType]
+    lastClr: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "lastClr", ST_HexColorRGB
+    )

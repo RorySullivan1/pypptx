@@ -558,6 +558,7 @@ register_element_cls("p:pic", CT_Picture)
 
 from pptx.oxml.shapes.shared import (  # noqa: E402
     CT_ApplicationNonVisualDrawingProps,
+    CT_LineEndProperties,
     CT_LineProperties,
     CT_Locking,
     CT_NonVisualDrawingProps,
@@ -571,7 +572,9 @@ from pptx.oxml.shapes.shared import (  # noqa: E402
 register_element_cls("a:chExt", CT_PositiveSize2D)
 register_element_cls("a:chOff", CT_Point2D)
 register_element_cls("a:ext", CT_PositiveSize2D)
+register_element_cls("a:headEnd", CT_LineEndProperties)
 register_element_cls("a:ln", CT_LineProperties)
+register_element_cls("a:tailEnd", CT_LineEndProperties)
 register_element_cls("a:off", CT_Point2D)
 register_element_cls("a:xfrm", CT_Transform2D)
 register_element_cls("c:spPr", CT_ShapeProperties)
@@ -608,6 +611,12 @@ from pptx.oxml.section import (  # noqa: E402
 register_element_cls("p14:section", CT_Section)
 register_element_cls("p14:sectionLst", CT_SectionList)
 register_element_cls("p14:sldId", CT_SectionSlideIdListEntry)
+
+
+from pptx.oxml.tags import CT_StringTag, CT_TagList  # noqa: E402
+
+register_element_cls("p:tag", CT_StringTag)
+register_element_cls("p:tagLst", CT_TagList)
 
 
 from pptx.oxml.slide import (  # noqa: E402
