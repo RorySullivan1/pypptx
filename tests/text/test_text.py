@@ -104,6 +104,28 @@ class DescribeTextFrame:
 
     @pytest.mark.parametrize(
         ("txBody_cxml", "expected_value"),
+        [("p:txBody/a:bodyPr", None), ("p:txBody/a:bodyPr{spcCol=914400}", 914400)],
+    )
+    def it_knows_its_column_spacing(self, txBody_cxml: str, expected_value: int | None):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.column_spacing == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:txBody/a:bodyPr", 457200, "p:txBody/a:bodyPr{spcCol=457200}"),
+            ("p:txBody/a:bodyPr{spcCol=914400}", None, "p:txBody/a:bodyPr"),
+        ],
+    )
+    def it_can_change_its_column_spacing(
+        self, txBody_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        text_frame.column_spacing = new_value
+        assert text_frame._txBody.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
         [
             ("p:txBody/a:p", False),
             ('p:txBody/a:p/a:r/a:t"Hello"', True),

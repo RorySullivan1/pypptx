@@ -162,6 +162,18 @@ class TextFrame(Subshape):
         self._bodyPr.numCol = value
 
     @property
+    def column_spacing(self) -> Length | None:
+        """Spacing between text columns in EMU.
+
+        Read/write. |None| indicates the default spacing. Only applicable when columns > 1.
+        """
+        return self._bodyPr.spcCol
+
+    @column_spacing.setter
+    def column_spacing(self, value: Length | None):
+        self._bodyPr.spcCol = value
+
+    @property
     def has_text(self) -> bool:
         """True when this text frame contains at least one non-empty paragraph."""
         return any(p.text for p in self.paragraphs)

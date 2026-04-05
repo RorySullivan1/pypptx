@@ -217,6 +217,18 @@ class LineFormat:
         return FillFormat.from_fill_parent(ln)
 
     @property
+    def no_fill(self) -> bool:
+        """Whether the line has no fill (invisible).
+
+        Read-only. |True| when the line has a ``noFill`` child element.
+        Use ``line.fill.background()`` to make a line invisible.
+        """
+        ln = self._ln
+        if ln is None:
+            return False
+        return ln.noFill is not None
+
+    @property
     def width(self):
         """
         The width of the line expressed as an integer number of :ref:`English

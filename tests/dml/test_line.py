@@ -108,6 +108,19 @@ class DescribeLineFormat:
         line.compound_type = new_value
         assert spPr.xml == xml(expected_cxml)
 
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", False),
+            ("p:spPr/a:ln", False),
+            ("p:spPr/a:ln/a:noFill", True),
+            ("p:spPr/a:ln/a:solidFill", False),
+        ],
+    )
+    def it_knows_its_no_fill_state(self, spPr_cxml: str, expected_value: bool):
+        line = LineFormat(element(spPr_cxml))
+        assert line.no_fill is expected_value
+
     def it_knows_its_dash_style(self, dash_style_get_fixture):
         line, expected_value = dash_style_get_fixture
         assert line.dash_style == expected_value
