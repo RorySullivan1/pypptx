@@ -674,6 +674,8 @@ register_element_cls("a:tr", CT_TableRow)
 from pptx.oxml.text import (  # noqa: E402
     CT_PresetTextShape,
     CT_RegularTextRun,
+    CT_TabStop,
+    CT_TabStopList,
     CT_TextBody,
     CT_TextBodyProperties,
     CT_TextCharacterProperties,
@@ -701,6 +703,8 @@ register_element_cls("a:lnSpc", CT_TextSpacing)
 register_element_cls("a:normAutofit", CT_TextNormalAutofit)
 register_element_cls("a:prstTxWarp", CT_PresetTextShape)
 register_element_cls("a:r", CT_RegularTextRun)
+register_element_cls("a:tab", CT_TabStop)
+register_element_cls("a:tabLst", CT_TabStopList)
 register_element_cls("a:p", CT_TextParagraph)
 register_element_cls("a:pPr", CT_TextParagraphProperties)
 register_element_cls("c:rich", CT_TextBody)

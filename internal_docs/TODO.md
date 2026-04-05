@@ -269,6 +269,19 @@ building Python API layers (Sections 6-17).
 
 ---
 
+## 5.3 OXML Final Micro-Gaps (DONE)
+
+### Text character properties (DONE)
+- [x] `effectLst` ZeroOrOne descriptor on `CT_TextCharacterProperties` (font shadow support)
+
+### Tab stops (DONE)
+- [x] `tabLst` ZeroOrOne descriptor on `CT_TextParagraphProperties`
+- [x] `CT_TabStopList` class with `tab = ZeroOrMore("a:tab")`
+- [x] `CT_TabStop` class with `pos` and `algn` attributes
+- [x] Registered `a:tab` and `a:tabLst`
+
+---
+
 ## 6. Python API — Slide Lifecycle (NEXT)
 
 _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_

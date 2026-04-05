@@ -38,6 +38,7 @@ from pptx.oxml.simpletypes import (
     ST_TextTypeface,
     ST_TextWrappingType,
     XsdBoolean,
+    XsdString,
 )
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -326,6 +327,25 @@ class CT_TextCharacterProperties(BaseOxmlElement):
             "a:extLst",
         ),
     )
+    effectLst = ZeroOrOne(
+        "a:effectLst",
+        successors=(
+            "a:effectDag",
+            "a:highlight",
+            "a:uLnTx",
+            "a:uLn",
+            "a:uFillTx",
+            "a:uFill",
+            "a:latin",
+            "a:ea",
+            "a:cs",
+            "a:sym",
+            "a:hlinkClick",
+            "a:hlinkMouseOver",
+            "a:rtl",
+            "a:extLst",
+        ),
+    )
     latin: CT_TextFont | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:latin",
         successors=(
@@ -582,6 +602,7 @@ class CT_TextParagraphProperties(BaseOxmlElement):
     buAutoNum = ZeroOrOne("a:buAutoNum", successors=_tag_seq[12:])
     buChar = ZeroOrOne("a:buChar", successors=_tag_seq[13:])
     buBlip = ZeroOrOne("a:buBlip", successors=_tag_seq[14:])
+    tabLst = ZeroOrOne("a:tabLst", successors=_tag_seq[15:])
     defRPr: CT_TextCharacterProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:defRPr", successors=_tag_seq[16:]
     )
@@ -713,6 +734,25 @@ class CT_TextSpacingPoint(BaseOxmlElement):
     val: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
         "val", ST_TextSpacingPoint
     )
+
+
+class CT_TabStop(BaseOxmlElement):
+    """`a:tab` element, specifying a single tab stop position and alignment."""
+
+    pos: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "pos", ST_Coordinate32
+    )
+    algn: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "algn", XsdString
+    )
+
+
+class CT_TabStopList(BaseOxmlElement):
+    """`a:tabLst` element, container for tab stop definitions."""
+
+    tab_lst: list[CT_TabStop]
+
+    tab = ZeroOrMore("a:tab")
 
 
 class CT_PresetTextShape(BaseOxmlElement):
