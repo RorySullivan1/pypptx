@@ -35,7 +35,7 @@ class GraphicFrame(BaseShape):
     Corresponds to a `p:graphicFrame` element in the shape tree.
     """
 
-    def __init__(self, graphicFrame: CT_GraphicalObjectFrame, parent: ProvidesPart):
+    def __init__(self, graphicFrame: CT_GraphicalObjectFrame, parent: ProvidesPart) -> None:
         super().__init__(graphicFrame, parent)
         self._graphicFrame = graphicFrame
 
@@ -136,7 +136,7 @@ class _OleFormat(ParentedElementProxy):
 
     part: BaseSlidePart  # pyright: ignore[reportIncompatibleMethodOverride]
 
-    def __init__(self, graphicData: CT_GraphicalObjectData, parent: ProvidesPart):
+    def __init__(self, graphicData: CT_GraphicalObjectData, parent: ProvidesPart) -> None:
         super().__init__(graphicData, parent)
         self._graphicData = graphicData
 

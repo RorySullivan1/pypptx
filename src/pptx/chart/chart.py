@@ -308,10 +308,10 @@ class Chart(PartElementProxy):
         return roundedCorners.val
 
     @rounded_corners.setter
-    def rounded_corners(self, value):
+    def rounded_corners(self, value: bool) -> None:
         self._chartSpace.get_or_add_roundedCorners().val = bool(value)
 
-    def replace_data(self, chart_data):
+    def replace_data(self, chart_data: _BaseChartData) -> None:
         """
         Use the categories and series values in the |ChartData| object
         *chart_data* to replace those in the XML and Excel worksheet for this
@@ -322,7 +322,7 @@ class Chart(PartElementProxy):
         self._workbook.update_from_xlsx_blob(chart_data.xlsx_blob)
 
     @property
-    def show_data_labels_over_max(self):
+    def show_data_labels_over_max(self) -> bool:
         """Read/write boolean. True if data labels display over the maximum.
 
         Returns False if not explicitly set.
@@ -333,11 +333,11 @@ class Chart(PartElementProxy):
         return showDLblsOverMax.val
 
     @show_data_labels_over_max.setter
-    def show_data_labels_over_max(self, value):
+    def show_data_labels_over_max(self, value: bool) -> None:
         self._chartSpace.chart.get_or_add_showDLblsOverMax().val = bool(value)
 
     @lazyproperty
-    def series(self):
+    def series(self) -> SeriesCollection:
         """
         A |SeriesCollection| object containing all the series in this
         chart. When the chart has multiple plots, all the series for the
@@ -347,7 +347,7 @@ class Chart(PartElementProxy):
         return SeriesCollection(self._chartSpace.plotArea)
 
     @property
-    def side_wall(self):
+    def side_wall(self) -> ChartSurface:
         """A |ChartSurface| object providing access to side wall formatting.
 
         Accessing this property is destructive in the sense it adds a
@@ -357,7 +357,7 @@ class Chart(PartElementProxy):
         return ChartSurface(chart.get_or_add_sideWall())
 
     @property
-    def value_axis(self):
+    def value_axis(self) -> ValueAxis:
         """The primary |ValueAxis| of this chart.
 
         Raises |ChartError| if the chart has no value axis.
@@ -368,7 +368,7 @@ class Chart(PartElementProxy):
         return ValueAxis(valAx_lst[0])
 
     @property
-    def secondary_value_axis(self):
+    def secondary_value_axis(self) -> ValueAxis:
         """The secondary |ValueAxis| of this chart.
 
         Present on combo charts and charts with a secondary axis.
@@ -380,7 +380,7 @@ class Chart(PartElementProxy):
         return ValueAxis(valAx_lst[1])
 
     @property
-    def secondary_category_axis(self):
+    def secondary_category_axis(self) -> CategoryAxis | DateAxis:
         """The secondary |CategoryAxis| or |DateAxis| of this chart.
 
         Present on combo charts and charts with a secondary axis.
@@ -397,7 +397,7 @@ class Chart(PartElementProxy):
         raise ChartError("chart has no secondary category axis")
 
     @property
-    def view_3d(self):
+    def view_3d(self) -> View3D:
         """A |View3D| object providing access to 3D view properties.
 
         Accessing this property is destructive in the sense it adds a
