@@ -531,6 +531,35 @@ class Describe_BaseGroupShapes:
         with pytest.raises(ValueError):
             shapes.index(shape_)
 
+    def it_can_duplicate_a_shape(self, request):
+        spTree = element(
+            "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=TextBox 1},"
+            "p:sp/p:nvSpPr/p:cNvPr{id=3,name=TextBox 2})"
+        )
+        shapes = _BaseGroupShapes(spTree, None)
+        shape_to_dup = shapes[0]
+        assert shape_to_dup.name == "TextBox 1"
+
+        new_shape = shapes.duplicate_shape(shape_to_dup)
+
+        assert len(shapes) == 3
+        assert new_shape.shape_id == 4
+        assert new_shape.name == "TextBox 3"
+        # original is unchanged
+        assert shapes[0].name == "TextBox 1"
+        assert shapes[0].shape_id == 2
+        # new shape is a separate element
+        assert new_shape.element is not shape_to_dup.element
+
+    def it_can_duplicate_a_shape_with_non_numeric_name(self):
+        spTree = element(
+            "p:spTree/p:sp/p:nvSpPr/p:cNvPr{id=2,name=MyShape}"
+        )
+        shapes = _BaseGroupShapes(spTree, None)
+        new_shape = shapes.duplicate_shape(shapes[0])
+        assert new_shape.name == "MyShape 2"
+        assert new_shape.shape_id == 3
+
     def it_can_remove_a_shape(self):
         spTree = element(
             "p:spTree/(p:sp/p:nvSpPr/p:cNvPr{id=2,name=sp1},"

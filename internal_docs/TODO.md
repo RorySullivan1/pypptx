@@ -299,7 +299,7 @@ _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_
 _Prerequisites: Sections 3.1 (`hidden`), 3.2 (`noChangeAspect`)_
 
 - [x] Delete a shape — `_BaseGroupShapes.remove_shape(shape)` removes element from spTree
-- [ ] Duplicate a shape — clone element in `spTree`, assign new shape ID, clone related parts
+- [x] Duplicate a shape — `_BaseGroupShapes.duplicate_shape(shape)` deep-clones element, assigns new ID/name, remaps rId references
 - [x] Z-order control — `move_shape_to_front()`, `move_shape_to_back()` via element reordering
 - [x] Shape visibility — `BaseShape.hidden` read/write property on cNvPr
 - [x] Lock aspect ratio — `BaseShape.lock_aspect_ratio` r/w property via lock elements on cNv*Pr

@@ -173,6 +173,32 @@ shape2 = [s for s in prs2.slides[0].shapes if not s.is_placeholder][0]
 assert shape2.hidden is True
 """)
 
+    def it_round_trips_a_duplicated_shape(self):
+        _run_roundtrip_test("""\
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[5])
+shape = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(3), Inches(1))
+shape.text_frame.text = "Original"
+
+new_shape = slide.shapes.duplicate_shape(shape)
+assert len([s for s in slide.shapes if not s.is_placeholder]) == 2
+assert new_shape.text_frame.text == "Original"
+assert new_shape.shape_id != shape.shape_id
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+slide2 = prs2.slides[0]
+textboxes = [s for s in slide2.shapes if s.has_text_frame and not s.is_placeholder]
+assert len(textboxes) == 2
+assert all(t.text_frame.text == "Original" for t in textboxes)
+# shape IDs should be unique
+ids = [t.shape_id for t in textboxes]
+assert len(set(ids)) == 2
+""")
+
     def it_round_trips_slide_numbers(self):
         _run_roundtrip_test("""\
 prs = Presentation()

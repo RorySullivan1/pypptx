@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import os
+from copy import deepcopy
 from typing import IO, TYPE_CHECKING, Callable, Iterable, Iterator, cast
 
 from pptx.enum.shapes import PP_PLACEHOLDER, PROG_ID
@@ -506,6 +507,32 @@ class _BaseGroupShapes(_BaseShapes):
         if first_shape is not None and first_shape is not shape.element:
             first_shape.addprevious(shape.element)
         self._invalidate_shape_cache()
+
+    def duplicate_shape(self, shape: BaseShape) -> BaseShape:
+        """Return a new shape that is a deep copy of `shape`.
+
+        The cloned shape is appended to this shape tree with a new unique shape ID.
+        Because the duplicate lives on the same slide, any relationship references
+        (images, charts, hyperlinks) in the cloned XML remain valid without remapping.
+        """
+        new_element = deepcopy(shape.element)
+
+        # --- assign new shape ID and update name ---
+        new_id = self._next_shape_id
+        cNvPr = new_element._nvXxPr.cNvPr
+        old_name = cNvPr.name
+        cNvPr.id = new_id
+        # Update trailing number in name if present (e.g. "TextBox 3" -> "TextBox 4")
+        parts = old_name.rsplit(" ", 1)
+        if len(parts) == 2 and parts[1].isdigit():
+            cNvPr.name = "%s %d" % (parts[0], new_id - 1)
+        else:
+            cNvPr.name = "%s %d" % (old_name, new_id - 1)
+
+        self._grpSp.append(new_element)
+        self._invalidate_shape_cache()
+        self._recalculate_extents()
+        return self._shape_factory(new_element)
 
     def remove_shape(self, shape: BaseShape) -> None:
         """Remove `shape` from this shape tree.
