@@ -617,6 +617,12 @@ register_element_cls("p14:sectionLst", CT_SectionList)
 register_element_cls("p14:sldId", CT_SectionSlideIdListEntry)
 
 
+from pptx.oxml.custprops import CT_CustomProperties, CT_CustomProperty  # noqa: E402
+
+register_element_cls("cust:Properties", CT_CustomProperties)
+register_element_cls("cust:property", CT_CustomProperty)
+
+
 from pptx.oxml.tags import CT_StringTag, CT_TagList  # noqa: E402
 
 register_element_cls("p:tag", CT_StringTag)

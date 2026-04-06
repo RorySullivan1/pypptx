@@ -11,6 +11,7 @@ from pptx.util import lazyproperty
 if TYPE_CHECKING:
     from pptx.oxml.presentation import CT_Presentation, CT_SlideId
     from pptx.oxml.section import CT_Section, CT_SectionList
+    from pptx.parts.custprops import CustomPropertiesPart
     from pptx.parts.presentation import PresentationPart
     from pptx.slide import NotesMaster, SlideLayouts
     from pptx.util import Length
@@ -46,6 +47,16 @@ class Presentation(PartElementProxy):
         Provides read/write access to the Dublin Core document properties for the presentation.
         """
         return self.part.core_properties
+
+    @property
+    def custom_properties(self) -> CustomPropertiesPart:
+        """|CustomPropertiesPart| providing dict-like access to custom document properties.
+
+        Supports ``custom_properties[name]``, ``custom_properties[name] = value``,
+        ``del custom_properties[name]``, ``name in custom_properties``, and iteration.
+        Values can be str, int, float, or bool.
+        """
+        return self.part.package.custom_properties
 
     @property
     def notes_master(self) -> NotesMaster:

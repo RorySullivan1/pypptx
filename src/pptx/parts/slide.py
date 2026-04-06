@@ -13,6 +13,7 @@ from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide, CT_Slide
 from pptx.oxml.theme import CT_OfficeStyleSheet
 from pptx.parts.chart import ChartPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
+from pptx.parts.tags import TagsPart
 from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
 from pptx.util import lazyproperty
 
@@ -216,6 +217,16 @@ class SlidePart(BaseSlidePart):
         except KeyError:
             return False
         return True
+
+    @property
+    def tags_part(self) -> TagsPart:
+        """The |TagsPart| for this slide, creating one if not present."""
+        try:
+            return cast("TagsPart", self.part_related_by(RT.TAGS))
+        except KeyError:
+            tags_part = TagsPart.new(self._package)
+            self.relate_to(tags_part, RT.TAGS)
+            return tags_part
 
     @lazyproperty
     def notes_slide(self) -> NotesSlide:

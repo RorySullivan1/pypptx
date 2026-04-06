@@ -11,6 +11,7 @@ from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.package import PartFactory
 from pptx.parts.chart import ChartPart
 from pptx.parts.coreprops import CorePropertiesPart
+from pptx.parts.custprops import CustomPropertiesPart
 from pptx.parts.image import ImagePart
 from pptx.parts.media import MediaPart
 from pptx.parts.presentation import PresentationPart
@@ -21,6 +22,7 @@ from pptx.parts.slide import (
     SlideMasterPart,
     SlidePart,
 )
+from pptx.parts.tags import TagsPart
 
 if TYPE_CHECKING:
     from pptx.opc.package import Part
@@ -62,6 +64,8 @@ content_type_to_part_class_map: dict[str, type[Part]] = {
     CT.VIDEO: MediaPart,
     CT.WMV: MediaPart,
     CT.X_MS_VIDEO: MediaPart,
+    CT.OFC_CUSTOM_PROPERTIES: CustomPropertiesPart,
+    CT.PML_TAGS: TagsPart,
     # -- accommodate "image/jpg" as an alias for "image/jpeg" --
     "image/jpg": ImagePart,
 }
@@ -71,12 +75,14 @@ PartFactory.part_type_for.update(content_type_to_part_class_map)
 del (
     ChartPart,
     CorePropertiesPart,
+    CustomPropertiesPart,
     ImagePart,
     MediaPart,
     SlidePart,
     SlideLayoutPart,
     SlideMasterPart,
     PresentationPart,
+    TagsPart,
     CT,
     PartFactory,
 )
