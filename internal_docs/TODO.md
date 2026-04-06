@@ -401,9 +401,9 @@ _Prerequisites: Section 4.4 (`CT_HeaderFooter`)_
 
 - [x] Header/footer configuration — `HeaderFooter` class with show_date, show_footer, show_header, show_slide_number
 - [x] Exposed on `SlideLayout`, `SlideMaster`, `NotesMaster` as `header_footer` lazyproperty
-- [ ] Date/time placeholder — automatic vs fixed, format string
-- [ ] Footer text placeholder content management
-- [ ] Per-slide show/hide overrides
+- [x] Date/time placeholder — `date_format` (read-only field type string), `is_date_auto` (auto vs fixed)
+- [x] Footer text placeholder content management — `footer_text` read/write property
+- [x] Per-slide show/hide overrides — `p:hf` on `CT_Slide`, `Slide.header_footer` lazyproperty
 
 ---
 

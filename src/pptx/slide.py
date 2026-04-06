@@ -248,6 +248,15 @@ class Slide(_BaseSlide):
         return self.part.notes_slide
 
     @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on this slide.
+
+        Provides per-slide overrides for date/time, footer, header, and slide
+        number placeholder visibility.
+        """
+        return HeaderFooter(self._element)
+
+    @lazyproperty
     def placeholders(self) -> SlidePlaceholders:
         """Sequence of placeholder shapes in this slide."""
         return SlidePlaceholders(self._element.spTree, self)
@@ -566,14 +575,98 @@ class SlideMasters(ParentedElementProxy):
 
 
 class HeaderFooter:
-    """Provides access to header/footer visibility settings.
+    """Provides access to header/footer visibility and content settings.
 
     Controls whether date/time, footer, header, and slide number placeholders
-    are shown on slides inheriting from this layout or master.
+    are shown, and provides access to footer text and date format.
     """
 
-    def __init__(self, slide_elm: CT_SlideLayout | CT_SlideMaster | CT_NotesMaster):
+    def __init__(
+        self,
+        slide_elm: CT_Slide | CT_SlideLayout | CT_SlideMaster | CT_NotesMaster,
+    ):
         self._slide_elm = slide_elm
+
+    @property
+    def date_format(self) -> str | None:
+        """The date format type string from the date placeholder field.
+
+        Read-only. Returns the ``type`` attribute value from the ``a:fld`` element
+        in the date placeholder, e.g. ``"datetime1"``, ``"datetimeFigureOut"``.
+        Returns |None| when no date placeholder or no field element is found.
+        """
+        ph = self._placeholder_by_type(PP_PLACEHOLDER.DATE)
+        if ph is None:
+            return None
+        from pptx.oxml.text import CT_TextField
+
+        txBody = ph.txBody
+        if txBody is None:
+            return None
+        for p in txBody.p_lst:
+            for child in p:
+                if isinstance(child, CT_TextField) and child.field_type is not None:
+                    return child.field_type
+        return None
+
+    @property
+    def footer_text(self) -> str | None:
+        """Text content of the footer placeholder.
+
+        Read/write. Returns |None| when no footer placeholder is present.
+        Setting this value replaces the text in the first run of the
+        footer placeholder. Setting to |None| clears the footer text.
+        """
+        ph = self._placeholder_by_type(PP_PLACEHOLDER.FOOTER)
+        if ph is None:
+            return None
+        txBody = ph.txBody
+        if txBody is None:
+            return None
+        paragraphs = txBody.p_lst
+        if not paragraphs:
+            return None
+        return paragraphs[0].text
+
+    @footer_text.setter
+    def footer_text(self, value: str | None) -> None:
+        ph = self._placeholder_by_type(PP_PLACEHOLDER.FOOTER)
+        if ph is None:
+            return
+        txBody = ph.txBody
+        if txBody is None:
+            return
+        paragraphs = txBody.p_lst
+        if not paragraphs:
+            return
+        p = paragraphs[0]
+        runs = p.r_lst
+        if runs:
+            runs[0].text = value or ""
+        else:
+            p.add_r(value or "")
+
+    @property
+    def is_date_auto(self) -> bool | None:
+        """Whether the date placeholder uses an auto-updating date field.
+
+        Read-only. Returns |True| when the date placeholder contains an
+        ``a:fld`` element (auto-updating), |False| when it uses a regular
+        text run (fixed date), or |None| when no date placeholder exists.
+        """
+        ph = self._placeholder_by_type(PP_PLACEHOLDER.DATE)
+        if ph is None:
+            return None
+        from pptx.oxml.text import CT_TextField
+
+        txBody = ph.txBody
+        if txBody is None:
+            return None
+        for p in txBody.p_lst:
+            for child in p:
+                if isinstance(child, CT_TextField):
+                    return True
+        return False
 
     @property
     def show_date(self) -> bool:
@@ -626,6 +719,14 @@ class HeaderFooter:
     def show_slide_number(self, value: bool) -> None:
         hf = self._slide_elm.get_or_add_hf()
         hf.sldNum = value
+
+    def _placeholder_by_type(self, ph_type: PP_PLACEHOLDER):
+        """Return the placeholder shape element with the given type, or None."""
+        spTree = self._slide_elm.cSld.spTree
+        for ph_elm in spTree.iter_ph_elms():
+            if ph_elm.ph_type == ph_type:
+                return ph_elm
+        return None
 
 
 class _Background(ElementProxy):
