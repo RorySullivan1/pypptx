@@ -417,14 +417,15 @@ _Prerequisites: Section 4.5 (sections and tags elements)_
 
 ---
 
-## 16. Python API — Comments
+## 16. Python API — Comments (DONE)
 
 _Prerequisites: Section 4.6 (comment elements)_
 
-- [ ] Slide comments — add, read, delete comments (`comments[N].xml` parts)
-- [ ] Comment authors — manage author list (`commentAuthors.xml` part)
-- [ ] Comment positioning — x/y coordinates on slide
-- [ ] Comment metadata — author, datetime, text
+- [x] Slide comments — `Slide.comments` returns `SlideComments` with add, iterate, len, clear, indexed access
+- [x] Comment authors — `CommentAuthorsPart` on package with get_or_add_author, auto-incrementing IDs
+- [x] Comment positioning — `Comment.position` returns (x, y) tuple
+- [x] Comment metadata — `Comment.author`, `Comment.text` (r/w), `Comment.datetime`, `Comment.delete()`
+- [x] Part registration — `CommentsPart` and `CommentAuthorsPart` registered in PartFactory
 
 ---
 
@@ -436,7 +437,7 @@ _Prerequisites: Section 4.7 (picture format effects)_
 - [x] Contrast — `Picture.contrast` via `a:lum` contrast attribute on blip
 - [x] Grayscale — `Picture.is_grayscale` via `a:grayscl` on blip
 - [ ] Transparency color
-- [ ] Original image dimensions — expose from `ImagePart`
+- [x] Original image dimensions — `Picture.image_width` / `image_height` via `ImagePart._native_size`
 
 ---
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE, PP_MEDIA_TYPE
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes.picture import CT_Picture
     from pptx.oxml.shapes.shared import CT_LineProperties
     from pptx.types import ProvidesPart
+    from pptx.util import Length
 
 
 class _BasePicture(BaseShape):
@@ -219,6 +220,30 @@ class Picture(_BasePicture):
             blip.get_or_add_grayscl()
         else:
             blip._remove_grayscl()
+
+    @property
+    def image_width(self) -> Length:
+        """Native width of the embedded image in EMU.
+
+        Read-only. This is the original image width based on its pixel dimensions and DPI.
+        Useful for resetting the picture to its natural size.
+        """
+        from pptx.parts.image import ImagePart
+
+        image_part = cast("ImagePart", self.part.related_part(self._pic.blip_rId))
+        return image_part._native_size[0]  # pyright: ignore[reportPrivateUsage]
+
+    @property
+    def image_height(self) -> Length:
+        """Native height of the embedded image in EMU.
+
+        Read-only. This is the original image height based on its pixel dimensions and DPI.
+        Useful for resetting the picture to its natural size.
+        """
+        from pptx.parts.image import ImagePart
+
+        image_part = cast("ImagePart", self.part.related_part(self._pic.blip_rId))
+        return image_part._native_size[1]  # pyright: ignore[reportPrivateUsage]
 
     @property
     def auto_shape_type(self) -> MSO_SHAPE | None:

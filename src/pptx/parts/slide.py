@@ -12,6 +12,7 @@ from pptx.opc.packuri import PackURI
 from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide, CT_Slide
 from pptx.oxml.theme import CT_OfficeStyleSheet
 from pptx.parts.chart import ChartPart
+from pptx.parts.comments import CommentsPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
 from pptx.parts.tags import TagsPart
 from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
@@ -217,6 +218,28 @@ class SlidePart(BaseSlidePart):
         except KeyError:
             return False
         return True
+
+    @property
+    def comments_part(self) -> CommentsPart:
+        """The |CommentsPart| for this slide, creating one if not present."""
+        try:
+            return cast("CommentsPart", self.part_related_by(RT.COMMENTS))
+        except KeyError:
+            # Derive index from slide partname (e.g. slide1.xml → comment1.xml)
+            idx = self.partname.idx
+            partname = "/ppt/comments/comment%d.xml" % idx
+            comments_part = CommentsPart.default(self._package, partname)
+            self.relate_to(comments_part, RT.COMMENTS)
+            return comments_part
+
+    @property
+    def has_comments(self) -> bool:
+        """True if this slide has a comments part."""
+        try:
+            self.part_related_by(RT.COMMENTS)
+            return True
+        except KeyError:
+            return False
 
     @property
     def tags_part(self) -> TagsPart:

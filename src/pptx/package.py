@@ -7,6 +7,7 @@ from typing import IO, Iterator
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import OpcPackage
 from pptx.opc.packuri import PackURI
+from pptx.parts.comments import CommentAuthorsPart
 from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.custprops import CustomPropertiesPart
 from pptx.parts.image import Image, ImagePart
@@ -42,6 +43,19 @@ class Package(OpcPackage):
             custom_props = CustomPropertiesPart.default(self)
             self.relate_to(custom_props, RT.CUSTOM_PROPERTIES)
             return custom_props
+
+    @lazyproperty
+    def comment_authors(self) -> CommentAuthorsPart:
+        """Instance of |CommentAuthorsPart| holding comment authors.
+
+        Creates a default comment authors part if one is not present.
+        """
+        try:
+            return self.part_related_by(RT.COMMENT_AUTHORS)
+        except KeyError:
+            authors_part = CommentAuthorsPart.default(self)
+            self.relate_to(authors_part, RT.COMMENT_AUTHORS)
+            return authors_part
 
     def get_or_add_image_part(self, image_file: str | IO[bytes]):
         """

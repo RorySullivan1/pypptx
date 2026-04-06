@@ -33,6 +33,8 @@ if TYPE_CHECKING:
         CT_SlideMaster,
     )
     from pptx.parts.presentation import PresentationPart
+    from pptx.oxml.comment import CT_Comment
+    from pptx.parts.comments import CommentAuthorsPart
     from pptx.parts.slide import SlideLayoutPart, SlideMasterPart, SlidePart
     from pptx.parts.tags import TagsPart
     from pptx.presentation import Presentation
@@ -189,6 +191,19 @@ class Slide(_BaseSlide):
     """Slide object. Provides access to shapes and slide-level properties."""
 
     part: SlidePart  # pyright: ignore[reportIncompatibleMethodOverride]
+
+    @property
+    def comments(self) -> SlideComments:
+        """Access to comments on this slide.
+
+        Returns a |SlideComments| object providing iteration, len(), add, and delete.
+        """
+        return SlideComments(self)
+
+    @property
+    def has_comments(self) -> bool:
+        """True if this slide has any comments."""
+        return self.part.has_comments
 
     @property
     def tags(self) -> TagsPart:
@@ -641,3 +656,119 @@ class _Background(ElementProxy):
         """
         bgPr = self._cSld.get_or_add_bgPr()
         return FillFormat.from_fill_parent(bgPr)
+
+
+class SlideComments:
+    """Collection of comments on a slide.
+
+    Supports iteration, len(), add(), and delete().
+    """
+
+    def __init__(self, slide: Slide):
+        self._slide = slide
+
+    def __len__(self) -> int:
+        if not self._slide.part.has_comments:
+            return 0
+        return len(self._slide.part.comments_part)
+
+    def __iter__(self) -> Iterator[Comment]:
+        if not self._slide.part.has_comments:
+            return
+        authors_part = self._slide.part.package.comment_authors
+        for cm in self._slide.part.comments_part:
+            yield Comment(cm, authors_part)
+
+    def __getitem__(self, idx: int) -> Comment:
+        comments = list(self)
+        if idx < 0 or idx >= len(comments):
+            raise IndexError("comment index out of range")
+        return comments[idx]
+
+    def add(
+        self, author_name: str, author_initials: str, text: str, x: int = 0, y: int = 0
+    ) -> Comment:
+        """Add a comment to this slide and return the new |Comment|."""
+        from lxml import etree
+
+        from pptx.oxml.ns import qn
+
+        authors_part = self._slide.part.package.comment_authors
+        author = authors_part.get_or_add_author(author_name, author_initials)
+
+        # Increment lastIdx to get next comment index for this author
+        next_idx = author.lastIdx + 1
+        author.set("lastIdx", str(next_idx))
+
+        comments_part = self._slide.part.comments_part
+        cm = etree.SubElement(comments_part._element, qn("p:cm"))
+        cm.set("authorId", str(author.id))
+        cm.set("idx", str(next_idx))
+
+        pos = etree.SubElement(cm, qn("p:pos"))
+        pos.set("x", str(x))
+        pos.set("y", str(y))
+
+        text_elm = etree.SubElement(cm, qn("p:text"))
+        text_elm.text = text
+
+        return Comment(cm, authors_part)
+
+    def clear(self) -> None:
+        """Remove all comments from this slide."""
+        if not self._slide.part.has_comments:
+            return
+        comments_part = self._slide.part.comments_part
+        for cm in list(comments_part._element.cm_lst):
+            comments_part._element.remove(cm)
+
+
+class Comment:
+    """A single comment on a slide."""
+
+    def __init__(self, cm: CT_Comment, authors_part: CommentAuthorsPart):
+        self._cm = cm
+        self._authors_part = authors_part
+
+    @property
+    def author(self) -> str:
+        """Name of the comment author."""
+        author = self._authors_part.get_author(self._cm.authorId)
+        return author.name if author is not None else ""
+
+    @property
+    def text(self) -> str:
+        """The comment text."""
+        text_elm = self._cm.text
+        if text_elm is None:
+            return ""
+        return text_elm.text or ""
+
+    @text.setter
+    def text(self, value: str):
+        if self._cm.text is None:
+            from lxml import etree
+
+            from pptx.oxml.ns import qn
+
+            text_elm = etree.SubElement(self._cm, qn("p:text"))
+            text_elm.text = value
+        else:
+            self._cm.text.text = value
+
+    @property
+    def position(self) -> tuple[int, int]:
+        """(x, y) position of the comment anchor in EMU."""
+        pos = self._cm.pos
+        if pos is None:
+            return (0, 0)
+        return (int(pos.get("x", "0")), int(pos.get("y", "0")))
+
+    @property
+    def datetime(self) -> str | None:
+        """ISO 8601 datetime string of the comment, or None."""
+        return self._cm.dt
+
+    def delete(self) -> None:
+        """Remove this comment from its slide."""
+        self._cm.getparent().remove(self._cm)
