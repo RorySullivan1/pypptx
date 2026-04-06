@@ -303,8 +303,13 @@ class CT_SlideLayoutIdList(BaseOxmlElement):
     """
 
     sldLayoutId_lst: list[CT_SlideLayoutIdListEntry]
+    _add_sldLayoutId: Callable[..., CT_SlideLayoutIdListEntry]
 
     sldLayoutId = ZeroOrMore("p:sldLayoutId")
+
+    def add_sldLayoutId(self, rId: str) -> CT_SlideLayoutIdListEntry:
+        """Create and return a new `p:sldLayoutId` child element with `rId`."""
+        return self._add_sldLayoutId(rId=rId)
 
 
 class CT_SlideLayoutIdListEntry(BaseOxmlElement):

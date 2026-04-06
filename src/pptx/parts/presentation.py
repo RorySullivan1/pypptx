@@ -7,9 +7,9 @@ from typing import IO, TYPE_CHECKING, Iterable
 
 from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from pptx.opc.package import XmlPart
+from pptx.opc.package import Part, XmlPart
 from pptx.opc.packuri import PackURI
-from pptx.parts.slide import NotesMasterPart, SlidePart
+from pptx.parts.slide import NotesMasterPart, SlideLayoutPart, SlideMasterPart, SlidePart
 from pptx.presentation import Presentation
 from pptx.util import lazyproperty
 
@@ -68,6 +68,184 @@ class PresentationPart(XmlPart):
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
         return rId, new_slide_part.slide
+
+    def import_slide(self, source_slide_part: SlidePart) -> tuple[str, Slide]:
+        """Return (rId, slide) pair for a slide imported from another presentation.
+
+        The source slide's XML is deep-copied and a new SlidePart is created in this
+        package. The source slide's layout is matched by name in this presentation;
+        if no match is found, the layout (and its master/theme if needed) are imported.
+        All relationships (images, charts, media) are re-established in this package.
+        Notes, comments, and tags are not imported.
+        """
+        from pptx.opc.constants import CONTENT_TYPE as CT
+
+        partname = self.package.next_partname("/ppt/slides/slide%d.xml")
+        new_element = deepcopy(source_slide_part._element)
+        new_slide_part = SlidePart(partname, CT.PML_SLIDE, self.package, new_element)
+
+        # --- find or import the slide layout ---
+        source_layout_part = source_slide_part.part_related_by(RT.SLIDE_LAYOUT)
+        target_layout_part = self._find_or_import_layout(source_layout_part)
+
+        # --- per-slide parts that should NOT be imported ---
+        _skip_reltypes = {RT.NOTES_SLIDE, RT.COMMENTS, RT.TAGS, RT.SLIDE_LAYOUT}
+
+        # --- build rId mapping, re-establishing relationships in target package ---
+        rId_map: dict[str, str] = {}
+        for rId, rel in source_slide_part.rels.items():
+            if rel.reltype in _skip_reltypes:
+                continue
+            if rel.is_external:
+                new_rId = new_slide_part.relate_to(rel.target_ref, rel.reltype, is_external=True)
+            else:
+                # --- import the part's blob into a new part in this package ---
+                target_part = self._import_part(rel.target_part)
+                new_rId = new_slide_part.relate_to(target_part, rel.reltype)
+            rId_map[rId] = new_rId
+
+        # --- add the layout relationship separately (uses target layout, not source) ---
+        source_layout_rId = None
+        for rId, rel in source_slide_part.rels.items():
+            if rel.reltype == RT.SLIDE_LAYOUT:
+                source_layout_rId = rId
+                break
+        if source_layout_rId is not None:
+            new_layout_rId = new_slide_part.relate_to(target_layout_part, RT.SLIDE_LAYOUT)
+            rId_map[source_layout_rId] = new_layout_rId
+
+        # --- update rId references in the cloned XML ---
+        _remap_rIds(new_element, rId_map)
+
+        rId = self.relate_to(new_slide_part, RT.SLIDE)
+        return rId, new_slide_part.slide
+
+    def _find_or_import_layout(self, source_layout_part: SlideLayoutPart) -> SlideLayoutPart:
+        """Return a layout part in this presentation matching the source, importing if needed."""
+        source_name = source_layout_part.slide_layout.name
+
+        # --- search all masters in this presentation for a matching layout name ---
+        for sldMasterId in self._element.get_or_add_sldMasterIdLst():
+            master_part = self.related_part(sldMasterId.rId)
+            for layout in master_part.slide_master.slide_layouts:
+                if layout.name == source_name:
+                    return layout.part
+
+        # --- no match found — import the layout and its master ---
+        return self._import_layout_and_master(source_layout_part)
+
+    def _import_layout_and_master(self, source_layout_part: SlideLayoutPart) -> SlideLayoutPart:
+        """Import a slide layout and its master into this presentation."""
+        from pptx.opc.constants import CONTENT_TYPE as CT
+
+        source_master_part = source_layout_part.part_related_by(RT.SLIDE_MASTER)
+
+        # --- import the master ---
+        master_partname = self.package.next_partname("/ppt/slideMasters/slideMaster%d.xml")
+        new_master_element = deepcopy(source_master_part._element)
+        new_master_part = SlideMasterPart(
+            master_partname, CT.PML_SLIDE_MASTER, self.package, new_master_element
+        )
+
+        # --- import master's theme if present ---
+        try:
+            source_theme_part = source_master_part.part_related_by(RT.THEME)
+            target_theme_part = self._import_part(source_theme_part)
+            new_master_part.relate_to(target_theme_part, RT.THEME)
+        except KeyError:
+            pass
+
+        # --- import master's non-layout relationships (images, etc.) ---
+        _skip_master_reltypes = {RT.SLIDE_LAYOUT, RT.THEME}
+        master_rId_map: dict[str, str] = {}
+        for rId, rel in source_master_part.rels.items():
+            if rel.reltype in _skip_master_reltypes:
+                continue
+            if rel.is_external:
+                new_rId = new_master_part.relate_to(
+                    rel.target_ref, rel.reltype, is_external=True
+                )
+            else:
+                target_part = self._import_part(rel.target_part)
+                new_rId = new_master_part.relate_to(target_part, rel.reltype)
+            master_rId_map[rId] = new_rId
+        _remap_rIds(new_master_element, master_rId_map)
+
+        # --- register the master in presentation.xml ---
+        master_rId = self.relate_to(new_master_part, RT.SLIDE_MASTER)
+        sldMasterIdLst = self._element.get_or_add_sldMasterIdLst()
+        sldMasterIdLst.add_sldMasterId(master_rId)
+
+        # --- import the layout ---
+        layout_partname = self.package.next_partname("/ppt/slideLayouts/slideLayout%d.xml")
+        new_layout_element = deepcopy(source_layout_part._element)
+        new_layout_part = SlideLayoutPart(
+            layout_partname, CT.PML_SLIDE_LAYOUT, self.package, new_layout_element
+        )
+        new_layout_part.relate_to(new_master_part, RT.SLIDE_MASTER)
+
+        # --- import layout's non-master relationships ---
+        layout_rId_map: dict[str, str] = {}
+        for rId, rel in source_layout_part.rels.items():
+            if rel.reltype == RT.SLIDE_MASTER:
+                continue
+            if rel.is_external:
+                new_rId = new_layout_part.relate_to(
+                    rel.target_ref, rel.reltype, is_external=True
+                )
+            else:
+                target_part = self._import_part(rel.target_part)
+                new_rId = new_layout_part.relate_to(target_part, rel.reltype)
+            layout_rId_map[rId] = new_rId
+        _remap_rIds(new_layout_element, layout_rId_map)
+
+        # --- register layout under the new master ---
+        layout_rId = new_master_part.relate_to(new_layout_part, RT.SLIDE_LAYOUT)
+        new_master_part._element.get_or_add_sldLayoutIdLst().add_sldLayoutId(layout_rId)
+
+        return new_layout_part
+
+    def _import_part(self, source_part: Part) -> Part:
+        """Import a part from another package into this one, reusing if blob matches."""
+        # --- for image/media parts, check if an identical part already exists ---
+        source_blob = source_part.blob
+        for existing_part in self.package.iter_parts():
+            if (
+                existing_part.content_type == source_part.content_type
+                and existing_part.blob == source_blob
+            ):
+                return existing_part
+
+        # --- create a new part with appropriate partname ---
+        partname_tmpl = self._partname_template(source_part.partname)
+        if partname_tmpl:
+            new_partname = self.package.next_partname(partname_tmpl)
+        else:
+            new_partname = source_part.partname
+
+        # --- for XmlPart subtypes, deep-copy the element ---
+        if hasattr(source_part, "_element"):
+            new_element = deepcopy(source_part._element)
+            new_part = type(source_part)(
+                new_partname, source_part.content_type, self.package, new_element
+            )
+        else:
+            new_part = type(source_part)(
+                new_partname, source_part.content_type, self.package, source_blob
+            )
+        return new_part
+
+    @staticmethod
+    def _partname_template(partname: PackURI) -> str | None:
+        """Return a printf-style template for generating new partnames like the given one."""
+        import re
+
+        name = str(partname)
+        match = re.match(r"^(.*?)(\d+)(\.\w+)$", name)
+        if match:
+            prefix, _, ext = match.groups()
+            return f"{prefix}%d{ext}"
+        return None
 
     @property
     def core_properties(self) -> CorePropertiesPart:

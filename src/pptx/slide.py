@@ -361,6 +361,27 @@ class Slides(ParentedElementProxy):
         self._sldIdLst.add_sldId(rId)
         return new_slide
 
+    def import_slide(self, slide: Slide) -> Slide:
+        """Import a slide from another presentation into this one.
+
+        The slide's content (shapes, images, charts, media) is copied. The slide's
+        layout is matched by name in this presentation; if no match is found, the
+        layout and its master are imported. Returns the newly created |Slide|.
+        """
+        rId, new_slide = self.part.import_slide(slide.part)
+        self._sldIdLst.add_sldId(rId)
+        return new_slide
+
+    def merge(self, presentation: Presentation) -> list[Slide]:
+        """Import all slides from another presentation, preserving order.
+
+        Returns a list of the newly created |Slide| objects.
+        """
+        new_slides = []
+        for slide in presentation.slides:
+            new_slides.append(self.import_slide(slide))
+        return new_slides
+
     def delete(self, slide: Slide) -> None:
         """Remove `slide` from the presentation.
 
