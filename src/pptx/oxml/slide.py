@@ -184,11 +184,16 @@ class CT_NotesSlide(_BaseSlideElement):
 class CT_Slide(_BaseSlideElement):
     """`p:sld` element, root element of a slide part (XML document)."""
 
-    _tag_seq = ("p:cSld", "p:clrMapOvr", "p:transition", "p:timing", "p:extLst")
+    get_or_add_hf: Callable[[], CT_HeaderFooter]
+
+    _tag_seq = ("p:cSld", "p:clrMapOvr", "p:transition", "p:timing", "p:hf", "p:extLst")
     cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
     clrMapOvr = ZeroOrOne("p:clrMapOvr", successors=_tag_seq[2:])
     transition = ZeroOrOne("p:transition", successors=_tag_seq[3:])
     timing = ZeroOrOne("p:timing", successors=_tag_seq[4:])
+    hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:hf", successors=_tag_seq[5:]
+    )
     del _tag_seq
 
     @classmethod

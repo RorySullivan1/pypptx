@@ -446,6 +446,10 @@ class CT_TextField(BaseOxmlElement):
         "a:t", successors=()
     )
 
+    field_type: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "type", XsdString
+    )
+
     @property
     def text(self) -> str:  # pyright: ignore[reportIncompatibleMethodOverride]
         """The text of the `a:t` child element."""

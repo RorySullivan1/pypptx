@@ -709,6 +709,138 @@ class DescribeHeaderFooter:
         hf.show_footer = False
         assert hf.show_footer is False
 
+    def it_works_on_slide_for_per_slide_overrides(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = '<p:sld %s><p:cSld><p:spTree/></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        # default is True (no hf element)
+        assert hf.show_footer is True
+        assert hf.show_date is True
+        assert hf.show_slide_number is True
+        # can set per-slide overrides
+        hf.show_footer = False
+        assert hf.show_footer is False
+        hf.show_date = False
+        assert hf.show_date is False
+
+    def it_reads_footer_text_from_placeholder(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '<p:sp>'
+            '<p:nvSpPr><p:cNvPr id="5" name="Footer Placeholder 4"/>'
+            '<p:cNvSpPr/><p:nvPr><p:ph type="ftr" idx="3"/></p:nvPr></p:nvSpPr>'
+            '<p:spPr/>'
+            '<p:txBody><a:bodyPr/><a:p><a:r><a:t>My Footer</a:t></a:r></a:p></p:txBody>'
+            '</p:sp>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        assert hf.footer_text == "My Footer"
+
+    def it_can_set_footer_text(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '<p:sp>'
+            '<p:nvSpPr><p:cNvPr id="5" name="Footer Placeholder 4"/>'
+            '<p:cNvSpPr/><p:nvPr><p:ph type="ftr" idx="3"/></p:nvPr></p:nvSpPr>'
+            '<p:spPr/>'
+            '<p:txBody><a:bodyPr/><a:p><a:r><a:t>Old Footer</a:t></a:r></a:p></p:txBody>'
+            '</p:sp>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        hf.footer_text = "New Footer"
+        assert hf.footer_text == "New Footer"
+
+    def it_returns_None_when_no_footer_placeholder(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        assert hf.footer_text is None
+
+    def it_reads_date_format_from_field(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '<p:sp>'
+            '<p:nvSpPr><p:cNvPr id="4" name="Date Placeholder 3"/>'
+            '<p:cNvSpPr/><p:nvPr><p:ph type="dt" idx="2"/></p:nvPr></p:nvSpPr>'
+            '<p:spPr/>'
+            '<p:txBody><a:bodyPr/><a:p>'
+            '<a:fld id="{GUID}" type="datetimeFigureOut">'
+            '<a:t>16/07/2012</a:t></a:fld>'
+            '</a:p></p:txBody>'
+            '</p:sp>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        assert hf.date_format == "datetimeFigureOut"
+        assert hf.is_date_auto is True
+
+    def it_reports_fixed_date_when_no_field(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '<p:sp>'
+            '<p:nvSpPr><p:cNvPr id="4" name="Date Placeholder 3"/>'
+            '<p:cNvSpPr/><p:nvPr><p:ph type="dt" idx="2"/></p:nvPr></p:nvSpPr>'
+            '<p:spPr/>'
+            '<p:txBody><a:bodyPr/><a:p><a:r><a:t>January 1, 2024</a:t></a:r></a:p></p:txBody>'
+            '</p:sp>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        assert hf.date_format is None
+        assert hf.is_date_auto is False
+
+    def it_returns_None_for_date_props_when_no_placeholder(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sld_xml = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(sld_xml)
+        hf = HeaderFooter(sld)
+        assert hf.date_format is None
+        assert hf.is_date_auto is None
+
 
 class DescribeSlideLayout:
     """Unit-test suite for `pptx.slide.SlideLayout` objects."""
