@@ -197,7 +197,7 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 - [x] `MSO_RECT_ALIGNMENT` — 9 positions (tl, t, tr, l, ctr, r, bl, b, br) → wired to `algn` on `CT_OuterShadowEffect`
 
 ### Deferred
-- [ ] Shadow style enumeration — deferred to Section 12 (Python API shadow implementation)
+- [x] Shadow style enumeration — handled by `ShadowFormat.shadow_type` returning `"outer"`/`"inner"`/`None`
 
 ---
 
@@ -377,7 +377,7 @@ _Prerequisites: Section 4.1 (shadow elements)_
 - [x] Shadow type — `ShadowFormat.shadow_type` (outer/inner/none)
 - [x] Blur radius — `ShadowFormat.blur_radius`
 - [x] Distance and direction — `ShadowFormat.distance`, `ShadowFormat.direction`
-- [ ] Shadow color with transparency — color child element with alpha
+- [x] Shadow color with transparency — `ShadowFormat.color` returns `ColorFormat`; alpha via `color.alpha` (0.0–1.0)
 - [x] Alignment — `ShadowFormat.alignment`
 - [x] Rotate with shape — `ShadowFormat.rotate_with_shape`
 - [x] Visibility — presence/absence of shadow element

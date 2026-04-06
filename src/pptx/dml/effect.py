@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from pptx.dml.color import ColorFormat
+from pptx.util import lazyproperty
+
 if TYPE_CHECKING:
     from pptx.enum.dml import MSO_RECT_ALIGNMENT
     from pptx.oxml.dml.effect import (
@@ -134,6 +137,24 @@ class ShadowFormat:
     def rotate_with_shape(self, value: bool | None) -> None:
         outerShdw = self._get_or_add_outerShdw()
         outerShdw.rotWithShape = value
+
+    @lazyproperty
+    def color(self) -> ColorFormat:
+        """Color of the shadow, including transparency.
+
+        Read/write via the returned |ColorFormat| object. Setting ``.rgb`` or
+        ``.theme_color`` chooses the shadow color. Transparency is controlled
+        via the alpha child on the color element.
+
+        Accessing this property creates an outer shadow element if none exists.
+        """
+        outerShdw = self._outerShdw
+        if outerShdw is not None:
+            return ColorFormat.from_colorchoice_parent(outerShdw)
+        innerShdw = self._innerShdw
+        if innerShdw is not None:
+            return ColorFormat.from_colorchoice_parent(innerShdw)
+        return ColorFormat.from_colorchoice_parent(self._get_or_add_outerShdw())
 
     @property
     def shadow_type(self) -> str | None:

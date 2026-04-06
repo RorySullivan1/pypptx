@@ -47,6 +47,34 @@ class ColorFormat:
         return color_format
 
     @property
+    def alpha(self) -> float:
+        """Opacity of this color as a float between 0.0 (transparent) and 1.0 (opaque).
+
+        Read/write. Returns 1.0 (fully opaque) when no alpha is explicitly set.
+        Raises |AttributeError| if no color is defined (type is None).
+        """
+        xClr = self._color._xClr
+        if xClr is None:
+            raise AttributeError("no .alpha property when color type is None")
+        alpha_elm = xClr.alpha
+        if alpha_elm is None:
+            return 1.0
+        return alpha_elm.val
+
+    @alpha.setter
+    def alpha(self, value: float) -> None:
+        xClr = self._color._xClr
+        if xClr is None:
+            raise AttributeError(
+                "can't set alpha when color type is None. Set .rgb or .theme_color first."
+            )
+        if value >= 1.0:
+            xClr._remove_alpha()
+        else:
+            alpha_elm = xClr.get_or_add_alpha()
+            alpha_elm.val = value
+
+    @property
     def rgb(self):
         """
         |RGBColor| value of this color, or None if no RGB color is explicitly
