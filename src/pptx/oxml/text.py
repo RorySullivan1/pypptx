@@ -295,6 +295,7 @@ class CT_TextCharacterProperties(BaseOxmlElement):
     'rPr' is short for 'run properties', and it corresponds to the |Font| proxy class.
     """
 
+    get_or_add_effectLst: Callable[[], BaseOxmlElement]
     get_or_add_hlinkClick: Callable[[], CT_Hyperlink]
     get_or_add_latin: Callable[[], CT_TextFont]
     get_or_add_ea: Callable[[], CT_TextFont]

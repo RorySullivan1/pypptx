@@ -148,6 +148,118 @@ class DescribeBaseShape:
         shape.title = new_value
         assert shape._element.xml == xml(expected_cxml)
 
+    def it_knows_its_lock_aspect_ratio_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Shape with no lock element — defaults to False
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        assert shape.lock_aspect_ratio is False
+
+        # Shape with lock element and noChangeAspect=true
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            '<p:cNvSpPr><a:spLocks noChangeAspect="1"/></p:cNvSpPr>'
+            "<p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        assert shape.lock_aspect_ratio is True
+
+    def it_can_change_its_lock_aspect_ratio_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Set lock on shape that has no lock element
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        shape.lock_aspect_ratio = True
+        assert shape.lock_aspect_ratio is True
+
+        # Clear lock
+        shape.lock_aspect_ratio = False
+        assert shape.lock_aspect_ratio is False
+
+    def it_supports_lock_aspect_ratio_on_pictures(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        pic_xml = (
+            '<p:pic %s><p:nvPicPr><p:cNvPr id="1" name="pic1"/>'
+            '<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>'
+            "<p:nvPr/></p:nvPicPr><p:spPr/></p:pic>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(pic_xml), None)
+        assert shape.lock_aspect_ratio is True
+
+        shape.lock_aspect_ratio = False
+        assert shape.lock_aspect_ratio is False
+
+    def it_knows_if_it_is_in_a_group(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Shape inside a group
+        grp_xml = (
+            '<p:grpSp %s><p:nvGrpSpPr><p:cNvPr id="1" name="grp1"/>'
+            "<p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>"
+            "<p:grpSpPr/>"
+            '<p:sp><p:nvSpPr><p:cNvPr id="2" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+            "</p:grpSp>"
+        ) % nsdecls("p", "a")
+        grpSp = parse_xml(grp_xml)
+        sp_elm = grpSp.findall("{http://schemas.openxmlformats.org/presentationml/2006/main}sp")[0]
+        shape = BaseShape(sp_elm, None)
+        assert shape.is_in_group is True
+
+        # Shape not in a group (at slide level or standalone)
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        # Root element has no parent, so not in group
+        assert shape.is_in_group is False
+
+    def it_can_access_its_parent_group(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+        from pptx.shapes.group import GroupShape
+
+        grp_xml = (
+            '<p:grpSp %s><p:nvGrpSpPr><p:cNvPr id="1" name="grp1"/>'
+            "<p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>"
+            "<p:grpSpPr/>"
+            '<p:sp><p:nvSpPr><p:cNvPr id="2" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+            "</p:grpSp>"
+        ) % nsdecls("p", "a")
+        grpSp = parse_xml(grp_xml)
+        sp_elm = grpSp.findall("{http://schemas.openxmlformats.org/presentationml/2006/main}sp")[0]
+        shape = BaseShape(sp_elm, None)
+        parent = shape.parent_group
+        assert isinstance(parent, GroupShape)
+        assert parent.name == "grp1"
+
+    def it_raises_on_parent_group_when_not_in_group(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        with pytest.raises(ShapeError):
+            shape.parent_group
+
     def it_provides_access_to_its_click_action(self, click_action_fixture):
         shape, ActionSetting_, cNvPr, click_action_ = click_action_fixture
         click_action = shape.click_action

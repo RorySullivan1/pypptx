@@ -10,6 +10,7 @@ from pptx.api import Presentation
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.package import PartFactory
 from pptx.parts.chart import ChartPart
+from pptx.parts.comments import CommentAuthorsPart, CommentsPart
 from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.custprops import CustomPropertiesPart
 from pptx.parts.image import ImagePart
@@ -65,6 +66,8 @@ content_type_to_part_class_map: dict[str, type[Part]] = {
     CT.WMV: MediaPart,
     CT.X_MS_VIDEO: MediaPart,
     CT.OFC_CUSTOM_PROPERTIES: CustomPropertiesPart,
+    CT.PML_COMMENTS: CommentsPart,
+    CT.PML_COMMENT_AUTHORS: CommentAuthorsPart,
     CT.PML_TAGS: TagsPart,
     # -- accommodate "image/jpg" as an alias for "image/jpeg" --
     "image/jpg": ImagePart,
@@ -74,6 +77,8 @@ PartFactory.part_type_for.update(content_type_to_part_class_map)
 
 del (
     ChartPart,
+    CommentAuthorsPart,
+    CommentsPart,
     CorePropertiesPart,
     CustomPropertiesPart,
     ImagePart,

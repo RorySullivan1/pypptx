@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes import ShapeElement
     from pptx.oxml.shapes.shared import CT_Placeholder
     from pptx.parts.slide import BaseSlidePart
+    from pptx.shapes.group import GroupShape
     from pptx.types import ProvidesPart
     from pptx.util import Length
 
@@ -120,6 +121,51 @@ class BaseShape:
     @hidden.setter
     def hidden(self, value: bool):
         self._element._nvXxPr.cNvPr.hidden = value if value else None  # pyright: ignore[reportPrivateUsage]
+
+    @property
+    def is_in_group(self) -> bool:
+        """True when this shape is contained in a group shape.
+
+        When True, ``parent_group`` returns the containing |GroupShape|.
+        """
+        from pptx.oxml.ns import qn
+
+        parent_elm = self._element.getparent()
+        return parent_elm is not None and parent_elm.tag == qn("p:grpSp")
+
+    @property
+    def parent_group(self) -> GroupShape:
+        """The |GroupShape| containing this shape.
+
+        Raises |ShapeError| if this shape is not in a group (check ``is_in_group`` first).
+        """
+        if not self.is_in_group:
+            raise ShapeError("shape is not contained in a group")
+        from pptx.shapes.group import GroupShape
+
+        grpSp_elm = self._element.getparent()
+        return GroupShape(grpSp_elm, self._parent)
+
+    @property
+    def lock_aspect_ratio(self) -> bool:
+        """True when this shape's aspect ratio is locked.
+
+        Read/write. When True, resizing the shape preserves the aspect ratio.
+        """
+        lock = self._element._lock_elm  # pyright: ignore[reportPrivateUsage]
+        if lock is None:
+            return False
+        return bool(lock.noChangeAspect)
+
+    @lock_aspect_ratio.setter
+    def lock_aspect_ratio(self, value: bool):
+        if value:
+            lock = self._element._get_or_add_lock_elm()  # pyright: ignore[reportPrivateUsage]
+            lock.noChangeAspect = True
+        else:
+            lock = self._element._lock_elm  # pyright: ignore[reportPrivateUsage]
+            if lock is not None:
+                lock.noChangeAspect = None
 
     @property
     def height(self) -> Length:

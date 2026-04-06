@@ -235,7 +235,10 @@ class Describe_Cell:
         assert cell == cell_with_same_tc
         assert cell != cell_with_other_tc
 
-    @pytest.mark.parametrize("border_prop", ["border_left", "border_right", "border_top", "border_bottom"])
+    @pytest.mark.parametrize("border_prop", [
+        "border_left", "border_right", "border_top", "border_bottom",
+        "border_diagonal_down", "border_diagonal_up",
+    ])
     def it_provides_access_to_its_borders(self, border_prop: str):
         tc = element("a:tc/a:tcPr")
         cell = _Cell(tc, None)

@@ -302,8 +302,8 @@ _Prerequisites: Sections 3.1 (`hidden`), 3.2 (`noChangeAspect`)_
 - [ ] Duplicate a shape — clone element in `spTree`, assign new shape ID, clone related parts
 - [x] Z-order control — `move_shape_to_front()`, `move_shape_to_back()` via element reordering
 - [x] Shape visibility — `BaseShape.hidden` read/write property on cNvPr
-- [ ] Lock aspect ratio — expose `noChangeAspect` on shape lock elements
-- [ ] Parent group reference — back-reference from child shape to containing `GroupShape`
+- [x] Lock aspect ratio — `BaseShape.lock_aspect_ratio` r/w property via lock elements on cNv*Pr
+- [x] Parent group reference — `BaseShape.is_in_group` and `BaseShape.parent_group` for group containment
 
 ---
 
@@ -327,7 +327,7 @@ _Prerequisites: Sections 3.3, 3.4, 3.5 (text attributes), Section 5 (enumeration
 - [x] Character caps — `font.caps` via `cap` attribute on `a:rPr`
 - [x] Character spacing — `font.spacing` via `spc` attribute on `a:rPr`
 - [x] Kerning — `font.kerning` via `kern` attribute on `a:rPr`
-- [ ] Font shadow — effect list child on `a:rPr`
+- [x] Font shadow — `Font.has_shadow` r/w via `a:effectLst/a:outerShdw` on `a:rPr`
 - [x] East Asian font name — `font.east_asian_name` via `a:ea` element on `a:rPr`
 - [x] Complex script font name — `font.complex_script_name` via `a:cs` element on `a:rPr`
 
@@ -352,7 +352,7 @@ _Prerequisites: Sections 3.3, 3.4, 3.5 (text attributes), Section 5 (enumeration
 _Prerequisites: Section 4.3 (table cell border elements)_
 
 - [x] Cell borders — `_Cell.border_left/right/top/bottom` via `_CellBorderAdapter` + `LineFormat`
-- [ ] Diagonal borders — `a:lnTlToBr`, `a:lnBlToTr` within `a:tcPr`
+- [x] Diagonal borders — `_Cell.border_diagonal_down` / `border_diagonal_up` via `a:lnTlToBr`, `a:lnBlToTr`
 - [x] Table style — `Table.table_style_id` via `tblStyle` attribute on `a:tblPr`
 
 ---
@@ -417,14 +417,15 @@ _Prerequisites: Section 4.5 (sections and tags elements)_
 
 ---
 
-## 16. Python API — Comments
+## 16. Python API — Comments (DONE)
 
 _Prerequisites: Section 4.6 (comment elements)_
 
-- [ ] Slide comments — add, read, delete comments (`comments[N].xml` parts)
-- [ ] Comment authors — manage author list (`commentAuthors.xml` part)
-- [ ] Comment positioning — x/y coordinates on slide
-- [ ] Comment metadata — author, datetime, text
+- [x] Slide comments — `Slide.comments` returns `SlideComments` with add, iterate, len, clear, indexed access
+- [x] Comment authors — `CommentAuthorsPart` on package with get_or_add_author, auto-incrementing IDs
+- [x] Comment positioning — `Comment.position` returns (x, y) tuple
+- [x] Comment metadata — `Comment.author`, `Comment.text` (r/w), `Comment.datetime`, `Comment.delete()`
+- [x] Part registration — `CommentsPart` and `CommentAuthorsPart` registered in PartFactory
 
 ---
 
@@ -436,7 +437,7 @@ _Prerequisites: Section 4.7 (picture format effects)_
 - [x] Contrast — `Picture.contrast` via `a:lum` contrast attribute on blip
 - [x] Grayscale — `Picture.is_grayscale` via `a:grayscl` on blip
 - [ ] Transparency color
-- [ ] Original image dimensions — expose from `ImagePart`
+- [x] Original image dimensions — `Picture.image_width` / `image_height` via `ImagePart._native_size`
 
 ---
 
@@ -498,9 +499,9 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] `Chart.secondary_value_axis` — access second `c:valAx` if present
 - [x] `Chart.secondary_category_axis` — access second `c:catAx`/`c:dateAx` if present
 - [x] Fix `Chart.value_axis` heuristic — was returning `valAx_lst[1]` when count > 1, now returns `[0]` (primary)
-- [ ] Axis `axId` / `crossAx` cross-referencing — associate axes with correct plots (deferred to 18.5)
-- [ ] `Plot.axis_ids` property — expose which axis IDs a plot references (deferred to 18.5)
-- [ ] Combo chart axis assignment — when adding a second plot, assign correct axis pair (deferred to 18.5)
+- [x] Axis `axId` / `crossAx` cross-referencing — implemented in 18.5 via `Plot.axis_ids` and `add_secondary_axes()`
+- [x] `Plot.axis_ids` property — implemented in 18.5
+- [x] Combo chart axis assignment — implemented in 18.5 via `Chart.add_plot()` with `use_secondary_axis`
 
 ### 18.5 Combo Charts — API (DONE)
 
