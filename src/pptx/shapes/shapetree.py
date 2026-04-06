@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import os
+from copy import deepcopy
 from typing import IO, TYPE_CHECKING, Callable, Iterable, Iterator, cast
 
 from pptx.enum.shapes import PP_PLACEHOLDER, PROG_ID
@@ -506,6 +507,58 @@ class _BaseGroupShapes(_BaseShapes):
         if first_shape is not None and first_shape is not shape.element:
             first_shape.addprevious(shape.element)
         self._invalidate_shape_cache()
+
+    def duplicate_shape(self, shape: BaseShape) -> BaseShape:
+        """Return a new shape that is a deep copy of `shape`.
+
+        The cloned shape is appended to this shape tree with a new unique shape ID.
+        Relationships to images, charts, and other parts are re-established on the
+        slide part so the duplicate references the same resources.
+        """
+        new_element = deepcopy(shape.element)
+
+        # --- assign new shape ID and update name ---
+        new_id = self._next_shape_id
+        cNvPr = new_element._nvXxPr.cNvPr
+        old_name = cNvPr.name
+        cNvPr.id = new_id
+        # Update trailing number in name if present (e.g. "TextBox 3" -> "TextBox 4")
+        parts = old_name.rsplit(" ", 1)
+        if len(parts) == 2 and parts[1].isdigit():
+            cNvPr.name = "%s %d" % (parts[0], new_id - 1)
+        else:
+            cNvPr.name = "%s %d" % (old_name, new_id - 1)
+
+        # --- re-map rId references to point to same target parts ---
+        rId_attrs = new_element.xpath("//@r:id")
+        if rId_attrs:
+            slide_part = self.part
+            rId_map: dict[str, str] = {}
+            for rId_attr in rId_attrs:
+                old_rId = str(rId_attr)
+                if old_rId not in rId_map:
+                    rel = slide_part.rels[old_rId]
+                    if rel.is_external:
+                        new_rId = slide_part.relate_to(
+                            rel.target_ref, rel.reltype, is_external=True
+                        )
+                    else:
+                        new_rId = slide_part.relate_to(rel.target_part, rel.reltype)
+                    rId_map[old_rId] = new_rId
+
+            # --- update rId values in the cloned XML ---
+            for old_rId, new_rId in rId_map.items():
+                if old_rId != new_rId:
+                    for attr in new_element.xpath("//@r:id"):
+                        elm = attr.getparent()
+                        for attr_name, val in elm.attrib.items():
+                            if val == old_rId:
+                                elm.set(attr_name, new_rId)
+
+        self._grpSp.append(new_element)
+        self._invalidate_shape_cache()
+        self._recalculate_extents()
+        return self._shape_factory(new_element)
 
     def remove_shape(self, shape: BaseShape) -> None:
         """Remove `shape` from this shape tree.
