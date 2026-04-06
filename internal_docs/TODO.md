@@ -303,7 +303,7 @@ _Prerequisites: Sections 3.1 (`hidden`), 3.2 (`noChangeAspect`)_
 - [x] Z-order control — `move_shape_to_front()`, `move_shape_to_back()` via element reordering
 - [x] Shape visibility — `BaseShape.hidden` read/write property on cNvPr
 - [x] Lock aspect ratio — `BaseShape.lock_aspect_ratio` r/w property via lock elements on cNv*Pr
-- [ ] Parent group reference — back-reference from child shape to containing `GroupShape`
+- [x] Parent group reference — `BaseShape.is_in_group` and `BaseShape.parent_group` for group containment
 
 ---
 
