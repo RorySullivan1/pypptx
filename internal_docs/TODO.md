@@ -363,9 +363,9 @@ _Prerequisites: Section 3.6 (`cmpd` attribute)_
 
 - [x] Arrowhead formatting — `begin/end_arrowhead_type/width/length` on `LineFormat`
 - [x] Compound line style — `LineFormat.compound_type` via `cmpd` attribute on `a:ln`
-- [ ] Line transparency — alpha modifier on line fill color
+- [x] Line transparency — `line.color.alpha` via `ColorFormat.alpha` on the line's solid fill color
 - [x] Line visibility — `LineFormat.no_fill` read-only check
-- [ ] Line pattern — pattern fill on lines
+- [x] Line pattern — `line.fill.patterned()` + `line.fill.pattern`/`fore_color`/`back_color` via `FillFormat`
 - [x] Query connected shapes — `Connector.begin_connection`/`end_connection`
 
 ---

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pptx.dml.color import ColorFormat
+from pptx.dml.color import ColorFormat, RGBColor
 from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
 from pptx.enum.dml import MSO_FILL, MSO_LINE, MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE
@@ -179,6 +179,44 @@ class DescribeLineFormat:
         color = line.color
         assert fill_.solid.mock_calls == expected_solid_calls
         assert color is color_
+
+    def it_supports_line_transparency_via_color_alpha(self):
+        from pptx.dml.color import RGBColor
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Line with solid fill and alpha on the color
+        spPr_xml = (
+            '<p:spPr %s><a:ln w="12700">'
+            '<a:solidFill><a:srgbClr val="FF0000">'
+            '<a:alpha val="50000"/>'
+            '</a:srgbClr></a:solidFill>'
+            '</a:ln></p:spPr>' % nsdecls("p", "a")
+        )
+        spPr = parse_xml(spPr_xml)
+        line = LineFormat(spPr)
+        assert line.color.rgb == RGBColor(0xFF, 0, 0)
+        assert line.color.alpha == pytest.approx(0.5)
+
+    def it_can_set_line_transparency(self):
+        spPr = element("p:spPr{a:b=c}")
+        line = LineFormat(spPr)
+        line.color.rgb = RGBColor(0, 0, 0xFF)
+        line.color.alpha = 0.75
+        assert line.color.alpha == pytest.approx(0.75)
+
+    def it_supports_pattern_fill_on_lines(self):
+        from pptx.dml.color import RGBColor
+        from pptx.enum.dml import MSO_PATTERN_TYPE
+
+        spPr = element("p:spPr{a:b=c}")
+        line = LineFormat(spPr)
+        line.fill.patterned()
+        line.fill.fore_color.rgb = RGBColor(0, 0, 0)
+        line.fill.back_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        line.fill.pattern = MSO_PATTERN_TYPE.PERCENT_50
+        assert line.fill.type == MSO_FILL.PATTERNED
+        assert line.fill.pattern == MSO_PATTERN_TYPE.PERCENT_50
 
     # fixtures -------------------------------------------------------
 
