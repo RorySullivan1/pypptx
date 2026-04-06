@@ -149,8 +149,13 @@ class CT_SlideMasterIdList(BaseOxmlElement):
     """
 
     sldMasterId_lst: list[CT_SlideMasterIdListEntry]
+    _add_sldMasterId: Callable[..., CT_SlideMasterIdListEntry]
 
     sldMasterId = ZeroOrMore("p:sldMasterId")
+
+    def add_sldMasterId(self, rId: str) -> CT_SlideMasterIdListEntry:
+        """Create and return a new `p:sldMasterId` child element with `rId`."""
+        return self._add_sldMasterId(rId=rId)
 
 
 class CT_SlideMasterIdListEntry(BaseOxmlElement):

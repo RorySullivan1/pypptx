@@ -276,3 +276,134 @@ assert effect_scheme.intense.has_3d_shape is True
 assert effect_scheme.name == "Office"
 """)
 
+    def it_round_trips_slide_import(self):
+        _run_roundtrip_test("""\
+# --- create source presentation with a text box ---
+src_prs = Presentation()
+src_slide = src_prs.slides.add_slide(src_prs.slide_layouts[6])  # blank layout
+txBox = src_slide.shapes.add_textbox(Inches(1), Inches(1), Inches(4), Inches(1))
+txBox.text_frame.text = "Imported Slide"
+
+# --- save and reload source ---
+src_stream = BytesIO()
+src_prs.save(src_stream)
+src_stream.seek(0)
+src_prs2 = Presentation(src_stream)
+
+# --- create target presentation and import slide ---
+tgt_prs = Presentation()
+imported = tgt_prs.slides.import_slide(src_prs2.slides[0])
+
+assert imported is not None
+# target should now have 1 slide (the imported one)
+assert len(tgt_prs.slides) == 1
+
+# verify content survived
+shapes = list(tgt_prs.slides[0].shapes)
+textboxes = [s for s in shapes if s.has_text_frame and not s.is_placeholder]
+assert len(textboxes) == 1
+assert textboxes[0].text_frame.text == "Imported Slide"
+
+# --- save and reload to verify round-trip ---
+tgt_stream = BytesIO()
+tgt_prs.save(tgt_stream)
+tgt_stream.seek(0)
+tgt_prs2 = Presentation(tgt_stream)
+
+assert len(tgt_prs2.slides) == 1
+shapes2 = list(tgt_prs2.slides[0].shapes)
+textboxes2 = [s for s in shapes2 if s.has_text_frame and not s.is_placeholder]
+assert len(textboxes2) == 1
+assert textboxes2[0].text_frame.text == "Imported Slide"
+""")
+
+    def it_round_trips_merge_presentations(self):
+        _run_roundtrip_test("""\
+# --- create two source presentations ---
+prs_a = Presentation()
+slide_a = prs_a.slides.add_slide(prs_a.slide_layouts[6])
+txBox_a = slide_a.shapes.add_textbox(Inches(1), Inches(1), Inches(3), Inches(1))
+txBox_a.text_frame.text = "Slide A"
+
+prs_b = Presentation()
+slide_b1 = prs_b.slides.add_slide(prs_b.slide_layouts[6])
+txBox_b1 = slide_b1.shapes.add_textbox(Inches(1), Inches(1), Inches(3), Inches(1))
+txBox_b1.text_frame.text = "Slide B1"
+slide_b2 = prs_b.slides.add_slide(prs_b.slide_layouts[6])
+txBox_b2 = slide_b2.shapes.add_textbox(Inches(1), Inches(1), Inches(3), Inches(1))
+txBox_b2.text_frame.text = "Slide B2"
+
+# --- save and reload ---
+stream_a = BytesIO()
+prs_a.save(stream_a)
+stream_a.seek(0)
+prs_a2 = Presentation(stream_a)
+
+stream_b = BytesIO()
+prs_b.save(stream_b)
+stream_b.seek(0)
+prs_b2 = Presentation(stream_b)
+
+# --- merge B into A ---
+new_slides = prs_a2.slides.merge(prs_b2)
+assert len(new_slides) == 2
+assert len(prs_a2.slides) == 3  # 1 original + 2 merged
+
+# --- save and reload ---
+out_stream = BytesIO()
+prs_a2.save(out_stream)
+out_stream.seek(0)
+merged = Presentation(out_stream)
+
+assert len(merged.slides) == 3
+texts = []
+for slide in merged.slides:
+    for shape in slide.shapes:
+        if shape.has_text_frame and not shape.is_placeholder:
+            texts.append(shape.text_frame.text)
+assert texts == ["Slide A", "Slide B1", "Slide B2"]
+""")
+
+    def it_imports_slide_with_image(self):
+        _run_roundtrip_test("""\
+import os, tempfile
+from pptx.shapes.picture import Picture
+
+# tiny valid PNG (1x1 white pixel)
+png_bytes = (
+    b'\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x00\\x01'
+    b'\\x00\\x00\\x00\\x01\\x08\\x02\\x00\\x00\\x00\\x90wS\\xde\\x00'
+    b'\\x00\\x00\\x0cIDATx\\x9cc\\xf8\\x0f\\x00\\x00\\x01\\x01\\x00'
+    b'\\x05\\x18\\xd8N\\x00\\x00\\x00\\x00IEND\\xaeB`\\x82'
+)
+with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+    f.write(png_bytes)
+    img_path = f.name
+
+try:
+    # --- source with image ---
+    src = Presentation()
+    slide = src.slides.add_slide(src.slide_layouts[6])
+    slide.shapes.add_picture(img_path, Inches(1), Inches(1))
+
+    src_stream = BytesIO()
+    src.save(src_stream)
+    src_stream.seek(0)
+    src2 = Presentation(src_stream)
+
+    # --- import into target ---
+    tgt = Presentation()
+    tgt.slides.import_slide(src2.slides[0])
+
+    tgt_stream = BytesIO()
+    tgt.save(tgt_stream)
+    tgt_stream.seek(0)
+    tgt2 = Presentation(tgt_stream)
+
+    assert len(tgt2.slides) == 1
+    pics = [s for s in tgt2.slides[0].shapes if isinstance(s, Picture)]
+    assert len(pics) == 1
+finally:
+    os.unlink(img_path)
+""")
+

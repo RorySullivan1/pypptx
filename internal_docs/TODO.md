@@ -662,16 +662,16 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 
 ---
 
-## 22. Python API — Callout Shapes
+## 22. Python API — Callout Shapes (DONE)
 
-- [ ] Callout-specific formatting via adjustment handles on callout preset geometries (accent bar, angle, length, gap)
+- [x] Callout-specific formatting via adjustment handles on callout preset geometries — already supported through `Shape.adjustments` (indexed read/write `AdjustmentCollection`) and `MSO_SHAPE.LINE_CALLOUT_*` presets with default adjustment values in `spec.py`
 
 ---
 
-## 23. Python API — Slide Import & Cross-Presentation Operations
+## 23. Python API — Slide Import & Cross-Presentation Operations (DONE)
 
-- [ ] Import slides from another `.pptx` — clone parts, remap relationships, deduplicate shared resources
-- [ ] Merge presentations — combine slide decks with master/layout reconciliation
+- [x] Import slides from another `.pptx` — `Slides.import_slide(slide)` deep-copies XML, remaps relationships, deduplicates shared resources (images/media), matches or imports layout/master
+- [x] Merge presentations — `Slides.merge(presentation)` imports all slides preserving order, with layout name matching and automatic master/theme import when needed
 
 ---
 
