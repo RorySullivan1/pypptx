@@ -17,6 +17,7 @@ from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.oxml.shapes.autoshape import CT_GeomGuide, CT_PresetGeometry2D, CT_Shape
+    from pptx.oxml.shapes.shared import CT_LineProperties
     from pptx.spec import AdjustmentValue
     from pptx.types import ProvidesPart
 
@@ -33,7 +34,7 @@ class Adjustment:
     greater than 1.0 in certain circumstances.
     """
 
-    def __init__(self, name: str, def_val: int, actual: int | None = None):
+    def __init__(self, name: str, def_val: int, actual: int | None = None) -> None:
         super(Adjustment, self).__init__()
         self.name = name
         self.def_val = def_val
@@ -55,7 +56,7 @@ class Adjustment:
         return self._normalize(raw_value)
 
     @effective_value.setter
-    def effective_value(self, value: float):
+    def effective_value(self, value: float) -> None:
         if not isinstance(value, Number):
             raise ShapeError(f"adjustment value must be numeric, got {repr(value)}")
         self.actual = self._denormalize(value)
@@ -94,7 +95,7 @@ class AdjustmentCollection:
     access, e.g. `shape.adjustments[1] = 0.15`.
     """
 
-    def __init__(self, prstGeom: CT_PresetGeometry2D):
+    def __init__(self, prstGeom: CT_PresetGeometry2D) -> None:
         super(AdjustmentCollection, self).__init__()
         self._adjustments_ = self._initialized_adjustments(prstGeom)
         self._prstGeom = prstGeom
@@ -103,7 +104,7 @@ class AdjustmentCollection:
         """Provides indexed access, (e.g. 'adjustments[9]')."""
         return self._adjustments_[idx].effective_value
 
-    def __setitem__(self, idx: int, value: float):
+    def __setitem__(self, idx: int, value: float) -> None:
         """Provides item assignment via an indexed expression, e.g. `adjustments[9] = 999.9`.
 
         Causes all adjustment values in collection to be written to the XML.
@@ -120,7 +121,7 @@ class AdjustmentCollection:
         self._update_adjustments_with_actuals(adjustments, prstGeom.gd_lst)
         return adjustments
 
-    def _rewrite_guides(self):
+    def _rewrite_guides(self) -> None:
         """Write `a:gd` elements to the XML, one for each adjustment value.
 
         Any existing guide elements are overwritten.
@@ -131,7 +132,7 @@ class AdjustmentCollection:
     @staticmethod
     def _update_adjustments_with_actuals(
         adjustments: Iterable[Adjustment], guides: Iterable[CT_GeomGuide]
-    ):
+    ) -> None:
         """Update |Adjustment| instances in `adjustments` with actual values held in `guides`.
 
         `guides` is a list of `a:gd` elements. Guides with a name that does not match an adjustment
@@ -153,7 +154,7 @@ class AdjustmentCollection:
         """Sequence of |Adjustment| objects contained in collection."""
         return tuple(self._adjustments_)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Implement built-in function len()"""
         return len(self._adjustments_)
 
@@ -198,7 +199,7 @@ class AutoShapeType:
         # -- return the instance; note that __init__() gets called either way --
         return cls._instances[autoshape_type_id]
 
-    def __init__(self, autoshape_type_id: MSO_AUTO_SHAPE_TYPE):
+    def __init__(self, autoshape_type_id: MSO_AUTO_SHAPE_TYPE) -> None:
         """Initialize attributes from constant values in `pptx.spec`."""
         # -- skip loading if this instance is from the cache --
         if hasattr(self, "_loaded"):
@@ -244,7 +245,7 @@ class AutoShapeType:
         return MSO_AUTO_SHAPE_TYPE.from_xml(prst)
 
     @property
-    def prst(self):
+    def prst(self) -> str:
         """
         Preset geometry identifier string for this auto shape. Used in the
         `prst` attribute of `a:prstGeom` element to specify the geometry
@@ -260,7 +261,7 @@ class Shape(BaseShape):
     (slide, slideLayout, slideMaster, notesPage, notesMaster, handoutMaster).
     """
 
-    def __init__(self, sp: CT_Shape, parent: ProvidesPart):
+    def __init__(self, sp: CT_Shape, parent: ProvidesPart) -> None:
         super(Shape, self).__init__(sp, parent)
         self._sp = sp
 
@@ -270,7 +271,7 @@ class Shape(BaseShape):
         return AdjustmentCollection(self._sp.prstGeom)
 
     @property
-    def auto_shape_type(self):
+    def auto_shape_type(self) -> MSO_AUTO_SHAPE_TYPE | None:
         """Enumeration value identifying the type of this auto shape.
 
         Like `MSO_SHAPE.ROUNDED_RECTANGLE`. Raises |ShapeError| if this shape is not an auto shape.
@@ -280,14 +281,14 @@ class Shape(BaseShape):
         return self._sp.prst
 
     @lazyproperty
-    def fill(self):
+    def fill(self) -> FillFormat:
         """|FillFormat| instance for this shape.
 
         Provides access to fill properties such as fill color.
         """
         return FillFormat.from_fill_parent(self._sp.spPr)
 
-    def get_or_add_ln(self):
+    def get_or_add_ln(self) -> CT_LineProperties:
         """Return the `a:ln` element containing the line format properties XML for this shape."""
         return self._sp.get_or_add_ln()
 
@@ -297,7 +298,7 @@ class Shape(BaseShape):
         return True
 
     @lazyproperty
-    def line(self):
+    def line(self) -> LineFormat:
         """|LineFormat| instance for this shape.
 
         Provides access to line properties such as line color.
@@ -305,7 +306,7 @@ class Shape(BaseShape):
         return LineFormat(self)
 
     @property
-    def ln(self):
+    def ln(self) -> CT_LineProperties | None:
         """The `a:ln` element containing the line format properties such as line color and width.
 
         |None| if no `a:ln` element is present.
@@ -343,11 +344,11 @@ class Shape(BaseShape):
         return self.text_frame.text
 
     @text.setter
-    def text(self, text: str):
+    def text(self, text: str) -> None:
         self.text_frame.text = text
 
     @property
-    def text_frame(self):
+    def text_frame(self) -> TextFrame:
         """|TextFrame| instance for this shape.
 
         Contains the text of the shape and provides access to text formatting properties.

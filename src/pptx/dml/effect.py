@@ -6,13 +6,20 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pptx.enum.dml import MSO_RECT_ALIGNMENT
+    from pptx.oxml.dml.effect import (
+        CT_GlowEffect,
+        CT_InnerShadowEffect,
+        CT_OuterShadowEffect,
+        CT_ReflectionEffect,
+    )
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.util import Length
 
 
 class ShadowFormat:
     """Provides access to shadow effect on a shape."""
 
-    def __init__(self, spPr):
+    def __init__(self, spPr: BaseOxmlElement) -> None:
         # ---spPr may also be a grpSpPr; both have a:effectLst child---
         self._element = spPr
 
@@ -29,7 +36,7 @@ class ShadowFormat:
         return outerShdw.algn
 
     @alignment.setter
-    def alignment(self, value: MSO_RECT_ALIGNMENT | None):
+    def alignment(self, value: MSO_RECT_ALIGNMENT | None) -> None:
         outerShdw = self._get_or_add_outerShdw()
         outerShdw.algn = value
 
@@ -45,7 +52,7 @@ class ShadowFormat:
         return shdw.blurRad
 
     @blur_radius.setter
-    def blur_radius(self, value: Length | None):
+    def blur_radius(self, value: Length | None) -> None:
         outerShdw = self._get_or_add_outerShdw()
         outerShdw.blurRad = value
 
@@ -62,7 +69,7 @@ class ShadowFormat:
         return shdw.dir
 
     @direction.setter
-    def direction(self, value: float | None):
+    def direction(self, value: float | None) -> None:
         outerShdw = self._get_or_add_outerShdw()
         outerShdw.dir = value
 
@@ -78,12 +85,12 @@ class ShadowFormat:
         return shdw.dist
 
     @distance.setter
-    def distance(self, value: Length | None):
+    def distance(self, value: Length | None) -> None:
         outerShdw = self._get_or_add_outerShdw()
         outerShdw.dist = value
 
     @property
-    def inherit(self):
+    def inherit(self) -> bool:
         """True if shape inherits shadow settings.
 
         Read/write. An explicitly-defined shadow setting on a shape causes
@@ -103,7 +110,7 @@ class ShadowFormat:
         return False
 
     @inherit.setter
-    def inherit(self, value):
+    def inherit(self, value: bool) -> None:
         inherit = bool(value)
         if inherit:
             # ---remove any explicitly-defined effects
@@ -124,7 +131,7 @@ class ShadowFormat:
         return outerShdw.rotWithShape
 
     @rotate_with_shape.setter
-    def rotate_with_shape(self, value: bool | None):
+    def rotate_with_shape(self, value: bool | None) -> None:
         outerShdw = self._get_or_add_outerShdw()
         outerShdw.rotWithShape = value
 
@@ -140,13 +147,13 @@ class ShadowFormat:
             return "inner"
         return None
 
-    def _get_or_add_outerShdw(self):
+    def _get_or_add_outerShdw(self) -> CT_OuterShadowEffect:
         """Return the `a:outerShdw` element, creating effectLst and outerShdw if needed."""
         effectLst = self._element.get_or_add_effectLst()
         return effectLst.get_or_add_outerShdw()
 
     @property
-    def _innerShdw(self):
+    def _innerShdw(self) -> CT_InnerShadowEffect | None:
         """Return `a:innerShdw` element or None."""
         effectLst = self._element.effectLst
         if effectLst is None:
@@ -154,7 +161,7 @@ class ShadowFormat:
         return effectLst.innerShdw
 
     @property
-    def _outerShdw(self):
+    def _outerShdw(self) -> CT_OuterShadowEffect | None:
         """Return `a:outerShdw` element or None."""
         effectLst = self._element.effectLst
         if effectLst is None:
@@ -165,7 +172,7 @@ class ShadowFormat:
 class GlowFormat:
     """Provides access to glow effect on a shape."""
 
-    def __init__(self, spPr):
+    def __init__(self, spPr: BaseOxmlElement) -> None:
         self._element = spPr
 
     @property
@@ -186,7 +193,7 @@ class GlowFormat:
         return effectLst.glow.rad
 
     @radius.setter
-    def radius(self, value: Length | None):
+    def radius(self, value: Length | None) -> None:
         effectLst = self._element.get_or_add_effectLst()
         if value is None:
             effectLst._remove_glow()
@@ -194,7 +201,7 @@ class GlowFormat:
         glow = effectLst.get_or_add_glow()
         glow.rad = value
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove any explicitly-defined glow effect."""
         effectLst = self._element.effectLst
         if effectLst is not None:
@@ -204,7 +211,7 @@ class GlowFormat:
 class ReflectionFormat:
     """Provides access to reflection effect on a shape."""
 
-    def __init__(self, spPr):
+    def __init__(self, spPr: BaseOxmlElement) -> None:
         self._element = spPr
 
     @property
@@ -222,7 +229,7 @@ class ReflectionFormat:
         return reflection.blurRad
 
     @blur_radius.setter
-    def blur_radius(self, value: Length | None):
+    def blur_radius(self, value: Length | None) -> None:
         reflection = self._get_or_add_reflection()
         reflection.blurRad = value
 
@@ -235,7 +242,7 @@ class ReflectionFormat:
         return reflection.stA
 
     @start_opacity.setter
-    def start_opacity(self, value: float | None):
+    def start_opacity(self, value: float | None) -> None:
         reflection = self._get_or_add_reflection()
         reflection.stA = value
 
@@ -248,7 +255,7 @@ class ReflectionFormat:
         return reflection.endA
 
     @end_opacity.setter
-    def end_opacity(self, value: float | None):
+    def end_opacity(self, value: float | None) -> None:
         reflection = self._get_or_add_reflection()
         reflection.endA = value
 
@@ -261,22 +268,22 @@ class ReflectionFormat:
         return reflection.dist
 
     @distance.setter
-    def distance(self, value: Length | None):
+    def distance(self, value: Length | None) -> None:
         reflection = self._get_or_add_reflection()
         reflection.dist = value
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove any explicitly-defined reflection effect."""
         effectLst = self._element.effectLst
         if effectLst is not None:
             effectLst._remove_reflection()
 
-    def _get_or_add_reflection(self):
+    def _get_or_add_reflection(self) -> CT_ReflectionEffect:
         effectLst = self._element.get_or_add_effectLst()
         return effectLst.get_or_add_reflection()
 
     @property
-    def _reflection(self):
+    def _reflection(self) -> CT_ReflectionEffect | None:
         effectLst = self._element.effectLst
         if effectLst is None:
             return None
@@ -286,7 +293,7 @@ class ReflectionFormat:
 class SoftEdgeFormat:
     """Provides access to soft edge effect on a shape."""
 
-    def __init__(self, spPr):
+    def __init__(self, spPr: BaseOxmlElement) -> None:
         self._element = spPr
 
     @property
@@ -307,7 +314,7 @@ class SoftEdgeFormat:
         return effectLst.softEdge.rad
 
     @radius.setter
-    def radius(self, value: Length | None):
+    def radius(self, value: Length | None) -> None:
         effectLst = self._element.get_or_add_effectLst()
         if value is None:
             effectLst._remove_softEdge()
@@ -315,7 +322,7 @@ class SoftEdgeFormat:
         softEdge = effectLst.get_or_add_softEdge()
         softEdge.rad = value
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove any explicitly-defined soft edge effect."""
         effectLst = self._element.effectLst
         if effectLst is not None:

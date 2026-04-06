@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
@@ -18,6 +19,14 @@ from pptx.shared import ElementProxy, PartElementProxy
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
+if TYPE_CHECKING:
+    from pptx.chart.data import _BaseChartData
+    from pptx.chart.plot import _BasePlot
+    from pptx.enum.chart import XL_CHART_TYPE
+    from pptx.oxml.chart.chart import CT_ChartSpace, CT_PlotArea
+    from pptx.oxml.chart.shared import CT_Title
+    from pptx.parts.chart import ChartPart, ChartWorkbook
+
 #: Maps overlay plot type names to their qualified XML tag names.
 _OVERLAY_PLOT_TAGS = {
     "line": qn("c:lineChart"),
@@ -30,11 +39,11 @@ _OVERLAY_PLOT_TAGS = {
 class Chart(PartElementProxy):
     """A chart object."""
 
-    def __init__(self, chartSpace, chart_part):
+    def __init__(self, chartSpace: CT_ChartSpace, chart_part: ChartPart) -> None:
         super(Chart, self).__init__(chartSpace, chart_part)
         self._chartSpace = chartSpace
 
-    def add_plot(self, plot_type="line", use_secondary_axis=True, grouping="standard"):
+    def add_plot(self, plot_type: str = "line", use_secondary_axis: bool = True, grouping: str = "standard") -> _BasePlot:
         """Add an overlay plot to this chart, creating a combo chart.
 
         *plot_type* is one of ``"line"``, ``"bar"``, ``"area"``, or
@@ -78,7 +87,7 @@ class Chart(PartElementProxy):
         return PlotFactory(xChart, self)
 
     @property
-    def back_wall(self):
+    def back_wall(self) -> ChartSurface:
         """A |ChartSurface| object providing access to back wall formatting.
 
         Accessing this property is destructive in the sense it adds a
@@ -88,7 +97,7 @@ class Chart(PartElementProxy):
         return ChartSurface(chart.get_or_add_backWall())
 
     @property
-    def category_axis(self):
+    def category_axis(self) -> CategoryAxis | DateAxis | ValueAxis:
         """
         The category axis of this chart. In the case of an XY or Bubble
         chart, this is the X axis. Raises |ValueError| if no category
@@ -109,7 +118,7 @@ class Chart(PartElementProxy):
         raise ChartError("chart has no category axis")
 
     @property
-    def chart_style(self):
+    def chart_style(self) -> int | None:
         """
         Read/write integer index of chart style used to format this chart.
         Range is from 1 to 48. Value is |None| if no explicit style has been
@@ -124,14 +133,14 @@ class Chart(PartElementProxy):
         return style.val
 
     @chart_style.setter
-    def chart_style(self, value):
+    def chart_style(self, value: int | None) -> None:
         self._chartSpace._remove_style()
         if value is None:
             return
         self._chartSpace._add_style(val=value)
 
     @lazyproperty
-    def chart_format(self):
+    def chart_format(self) -> ChartFormat:
         """|ChartFormat| object providing access to chart area formatting.
 
         Controls the fill and line properties of the overall chart area
@@ -140,7 +149,7 @@ class Chart(PartElementProxy):
         return ChartFormat(self._chartSpace)
 
     @property
-    def chart_title(self):
+    def chart_title(self) -> ChartTitle:
         """A |ChartTitle| object providing access to title properties.
 
         Calling this property is destructive in the sense it adds a chart
@@ -151,7 +160,7 @@ class Chart(PartElementProxy):
         return ChartTitle(self._element.get_or_add_title())
 
     @property
-    def chart_type(self):
+    def chart_type(self) -> XL_CHART_TYPE:
         """Member of :ref:`XlChartType` enumeration specifying type of this chart.
 
         If the chart has two plots, for example, a line plot overlayed on a bar plot,
@@ -161,7 +170,7 @@ class Chart(PartElementProxy):
         return PlotTypeInspector.chart_type(first_plot)
 
     @property
-    def display_blanks_as(self):
+    def display_blanks_as(self) -> str:
         """Read/write string specifying how blank cells are plotted.
 
         One of ``"gap"``, ``"zero"``, or ``"span"``. Default is ``"gap"``
@@ -174,7 +183,7 @@ class Chart(PartElementProxy):
         return dispBlanksAs.val
 
     @display_blanks_as.setter
-    def display_blanks_as(self, value):
+    def display_blanks_as(self, value: str) -> None:
         if value not in ("gap", "zero", "span"):
             raise ChartError(
                 f"display_blanks_as must be 'gap', 'zero', or 'span', got '{value}'"
@@ -185,7 +194,7 @@ class Chart(PartElementProxy):
             chart._add_dispBlanksAs(val=value)
 
     @property
-    def floor(self):
+    def floor(self) -> ChartSurface:
         """A |ChartSurface| object providing access to floor formatting.
 
         Accessing this property is destructive in the sense it adds a
@@ -195,13 +204,13 @@ class Chart(PartElementProxy):
         return ChartSurface(chart.get_or_add_floor())
 
     @lazyproperty
-    def font(self):
+    def font(self) -> Font:
         """Font object controlling text format defaults for this chart."""
         defRPr = self._chartSpace.get_or_add_txPr().p_lst[0].get_or_add_pPr().get_or_add_defRPr()
         return Font(defRPr)
 
     @property
-    def has_legend(self):
+    def has_legend(self) -> bool:
         """
         Read/write boolean, |True| if the chart has a legend. Assigning
         |True| causes a legend to be added to the chart if it doesn't already
@@ -211,11 +220,11 @@ class Chart(PartElementProxy):
         return self._chartSpace.chart.has_legend
 
     @has_legend.setter
-    def has_legend(self, value):
+    def has_legend(self, value: bool) -> None:
         self._chartSpace.chart.has_legend = bool(value)
 
     @property
-    def has_title(self):
+    def has_title(self) -> bool:
         """Read/write boolean, specifying whether this chart has a title.
 
         Assigning |True| causes a title to be added if not already present.
@@ -228,7 +237,7 @@ class Chart(PartElementProxy):
         return True
 
     @has_title.setter
-    def has_title(self, value):
+    def has_title(self, value: bool) -> None:
         chart = self._chartSpace.chart
         if bool(value) is False:
             chart._remove_title()
@@ -238,7 +247,7 @@ class Chart(PartElementProxy):
         chart.get_or_add_title()
 
     @property
-    def legend(self):
+    def legend(self) -> Legend | None:
         """
         A |Legend| object providing access to the properties of the legend
         for this chart.
@@ -249,7 +258,7 @@ class Chart(PartElementProxy):
         return Legend(legend_elm)
 
     @lazyproperty
-    def plot_area(self):
+    def plot_area(self) -> PlotArea:
         """A |PlotArea| object providing access to plot area properties.
 
         Includes manual layout (position/size) and shape formatting (fill/line).
@@ -257,7 +266,7 @@ class Chart(PartElementProxy):
         return PlotArea(self._chartSpace.chart.plotArea)
 
     @property
-    def plot_visible_only(self):
+    def plot_visible_only(self) -> bool:
         """Read/write boolean. True if only visible cells are plotted.
 
         Returns True if not explicitly set (the PowerPoint default).
@@ -268,11 +277,11 @@ class Chart(PartElementProxy):
         return plotVisOnly.val
 
     @plot_visible_only.setter
-    def plot_visible_only(self, value):
+    def plot_visible_only(self, value: bool) -> None:
         self._chartSpace.chart.get_or_add_plotVisOnly().val = bool(value)
 
     @lazyproperty
-    def plots(self):
+    def plots(self) -> _Plots:
         """
         The sequence of plots in this chart. A plot, called a *chart group*
         in the Microsoft API, is a distinct sequence of one or more series
@@ -288,7 +297,7 @@ class Chart(PartElementProxy):
         return _Plots(plotArea, self)
 
     @property
-    def rounded_corners(self):
+    def rounded_corners(self) -> bool:
         """Read/write boolean. True if the chart has rounded corners.
 
         Returns False if not explicitly set.
@@ -299,10 +308,10 @@ class Chart(PartElementProxy):
         return roundedCorners.val
 
     @rounded_corners.setter
-    def rounded_corners(self, value):
+    def rounded_corners(self, value: bool) -> None:
         self._chartSpace.get_or_add_roundedCorners().val = bool(value)
 
-    def replace_data(self, chart_data):
+    def replace_data(self, chart_data: _BaseChartData) -> None:
         """
         Use the categories and series values in the |ChartData| object
         *chart_data* to replace those in the XML and Excel worksheet for this
@@ -313,7 +322,7 @@ class Chart(PartElementProxy):
         self._workbook.update_from_xlsx_blob(chart_data.xlsx_blob)
 
     @property
-    def show_data_labels_over_max(self):
+    def show_data_labels_over_max(self) -> bool:
         """Read/write boolean. True if data labels display over the maximum.
 
         Returns False if not explicitly set.
@@ -324,11 +333,11 @@ class Chart(PartElementProxy):
         return showDLblsOverMax.val
 
     @show_data_labels_over_max.setter
-    def show_data_labels_over_max(self, value):
+    def show_data_labels_over_max(self, value: bool) -> None:
         self._chartSpace.chart.get_or_add_showDLblsOverMax().val = bool(value)
 
     @lazyproperty
-    def series(self):
+    def series(self) -> SeriesCollection:
         """
         A |SeriesCollection| object containing all the series in this
         chart. When the chart has multiple plots, all the series for the
@@ -338,7 +347,7 @@ class Chart(PartElementProxy):
         return SeriesCollection(self._chartSpace.plotArea)
 
     @property
-    def side_wall(self):
+    def side_wall(self) -> ChartSurface:
         """A |ChartSurface| object providing access to side wall formatting.
 
         Accessing this property is destructive in the sense it adds a
@@ -348,7 +357,7 @@ class Chart(PartElementProxy):
         return ChartSurface(chart.get_or_add_sideWall())
 
     @property
-    def value_axis(self):
+    def value_axis(self) -> ValueAxis:
         """The primary |ValueAxis| of this chart.
 
         Raises |ChartError| if the chart has no value axis.
@@ -359,7 +368,7 @@ class Chart(PartElementProxy):
         return ValueAxis(valAx_lst[0])
 
     @property
-    def secondary_value_axis(self):
+    def secondary_value_axis(self) -> ValueAxis:
         """The secondary |ValueAxis| of this chart.
 
         Present on combo charts and charts with a secondary axis.
@@ -371,7 +380,7 @@ class Chart(PartElementProxy):
         return ValueAxis(valAx_lst[1])
 
     @property
-    def secondary_category_axis(self):
+    def secondary_category_axis(self) -> CategoryAxis | DateAxis:
         """The secondary |CategoryAxis| or |DateAxis| of this chart.
 
         Present on combo charts and charts with a secondary axis.
@@ -388,7 +397,7 @@ class Chart(PartElementProxy):
         raise ChartError("chart has no secondary category axis")
 
     @property
-    def view_3d(self):
+    def view_3d(self) -> View3D:
         """A |View3D| object providing access to 3D view properties.
 
         Accessing this property is destructive in the sense it adds a
@@ -398,7 +407,7 @@ class Chart(PartElementProxy):
         return View3D(chart.get_or_add_view3D())
 
     @property
-    def _workbook(self):
+    def _workbook(self) -> ChartWorkbook:
         """
         The |ChartWorkbook| object providing access to the Excel source data
         for this chart.
@@ -414,12 +423,12 @@ class ChartTitle(ElementProxy):
     # actually differ in certain fuller behaviors, but at present they're
     # essentially identical.
 
-    def __init__(self, title):
+    def __init__(self, title: CT_Title) -> None:
         super(ChartTitle, self).__init__(title)
         self._title = title
 
     @lazyproperty
-    def format(self):
+    def format(self) -> ChartFormat:
         """|ChartFormat| object providing access to line and fill formatting.
 
         Return the |ChartFormat| object providing shape formatting properties
@@ -428,7 +437,7 @@ class ChartTitle(ElementProxy):
         return ChartFormat(self._title)
 
     @property
-    def has_text_frame(self):
+    def has_text_frame(self) -> bool:
         """Read/write Boolean specifying whether this title has a text frame.
 
         Return |True| if this chart title has a text frame, and |False|
@@ -441,14 +450,14 @@ class ChartTitle(ElementProxy):
         return True
 
     @has_text_frame.setter
-    def has_text_frame(self, value):
+    def has_text_frame(self, value: bool) -> None:
         if bool(value) is False:
             self._title._remove_tx()
             return
         self._title.get_or_add_tx_rich()
 
     @property
-    def text_frame(self):
+    def text_frame(self) -> TextFrame:
         """|TextFrame| instance for this chart title.
 
         Return a |TextFrame| instance allowing read/write access to the text
@@ -469,12 +478,12 @@ class _Plots(Sequence):
     a superimposed line plot.
     """
 
-    def __init__(self, plotArea, chart):
+    def __init__(self, plotArea: CT_PlotArea, chart: Chart) -> None:
         super(_Plots, self).__init__()
         self._plotArea = plotArea
         self._chart = chart
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int | slice) -> _BasePlot | list[_BasePlot]:
         xCharts = self._plotArea.xCharts
         if isinstance(index, slice):
             plots = [PlotFactory(xChart, self._chart) for xChart in xCharts]
@@ -483,5 +492,5 @@ class _Plots(Sequence):
             xChart = xCharts[index]
             return PlotFactory(xChart, self._chart)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._plotArea.xCharts)

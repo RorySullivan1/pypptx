@@ -9,7 +9,15 @@ from pptx.enum.dml import MSO_FILL
 from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
-    from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE
+    from pptx.dml.color import ColorFormat
+    from pptx.enum.dml import (
+        MSO_LINE_COMPOUND_TYPE,
+        MSO_LINE_DASH_STYLE,
+        MSO_LINE_END_SIZE,
+        MSO_LINE_END_TYPE,
+    )
+    from pptx.oxml.shapes.shared import CT_LineProperties
+    from pptx.util import Length
 
 
 class LineFormat:
@@ -19,7 +27,7 @@ class LineFormat:
     a shape such as |Shape| or |Picture|.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: object) -> None:
         super(LineFormat, self).__init__()
         self._parent = parent
 
@@ -35,7 +43,7 @@ class LineFormat:
         return ln.headEnd.len
 
     @begin_arrowhead_length.setter
-    def begin_arrowhead_length(self, value: MSO_LINE_END_SIZE | None):
+    def begin_arrowhead_length(self, value: MSO_LINE_END_SIZE | None) -> None:
         if value is None:
             ln = self._ln
             if ln is not None and ln.headEnd is not None:
@@ -56,7 +64,7 @@ class LineFormat:
         return ln.headEnd.type
 
     @begin_arrowhead_type.setter
-    def begin_arrowhead_type(self, value: MSO_LINE_END_TYPE | None):
+    def begin_arrowhead_type(self, value: MSO_LINE_END_TYPE | None) -> None:
         if value is None:
             ln = self._ln
             if ln is not None and ln.headEnd is not None:
@@ -77,7 +85,7 @@ class LineFormat:
         return ln.headEnd.w
 
     @begin_arrowhead_width.setter
-    def begin_arrowhead_width(self, value: MSO_LINE_END_SIZE | None):
+    def begin_arrowhead_width(self, value: MSO_LINE_END_SIZE | None) -> None:
         if value is None:
             ln = self._ln
             if ln is not None and ln.headEnd is not None:
@@ -87,7 +95,7 @@ class LineFormat:
         headEnd.w = value
 
     @lazyproperty
-    def color(self):
+    def color(self) -> ColorFormat:
         """
         The |ColorFormat| instance that provides access to the color settings
         for this line. Essentially a shortcut for ``line.fill.fore_color``.
@@ -113,12 +121,12 @@ class LineFormat:
         return ln.cmpd
 
     @compound_type.setter
-    def compound_type(self, value: MSO_LINE_COMPOUND_TYPE | None):
+    def compound_type(self, value: MSO_LINE_COMPOUND_TYPE | None) -> None:
         ln = self._get_or_add_ln()
         ln.cmpd = value
 
     @property
-    def dash_style(self):
+    def dash_style(self) -> MSO_LINE_DASH_STYLE | None:
         """Return value indicating line style.
 
         Returns a member of :ref:`MsoLineDashStyle` indicating line style, or
@@ -133,7 +141,7 @@ class LineFormat:
         return ln.prstDash_val
 
     @dash_style.setter
-    def dash_style(self, dash_style):
+    def dash_style(self, dash_style: MSO_LINE_DASH_STYLE | None) -> None:
         if dash_style is None:
             ln = self._ln
             if ln is None:
@@ -156,7 +164,7 @@ class LineFormat:
         return ln.tailEnd.len
 
     @end_arrowhead_length.setter
-    def end_arrowhead_length(self, value: MSO_LINE_END_SIZE | None):
+    def end_arrowhead_length(self, value: MSO_LINE_END_SIZE | None) -> None:
         if value is None:
             ln = self._ln
             if ln is not None and ln.tailEnd is not None:
@@ -177,7 +185,7 @@ class LineFormat:
         return ln.tailEnd.type
 
     @end_arrowhead_type.setter
-    def end_arrowhead_type(self, value: MSO_LINE_END_TYPE | None):
+    def end_arrowhead_type(self, value: MSO_LINE_END_TYPE | None) -> None:
         if value is None:
             ln = self._ln
             if ln is not None and ln.tailEnd is not None:
@@ -198,7 +206,7 @@ class LineFormat:
         return ln.tailEnd.w
 
     @end_arrowhead_width.setter
-    def end_arrowhead_width(self, value: MSO_LINE_END_SIZE | None):
+    def end_arrowhead_width(self, value: MSO_LINE_END_SIZE | None) -> None:
         if value is None:
             ln = self._ln
             if ln is not None and ln.tailEnd is not None:
@@ -208,7 +216,7 @@ class LineFormat:
         tailEnd.w = value
 
     @lazyproperty
-    def fill(self):
+    def fill(self) -> FillFormat:
         """
         |FillFormat| instance for this line, providing access to fill
         properties such as foreground color.
@@ -229,7 +237,7 @@ class LineFormat:
         return ln.noFill is not None
 
     @property
-    def width(self):
+    def width(self) -> Length:
         """
         The width of the line expressed as an integer number of :ref:`English
         Metric Units <EMU>`. The returned value is an instance of |Length|,
@@ -242,13 +250,13 @@ class LineFormat:
         return ln.w
 
     @width.setter
-    def width(self, emu):
+    def width(self, emu: Length | None) -> None:
         if emu is None:
             emu = 0
         ln = self._get_or_add_ln()
         ln.w = emu
 
-    def _get_or_add_ln(self):
+    def _get_or_add_ln(self) -> CT_LineProperties:
         """
         Return the ``<a:ln>`` element containing the line format properties
         in the XML.
@@ -256,5 +264,5 @@ class LineFormat:
         return self._parent.get_or_add_ln()
 
     @property
-    def _ln(self):
+    def _ln(self) -> CT_LineProperties | None:
         return self._parent.ln

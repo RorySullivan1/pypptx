@@ -40,7 +40,7 @@ avoids context-switching between layers and exposes schema gaps early.
 ### 1.6 Type Annotations
 - [x] `py.typed` marker already present
 - [x] `from __future__ import annotations` in all 92 source files
-- [ ] Incremental annotation improvements deferred to feature work
+- [x] Incremental annotation improvements — return types, parameter types, and `-> None` on setters across 15+ key API files
 
 ### 1.7 Test Infrastructure
 - [x] pytest configured in `pyproject.toml` (test paths, class/function patterns)

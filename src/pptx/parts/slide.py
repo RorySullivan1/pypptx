@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from pptx.chart.data import ChartData
     from pptx.enum.chart import XL_CHART_TYPE
     from pptx.media import Video
+    from pptx.opc.package import Package
     from pptx.parts.image import Image, ImagePart
 
 
@@ -42,7 +43,7 @@ class BaseSlidePart(XmlPart):
         """
         return cast("ImagePart", self.related_part(rId)).image
 
-    def get_or_add_image_part(self, image_file: str | IO[bytes]):
+    def get_or_add_image_part(self, image_file: str | IO[bytes]) -> tuple[ImagePart, str]:
         """Return `(image_part, rId)` pair corresponding to `image_file`.
 
         The returned |ImagePart| object contains the image in `image_file` and is
@@ -66,7 +67,7 @@ class NotesMasterPart(BaseSlidePart):
     """
 
     @classmethod
-    def create_default(cls, package):
+    def create_default(cls, package: Package) -> NotesMasterPart:
         """
         Create and return a default notes master part, including creating the
         new theme it requires.
@@ -77,14 +78,14 @@ class NotesMasterPart(BaseSlidePart):
         return notes_master_part
 
     @lazyproperty
-    def notes_master(self):
+    def notes_master(self) -> NotesMaster:
         """
         Return the |NotesMaster| object that proxies this notes master part.
         """
         return NotesMaster(self._element, self)
 
     @classmethod
-    def _new(cls, package):
+    def _new(cls, package: Package) -> NotesMasterPart:
         """
         Create and return a standalone, default notes master part based on
         the built-in template (without any related parts, such as theme).
@@ -97,7 +98,7 @@ class NotesMasterPart(BaseSlidePart):
         )
 
     @classmethod
-    def _new_theme_part(cls, package):
+    def _new_theme_part(cls, package: Package) -> XmlPart:
         """Return new default theme-part suitable for use with a notes master."""
         return XmlPart(
             package.next_partname("/ppt/theme/theme%d.xml"),
@@ -115,7 +116,7 @@ class NotesSlidePart(BaseSlidePart):
     """
 
     @classmethod
-    def new(cls, package, slide_part):
+    def new(cls, package: Package, slide_part: SlidePart) -> NotesSlidePart:
         """Return new |NotesSlidePart| for the slide in `slide_part`.
 
         The new notes-slide part is based on the (singleton) notes master and related to
@@ -129,18 +130,20 @@ class NotesSlidePart(BaseSlidePart):
         return notes_slide_part
 
     @lazyproperty
-    def notes_master(self):
+    def notes_master(self) -> NotesMaster:
         """Return the |NotesMaster| object this notes slide inherits from."""
         notes_master_part = self.part_related_by(RT.NOTES_MASTER)
         return notes_master_part.notes_master
 
     @lazyproperty
-    def notes_slide(self):
+    def notes_slide(self) -> NotesSlide:
         """Return the |NotesSlide| object that proxies this notes slide part."""
         return NotesSlide(self._element, self)
 
     @classmethod
-    def _add_notes_slide_part(cls, package, slide_part, notes_master_part):
+    def _add_notes_slide_part(
+        cls, package: Package, slide_part: SlidePart, notes_master_part: NotesMasterPart
+    ) -> NotesSlidePart:
         """Create and return a new notes-slide part.
 
         The return part is fully related, but has no shape content (i.e. placeholders
@@ -161,7 +164,7 @@ class SlidePart(BaseSlidePart):
     """Slide part. Corresponds to package files ppt/slides/slide[1-9][0-9]*.xml."""
 
     @classmethod
-    def new(cls, partname, package, slide_layout_part):
+    def new(cls, partname: PackURI, package: Package, slide_layout_part: SlideLayoutPart) -> SlidePart:
         """Return newly-created blank slide part.
 
         The new slide-part has `partname` and a relationship to `slide_layout_part`.
@@ -170,7 +173,7 @@ class SlidePart(BaseSlidePart):
         slide_part.relate_to(slide_layout_part, RT.SLIDE_LAYOUT)
         return slide_part
 
-    def add_chart_part(self, chart_type: XL_CHART_TYPE, chart_data: ChartData):
+    def add_chart_part(self, chart_type: XL_CHART_TYPE, chart_data: ChartData) -> str:
         """Return str rId of new |ChartPart| object containing chart of `chart_type`.
 
         The chart depicts `chart_data` and is related to the slide contained in this
@@ -180,7 +183,7 @@ class SlidePart(BaseSlidePart):
 
     def add_embedded_ole_object_part(
         self, prog_id: PROG_ID | str, ole_object_file: str | IO[bytes]
-    ):
+    ) -> str:
         """Return rId of newly-added OLE-object part formed from `ole_object_file`."""
         relationship_type = RT.PACKAGE if isinstance(prog_id, PROG_ID) else RT.OLE_OBJECT
         return self.relate_to(
@@ -206,7 +209,7 @@ class SlidePart(BaseSlidePart):
         return media_rId, video_rId
 
     @property
-    def has_notes_slide(self):
+    def has_notes_slide(self) -> bool:
         """
         Return True if this slide has a notes slide, False otherwise. A notes
         slide is created by the :attr:`notes_slide` property when one doesn't
@@ -265,7 +268,7 @@ class SlidePart(BaseSlidePart):
         return notes_slide_part.notes_slide
 
     @lazyproperty
-    def slide(self):
+    def slide(self) -> Slide:
         """
         The |Slide| object representing this slide part.
         """
@@ -283,7 +286,7 @@ class SlidePart(BaseSlidePart):
         slide_layout_part = self.part_related_by(RT.SLIDE_LAYOUT)
         return slide_layout_part.slide_layout
 
-    def _add_notes_slide_part(self):
+    def _add_notes_slide_part(self) -> NotesSlidePart:
         """
         Return a newly created |NotesSlidePart| object related to this slide
         part. Caller is responsible for ensuring this slide doesn't already
@@ -301,7 +304,7 @@ class SlideLayoutPart(BaseSlidePart):
     """
 
     @lazyproperty
-    def slide_layout(self):
+    def slide_layout(self) -> SlideLayout:
         """
         The |SlideLayout| object representing this part.
         """
@@ -324,14 +327,14 @@ class SlideMasterPart(BaseSlidePart):
         return self.related_part(rId).slide_layout
 
     @lazyproperty
-    def slide_master(self):
+    def slide_master(self) -> SlideMaster:
         """
         The |SlideMaster| object representing this part.
         """
         return SlideMaster(self._element, self)
 
     @property
-    def theme_part(self):
+    def theme_part(self) -> XmlPart | None:
         """The |XmlPart| containing the theme for this slide master.
 
         Returns None if no theme relationship exists.
