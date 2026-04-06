@@ -288,7 +288,7 @@ _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_
 
 - [x] Delete a slide — `Slides.delete(slide)` removes sldId and drops relationship
 - [x] Reorder slides — `Slides.move(old_idx, new_idx)` reorders sldId entries
-- [ ] Duplicate a slide — deep-clone slide part, remap relationships for images/charts/media
+- [x] Duplicate a slide — `Slides.duplicate(slide)` deep-clones slide part, remaps relationships for images/charts/media
 - [x] Slide number property — `Slide.slide_number` computed from position + firstSlideNum
 - [x] `Presentation.first_slide_number` — read/write firstSlideNum attribute
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import IO, TYPE_CHECKING, Iterable
 
 from pptx.exc import SlideError
@@ -33,6 +34,43 @@ class PresentationPart(XmlPart):
         slide_part = SlidePart.new(partname, self.package, slide_layout_part)
         rId = self.relate_to(slide_part, RT.SLIDE)
         return rId, slide_part.slide
+
+    def duplicate_slide(self, slide_part: SlidePart) -> tuple[str, Slide]:
+        """Return (rId, slide) pair for a newly created duplicate of `slide_part`.
+
+        The new slide is a deep clone of the source slide with all relationships
+        (images, charts, media, layout, etc.) re-established on the new part.
+        """
+        from pptx.opc.constants import CONTENT_TYPE as CT
+
+        partname = self._next_slide_partname
+        new_element = deepcopy(slide_part._element)
+        new_slide_part = SlidePart(partname, CT.PML_SLIDE, self.package, new_element)
+
+        # --- build rId mapping from old slide to new slide ---
+        rId_map: dict[str, str] = {}
+        for rId, rel in slide_part.rels.items():
+            if rel.is_external:
+                new_rId = new_slide_part.relate_to(rel.target_ref, rel.reltype, is_external=True)
+            else:
+                new_rId = new_slide_part.relate_to(rel.target_part, rel.reltype)
+            rId_map[rId] = new_rId
+
+        # --- update rId references in the cloned XML ---
+        for old_rId, new_rId in rId_map.items():
+            if old_rId != new_rId:
+                for attr in new_element.xpath("//@r:id"):
+                    elm = attr.getparent()
+                    attr_name = None
+                    for name, val in elm.attrib.items():
+                        if val == old_rId:
+                            attr_name = name
+                            break
+                    if attr_name is not None:
+                        elm.set(attr_name, new_rId)
+
+        rId = self.relate_to(new_slide_part, RT.SLIDE)
+        return rId, new_slide_part.slide
 
     @property
     def core_properties(self) -> CorePropertiesPart:

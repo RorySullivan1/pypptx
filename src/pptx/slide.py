@@ -340,6 +340,18 @@ class Slides(ParentedElementProxy):
                 return idx
         raise SlideError("%s is not in slide collection" % slide)
 
+    def duplicate(self, slide: Slide) -> Slide:
+        """Return a new slide that is a deep copy of `slide`.
+
+        The new slide is appended to the end of the slide collection. All shapes,
+        images, charts, and other content are duplicated. Raises |ValueError| if
+        `slide` is not in this collection.
+        """
+        self.index(slide)  # raises if slide not in collection
+        rId, new_slide = self.part.duplicate_slide(slide.part)
+        self._sldIdLst.add_sldId(rId)
+        return new_slide
+
     def delete(self, slide: Slide) -> None:
         """Remove `slide` from the presentation.
 

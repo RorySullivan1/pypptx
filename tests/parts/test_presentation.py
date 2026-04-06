@@ -191,6 +191,40 @@ class DescribePresentationPart:
 
         assert prs_part._next_slide_partname == PackURI("/ppt/slides/slide3.xml")
 
+    def it_can_duplicate_a_slide(self, request, package_):
+        from pptx.opc.constants import CONTENT_TYPE as CT
+        from pptx.oxml.slide import CT_Slide
+
+        # Create a source slide part with a relationship to a layout
+        partname = PackURI("/ppt/slides/slide1.xml")
+        slide_elm = CT_Slide.new()
+        src_slide_part = SlidePart(partname, CT.PML_SLIDE, package_, slide_elm)
+
+        layout_part = instance_mock(request, SlidePart)
+        layout_part.partname = PackURI("/ppt/slideLayouts/slideLayout1.xml")
+        src_slide_part.relate_to(layout_part, RT.SLIDE_LAYOUT)
+
+        # Set up the PresentationPart with a valid partname
+        prs_elm = element("p:presentation/p:sldIdLst/p:sldId{r:id=rId1,id=256}")
+        prs_part = PresentationPart(
+            PackURI("/ppt/presentation.xml"), CT.PML_PRESENTATION, package_, prs_elm
+        )
+        property_mock(
+            request,
+            PresentationPart,
+            "_next_slide_partname",
+            return_value=PackURI("/ppt/slides/slide2.xml"),
+        )
+
+        rId, new_slide = prs_part.duplicate_slide(src_slide_part)
+
+        assert rId is not None
+        assert new_slide is not None
+        # Verify the new slide part has a relationship to the same layout
+        new_slide_part = new_slide.part
+        layout_rel = new_slide_part.part_related_by(RT.SLIDE_LAYOUT)
+        assert layout_rel is layout_part
+
     # fixture components ---------------------------------------------
 
     @pytest.fixture

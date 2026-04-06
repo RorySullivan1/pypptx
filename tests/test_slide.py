@@ -496,6 +496,24 @@ class DescribeSlides:
         prs_part_.get_slide.assert_called_once_with(slide_id)
         assert slide is expected_value
 
+    def it_can_duplicate_a_slide(self, part_prop_, prs_part_):
+        sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
+        slides = Slides(sldIdLst, None)
+        sld_elm = element("p:sld")
+        slide_to_dup = Slide(sld_elm, None)
+        new_slide = Slide(element("p:sld"), None)
+        other_slide = Slide(element("p:sld"), None)
+        prs_part_.related_slide.side_effect = lambda rId: (
+            slide_to_dup if rId == "rId1" else other_slide
+        )
+        prs_part_.duplicate_slide.return_value = ("rId3", new_slide)
+
+        result = slides.duplicate(slide_to_dup)
+
+        prs_part_.duplicate_slide.assert_called_once_with(slide_to_dup.part)
+        assert result is new_slide
+        assert len(slides) == 3
+
     def it_can_delete_a_slide(self, part_prop_, prs_part_):
         sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
         slides = Slides(sldIdLst, None)
