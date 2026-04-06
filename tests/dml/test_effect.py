@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.dml.color import ColorFormat, RGBColor
 from pptx.dml.effect import GlowFormat, ReflectionFormat, ShadowFormat, SoftEdgeFormat
 from pptx.enum.dml import MSO_RECT_ALIGNMENT
 from pptx.util import Emu, Pt
@@ -96,6 +97,68 @@ class DescribeShadowFormat:
         shadow, value, expected_xml = inherit_set_fixture
         shadow.inherit = value
         assert shadow._element.xml == expected_xml
+
+    def it_provides_access_to_shadow_color(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Shadow with an sRGB color
+        spPr_xml = (
+            '<p:spPr %s><a:effectLst>'
+            '<a:outerShdw blurRad="50800" dist="38100" dir="2700000">'
+            '<a:srgbClr val="FF0000"/>'
+            '</a:outerShdw></a:effectLst></p:spPr>' % nsdecls("p", "a")
+        )
+        spPr = parse_xml(spPr_xml)
+        shadow = ShadowFormat(spPr)
+        assert isinstance(shadow.color, ColorFormat)
+        assert shadow.color.rgb == RGBColor(0xFF, 0x00, 0x00)
+
+    def it_can_set_shadow_color(self):
+        shadow = ShadowFormat(element("p:spPr"))
+        shadow.color.rgb = RGBColor(0x00, 0x80, 0xFF)
+        assert shadow.color.rgb == RGBColor(0x00, 0x80, 0xFF)
+        assert shadow.shadow_type == "outer"
+
+    def it_provides_access_to_shadow_color_alpha(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Shadow with 40% opacity (alpha = 0.4)
+        spPr_xml = (
+            '<p:spPr %s><a:effectLst>'
+            '<a:outerShdw blurRad="50800">'
+            '<a:srgbClr val="000000"><a:alpha val="40000"/></a:srgbClr>'
+            '</a:outerShdw></a:effectLst></p:spPr>' % nsdecls("p", "a")
+        )
+        spPr = parse_xml(spPr_xml)
+        shadow = ShadowFormat(spPr)
+        assert shadow.color.alpha == pytest.approx(0.4)
+
+    def it_can_set_shadow_color_alpha(self):
+        shadow = ShadowFormat(element("p:spPr"))
+        shadow.color.rgb = RGBColor(0, 0, 0)
+        shadow.color.alpha = 0.5
+        assert shadow.color.alpha == pytest.approx(0.5)
+
+        # Setting to 1.0 removes the alpha element
+        shadow.color.alpha = 1.0
+        assert shadow.color.alpha == 1.0
+
+    def it_reads_inner_shadow_color(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        spPr_xml = (
+            '<p:spPr %s><a:effectLst>'
+            '<a:innerShdw blurRad="50800">'
+            '<a:srgbClr val="00FF00"><a:alpha val="75000"/></a:srgbClr>'
+            '</a:innerShdw></a:effectLst></p:spPr>' % nsdecls("p", "a")
+        )
+        spPr = parse_xml(spPr_xml)
+        shadow = ShadowFormat(spPr)
+        assert shadow.color.rgb == RGBColor(0x00, 0xFF, 0x00)
+        assert shadow.color.alpha == pytest.approx(0.75)
 
     # fixtures -------------------------------------------------------
 
