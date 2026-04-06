@@ -652,12 +652,13 @@ _Prerequisites: Section 4.9 (theme elements)_
 
 ---
 
-## 21. Python API — WordArt & Text Effects
+## 21. ~~Python API — WordArt & Text Effects~~ (OUT OF SCOPE)
 
-_Prerequisites: Section 4.10 (WordArt elements)_
+_Moved to Out of Scope — decorative effects rarely needed in programmatic document generation.
+OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for direct access if needed._
 
-- [ ] Preset text warp — `a:prstTxWarp` on `a:bodyPr`
-- [ ] Text-level 3D scene and fill/outline
+- ~~Preset text warp — `a:prstTxWarp` on `a:bodyPr`~~
+- ~~Text-level 3D scene and fill/outline~~
 
 ---
 
@@ -693,3 +694,5 @@ The following are **not planned** as they require capabilities beyond XML file m
 - Image reprocessing/compression
 - Animation and transition authoring
 - Visual line-break calculation (`TextRange.Lines()`)
+- WordArt / text warp effects (OXML layer exists for direct access via `CT_PresetTextShape`)
+- Text-level 3D scene, fill, and outline effects
