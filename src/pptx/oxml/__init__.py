@@ -736,12 +736,18 @@ register_element_cls("p:txBody", CT_TextBody)
 from pptx.oxml.theme import (  # noqa: E402
     CT_BaseStyles,
     CT_ColorScheme,
+    CT_EffectStyleItem,
+    CT_EffectStyleList,
     CT_FontCollection,
     CT_FontScheme,
     CT_OfficeStyleSheet,
+    CT_StyleMatrix,
 )
 
 register_element_cls("a:clrScheme", CT_ColorScheme)
+register_element_cls("a:effectStyle", CT_EffectStyleItem)
+register_element_cls("a:effectStyleLst", CT_EffectStyleList)
+register_element_cls("a:fmtScheme", CT_StyleMatrix)
 register_element_cls("a:fontScheme", CT_FontScheme)
 register_element_cls("a:majorFont", CT_FontCollection)
 register_element_cls("a:minorFont", CT_FontCollection)

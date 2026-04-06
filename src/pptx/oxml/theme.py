@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pptx.oxml.simpletypes import XsdString
-from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrOne
+from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrMore, ZeroOrOne
 
 from . import parse_from_template
 
@@ -72,6 +72,38 @@ class CT_FontCollection(BaseOxmlElement):
     del _tag_seq
 
 
+class CT_EffectStyleItem(BaseOxmlElement):
+    """`a:effectStyle` element, one of three effect styles (subtle, moderate, intense)."""
+
+    _tag_seq = ("a:effectLst", "a:effectDag", "a:scene3d", "a:sp3d")
+    effectLst = ZeroOrOne("a:effectLst", successors=_tag_seq[1:])
+    scene3d = ZeroOrOne("a:scene3d", successors=_tag_seq[3:])
+    sp3d = ZeroOrOne("a:sp3d", successors=())
+    del _tag_seq
+
+
+class CT_EffectStyleList(BaseOxmlElement):
+    """`a:effectStyleLst` element, containing three effect style definitions."""
+
+    effectStyle_lst: list[CT_EffectStyleItem]
+
+    effectStyle = ZeroOrMore("a:effectStyle")
+
+
+class CT_StyleMatrix(BaseOxmlElement):
+    """`a:fmtScheme` element, the format scheme containing fill, line, effect, and bg styles."""
+
+    _tag_seq = ("a:fillStyleLst", "a:lnStyleLst", "a:effectStyleLst", "a:bgFillStyleLst")
+    effectStyleLst: CT_EffectStyleList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:effectStyleLst", successors=_tag_seq[3:]
+    )
+    del _tag_seq
+
+    name: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "name", XsdString
+    )
+
+
 class CT_BaseStyles(BaseOxmlElement):
     """`a:themeElements` element containing the core theme definitions."""
 
@@ -81,6 +113,9 @@ class CT_BaseStyles(BaseOxmlElement):
     )
     fontScheme: CT_FontScheme | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:fontScheme", successors=_tag_seq[2:]
+    )
+    fmtScheme: CT_StyleMatrix | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:fmtScheme", successors=_tag_seq[3:]
     )
     del _tag_seq
 

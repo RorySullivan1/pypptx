@@ -541,7 +541,7 @@ class SlideMaster(_BaseMaster):
         theme_part = self.part.theme_part
         if theme_part is None:
             return None
-        return Theme(theme_part.element)
+        return Theme(theme_part._element)
 
 
 class SlideMasters(ParentedElementProxy):

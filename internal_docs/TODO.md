@@ -648,7 +648,7 @@ _Prerequisites: Section 4.9 (theme elements)_
 
 - [x] Read/write theme color schemes — `a:clrScheme` in `theme.xml`
 - [x] Read/write theme font schemes — major and minor font families
-- [ ] Theme effect schemes (deferred — rarely used in practice)
+- [x] Theme effect schemes — `Theme.effect_scheme` returning `EffectScheme` with indexed/named access to 3 `EffectStyle` objects (subtle/moderate/intense)
 
 ---
 

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pptx.exc as exceptions
 from pptx.api import Presentation
 from pptx.opc.constants import CONTENT_TYPE as CT
-from pptx.opc.package import PartFactory
+from pptx.opc.package import PartFactory, XmlPart
 from pptx.parts.chart import ChartPart
 from pptx.parts.comments import CommentAuthorsPart, CommentsPart
 from pptx.parts.coreprops import CorePropertiesPart
@@ -69,6 +69,7 @@ content_type_to_part_class_map: dict[str, type[Part]] = {
     CT.PML_COMMENTS: CommentsPart,
     CT.PML_COMMENT_AUTHORS: CommentAuthorsPart,
     CT.PML_TAGS: TagsPart,
+    CT.OFC_THEME: XmlPart,
     # -- accommodate "image/jpg" as an alias for "image/jpeg" --
     "image/jpg": ImagePart,
 }
@@ -88,6 +89,7 @@ del (
     SlideMasterPart,
     PresentationPart,
     TagsPart,
+    XmlPart,
     CT,
     PartFactory,
 )

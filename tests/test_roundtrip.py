@@ -254,3 +254,25 @@ finally:
     os.unlink(img_path)
 """)
 
+    def it_round_trips_theme_effect_scheme(self):
+        _run_roundtrip_test("""\
+from pptx.theme import EffectScheme
+
+prs = Presentation()
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+master = prs2.slide_masters[0]
+theme = master.theme
+effect_scheme = theme.effect_scheme
+assert effect_scheme is not None
+assert len(effect_scheme) == 3
+assert effect_scheme.subtle.has_effect_list is True
+assert effect_scheme.intense.has_3d_scene is True
+assert effect_scheme.intense.has_3d_shape is True
+assert effect_scheme.name == "Office"
+""")
+
