@@ -662,9 +662,9 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 
 ---
 
-## 22. Python API — Callout Shapes
+## 22. Python API — Callout Shapes (DONE)
 
-- [ ] Callout-specific formatting via adjustment handles on callout preset geometries (accent bar, angle, length, gap)
+- [x] Callout-specific formatting via adjustment handles on callout preset geometries — already supported through `Shape.adjustments` (indexed read/write `AdjustmentCollection`) and `MSO_SHAPE.LINE_CALLOUT_*` presets with default adjustment values in `spec.py`
 
 ---
 
