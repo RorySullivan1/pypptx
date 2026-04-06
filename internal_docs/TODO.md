@@ -45,7 +45,7 @@ avoids context-switching between layers and exposes schema gaps early.
 ### 1.7 Test Infrastructure
 - [x] pytest configured in `pyproject.toml` (test paths, class/function patterns)
 - [x] 2644 tests passing, 97% code coverage
-- [ ] Add round-trip integration tests (deferred)
+- [x] Add round-trip integration tests — 8 tests covering blank pres, shapes, accessibility, fonts, slide ops, duplication, hidden shapes, slide numbers
 
 ### 1.8 OXML Layer (DONE)
 - [x] Added `p14` and `p15` namespace prefixes for sections and modern comments
@@ -89,7 +89,7 @@ exist but are incomplete.
 - [x] `descr` — optional `XsdString` attribute (alternative text for accessibility)
 - [x] `title` — optional `XsdString` attribute (shape title for accessibility)
 - [x] `hidden` — optional `XsdBoolean` attribute (shape visibility)
-- [ ] Decorative flag — requires manual `a:ext` element handling (deferred to Section 8)
+- [x] Decorative flag — implemented via manual `a:ext` element handling (see Section 8)
 
 ### 3.2 `oxml/shapes/shared.py` — Shape lock elements (DONE)
 - [x] Created `CT_Locking` class with `noChangeAspect` optional boolean attribute
