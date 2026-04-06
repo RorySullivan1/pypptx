@@ -8,6 +8,7 @@ from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import OpcPackage
 from pptx.opc.packuri import PackURI
 from pptx.parts.coreprops import CorePropertiesPart
+from pptx.parts.custprops import CustomPropertiesPart
 from pptx.parts.image import Image, ImagePart
 from pptx.parts.media import MediaPart
 from pptx.util import lazyproperty
@@ -28,6 +29,19 @@ class Package(OpcPackage):
             core_props = CorePropertiesPart.default(self)
             self.relate_to(core_props, RT.CORE_PROPERTIES)
             return core_props
+
+    @lazyproperty
+    def custom_properties(self) -> CustomPropertiesPart:
+        """Instance of |CustomPropertiesPart| holding custom document properties.
+
+        Creates a default custom properties part if one is not present.
+        """
+        try:
+            return self.part_related_by(RT.CUSTOM_PROPERTIES)
+        except KeyError:
+            custom_props = CustomPropertiesPart.default(self)
+            self.relate_to(custom_props, RT.CUSTOM_PROPERTIES)
+            return custom_props
 
     def get_or_add_image_part(self, image_file: str | IO[bytes]):
         """

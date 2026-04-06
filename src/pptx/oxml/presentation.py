@@ -13,6 +13,8 @@ from pptx.oxml.xmlchemy import (
     ZeroOrOne,
 )
 
+from pptx.oxml.ns import qn
+
 if TYPE_CHECKING:
     from pptx.util import Length
 
@@ -51,6 +53,36 @@ class CT_Presentation(BaseOxmlElement):
     firstSlideNum: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "firstSlideNum", XsdInt
     )
+
+    _SECTION_EXT_URI = "{521415D9-36F7-43E2-AB2F-B2CE04A55DE4}"
+
+    @property
+    def sectionLst(self):
+        """Return the `p14:sectionLst` element or None if not present."""
+        from pptx.oxml.section import CT_SectionList
+
+        results = self.xpath(
+            "p:extLst/p:ext/p14:sectionLst",
+        )
+        return results[0] if results else None
+
+    def get_or_add_sectionLst(self):
+        """Return `p14:sectionLst`, creating the extension structure if needed."""
+        from pptx.oxml.section import CT_SectionList
+
+        sectionLst = self.sectionLst
+        if sectionLst is not None:
+            return sectionLst
+
+        from lxml import etree
+
+        extLst = self.find(qn("p:extLst"))
+        if extLst is None:
+            extLst = etree.SubElement(self, qn("p:extLst"))
+        ext = etree.SubElement(extLst, qn("p:ext"))
+        ext.set("uri", self._SECTION_EXT_URI)
+        sectionLst = etree.SubElement(ext, qn("p14:sectionLst"))
+        return sectionLst
 
 
 class CT_SlideId(BaseOxmlElement):

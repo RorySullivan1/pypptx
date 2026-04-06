@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.oxml import parse_xml
+from pptx.oxml.ns import nsdecls
 from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.presentation import PresentationPart
 from pptx.parts.slide import NotesMasterPart
-from pptx.presentation import Presentation
+from pptx.presentation import Presentation, Section, Sections
 from pptx.slide import SlideLayouts, SlideMaster, SlideMasters, Slides
 
 from .unitutil.cxml import element, xml
@@ -255,3 +257,106 @@ class DescribePresentation:
     @pytest.fixture
     def slides_(self, request):
         return instance_mock(request, Slides)
+
+
+class DescribeSections:
+    """Unit-test suite for `pptx.presentation.Sections` objects."""
+
+    def _prs_elm_with_sections(self):
+        xml_str = (
+            '<p:presentation %s %s>'
+            '  <p:extLst>'
+            '    <p:ext uri="{521415D9-36F7-43E2-AB2F-B2CE04A55DE4}">'
+            '      <p14:sectionLst>'
+            '        <p14:section name="Intro">'
+            '          <p14:sldId id="256"/>'
+            '        </p14:section>'
+            '        <p14:section name="Body"/>'
+            '      </p14:sectionLst>'
+            '    </p:ext>'
+            '  </p:extLst>'
+            '</p:presentation>'
+        ) % (nsdecls("p"), nsdecls("p14"))
+        return parse_xml(xml_str)
+
+    def it_supports_len(self):
+        prs_elm = self._prs_elm_with_sections()
+        sections = Sections(prs_elm)
+        assert len(sections) == 2
+
+    def it_supports_len_with_no_sections(self):
+        prs_elm = element("p:presentation")
+        sections = Sections(prs_elm)
+        assert len(sections) == 0
+
+    def it_supports_indexed_access(self):
+        prs_elm = self._prs_elm_with_sections()
+        sections = Sections(prs_elm)
+        assert sections[0].name == "Intro"
+        assert sections[1].name == "Body"
+
+    def it_supports_iteration(self):
+        prs_elm = self._prs_elm_with_sections()
+        sections = Sections(prs_elm)
+        names = [s.name for s in sections]
+        assert names == ["Intro", "Body"]
+
+    def it_can_add_a_section(self):
+        prs_elm = element("p:presentation")
+        sections = Sections(prs_elm)
+        section = sections.add("New Section")
+        assert len(sections) == 1
+        assert section.name == "New Section"
+
+    def it_raises_on_index_out_of_range(self):
+        prs_elm = element("p:presentation")
+        sections = Sections(prs_elm)
+        with pytest.raises(IndexError):
+            sections[0]
+
+
+class DescribeSection:
+    """Unit-test suite for `pptx.presentation.Section` objects."""
+
+    def _section_elm(self, name="Test", slide_ids=()):
+        xml_parts = [
+            '<p14:sectionLst %s>' % nsdecls("p14"),
+            '  <p14:section name="%s">' % name,
+        ]
+        for sid in slide_ids:
+            xml_parts.append('    <p14:sldId id="%d"/>' % sid)
+        xml_parts.append('  </p14:section>')
+        xml_parts.append('</p14:sectionLst>')
+        sectionLst = parse_xml("".join(xml_parts))
+        return sectionLst.section_lst[0]
+
+    def it_knows_its_name(self):
+        section = Section(self._section_elm("Intro"))
+        assert section.name == "Intro"
+
+    def it_can_change_its_name(self):
+        section = Section(self._section_elm("Old"))
+        section.name = "New"
+        assert section.name == "New"
+
+    def it_knows_its_slide_ids(self):
+        section = Section(self._section_elm("Test", (256, 257)))
+        assert section.slide_ids == (256, 257)
+
+    def it_can_add_a_slide_id(self):
+        section = Section(self._section_elm("Test"))
+        section.add_slide_id(256)
+        assert section.slide_ids == (256,)
+
+    def it_can_remove_itself(self):
+        xml_str = (
+            '<p14:sectionLst %s>'
+            '  <p14:section name="A"/>'
+            '  <p14:section name="B"/>'
+            '</p14:sectionLst>'
+        ) % nsdecls("p14")
+        sectionLst = parse_xml(xml_str)
+        section = Section(sectionLst.section_lst[0])
+        section.remove()
+        assert len(sectionLst.section_lst) == 1
+        assert sectionLst.section_lst[0].name == "B"

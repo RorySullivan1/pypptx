@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     )
     from pptx.parts.presentation import PresentationPart
     from pptx.parts.slide import SlideLayoutPart, SlideMasterPart, SlidePart
+    from pptx.parts.tags import TagsPart
     from pptx.presentation import Presentation
     from pptx.shapes.placeholder import LayoutPlaceholder, MasterPlaceholder
     from pptx.shapes.shapetree import NotesSlidePlaceholder
@@ -188,6 +189,16 @@ class Slide(_BaseSlide):
     """Slide object. Provides access to shapes and slide-level properties."""
 
     part: SlidePart  # pyright: ignore[reportIncompatibleMethodOverride]
+
+    @property
+    def tags(self) -> TagsPart:
+        """The |TagsPart| for this slide providing dict-like access to key-value tags.
+
+        A tags part is created automatically if one doesn't exist. Supports ``tags[key]``,
+        ``tags[key] = value``, ``del tags[key]``, ``key in tags``, ``len(tags)``,
+        and ``tags.items()``.
+        """
+        return self.part.tags_part
 
     @property
     def follow_master_background(self):

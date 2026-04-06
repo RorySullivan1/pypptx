@@ -407,13 +407,13 @@ _Prerequisites: Section 4.4 (`CT_HeaderFooter`)_
 
 ---
 
-## 15. Python API — Metadata & Organization
+## 15. Python API — Metadata & Organization (DONE)
 
 _Prerequisites: Section 4.5 (sections and tags elements)_
 
-- [ ] Tags — key-value string pairs on shapes and slides (separate `tags[N].xml` parts linked via relationships)
-- [ ] Sections — named slide groups via `p14:sectionLst` in presentation extensions (add, remove, rename, reorder, list sections)
-- [ ] Custom document properties — beyond core properties (custom key-value metadata)
+- [x] Tags — `Slide.tags` via `TagsPart` with dict-like API (get/set/del/contains/iter/items)
+- [x] Sections — `Presentation.sections` with `Sections`/`Section` classes (add, remove, rename, iterate, slide IDs)
+- [x] Custom document properties — `Presentation.custom_properties` via `CustomPropertiesPart` with typed values (str/int/float/bool)
 
 ---
 
