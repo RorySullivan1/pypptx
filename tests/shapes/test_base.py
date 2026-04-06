@@ -148,6 +148,59 @@ class DescribeBaseShape:
         shape.title = new_value
         assert shape._element.xml == xml(expected_cxml)
 
+    def it_knows_its_lock_aspect_ratio_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Shape with no lock element — defaults to False
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        assert shape.lock_aspect_ratio is False
+
+        # Shape with lock element and noChangeAspect=true
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            '<p:cNvSpPr><a:spLocks noChangeAspect="1"/></p:cNvSpPr>'
+            "<p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        assert shape.lock_aspect_ratio is True
+
+    def it_can_change_its_lock_aspect_ratio_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Set lock on shape that has no lock element
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(sp_xml), None)
+        shape.lock_aspect_ratio = True
+        assert shape.lock_aspect_ratio is True
+
+        # Clear lock
+        shape.lock_aspect_ratio = False
+        assert shape.lock_aspect_ratio is False
+
+    def it_supports_lock_aspect_ratio_on_pictures(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        pic_xml = (
+            '<p:pic %s><p:nvPicPr><p:cNvPr id="1" name="pic1"/>'
+            '<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>'
+            "<p:nvPr/></p:nvPicPr><p:spPr/></p:pic>"
+        ) % nsdecls("p", "a")
+        shape = BaseShape(parse_xml(pic_xml), None)
+        assert shape.lock_aspect_ratio is True
+
+        shape.lock_aspect_ratio = False
+        assert shape.lock_aspect_ratio is False
+
     def it_provides_access_to_its_click_action(self, click_action_fixture):
         shape, ActionSetting_, cNvPr, click_action_ = click_action_fixture
         click_action = shape.click_action

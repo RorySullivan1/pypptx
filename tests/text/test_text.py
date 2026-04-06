@@ -797,6 +797,38 @@ class DescribeFont:
         font.strikethrough = new_value
         assert font._element.xml == xml(expected_cxml)
 
+    def it_knows_its_shadow_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # No effectLst — no shadow
+        rPr = parse_xml("<a:rPr %s/>" % nsdecls("a"))
+        assert Font(rPr).has_shadow is False
+
+        # effectLst with outerShdw — has shadow
+        rPr = parse_xml(
+            "<a:rPr %s><a:effectLst><a:outerShdw/></a:effectLst></a:rPr>" % nsdecls("a")
+        )
+        assert Font(rPr).has_shadow is True
+
+        # effectLst without outerShdw — no shadow
+        rPr = parse_xml("<a:rPr %s><a:effectLst/></a:rPr>" % nsdecls("a"))
+        assert Font(rPr).has_shadow is False
+
+    def it_can_change_its_shadow_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Enable shadow
+        rPr = parse_xml("<a:rPr %s/>" % nsdecls("a"))
+        font = Font(rPr)
+        font.has_shadow = True
+        assert font.has_shadow is True
+
+        # Disable shadow
+        font.has_shadow = False
+        assert font.has_shadow is False
+
     def it_provides_access_to_its_color(self, font):
         assert isinstance(font.color, ColorFormat)
 

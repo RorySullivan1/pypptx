@@ -42,6 +42,48 @@ class BaseShapeElement(BaseOxmlElement):
 
     spPr: CT_ShapeProperties
 
+    # Maps shape element tag to the corresponding lock element tag.
+    _lock_tag_map = {
+        qn("p:sp"): qn("a:spLocks"),
+        qn("p:pic"): qn("a:picLocks"),
+        qn("p:cxnSp"): qn("a:cxnSpLocks"),
+        qn("p:grpSp"): qn("a:grpSpLocks"),
+        qn("p:graphicFrame"): qn("a:graphicFrameLocks"),
+    }
+
+    @property
+    def _lock_elm(self) -> CT_Locking | None:
+        """Return the lock element for this shape, or None if not present."""
+        lock_tag = self._lock_tag_map.get(self.tag)
+        if lock_tag is None:
+            return None
+        nvXxPr = self._nvXxPr
+        if len(nvXxPr) < 2:
+            return None
+        cNvXxPr = nvXxPr[1]
+        for child in cNvXxPr:
+            if child.tag == lock_tag:
+                return child
+        return None
+
+    def _get_or_add_lock_elm(self) -> CT_Locking:
+        """Return the lock element for this shape, creating it if absent."""
+        from lxml import etree
+
+        lock = self._lock_elm
+        if lock is not None:
+            return lock
+        lock_tag = self._lock_tag_map.get(self.tag)
+        if lock_tag is None:
+            raise ValueError(f"No lock element defined for {self.tag}")
+        nvXxPr = self._nvXxPr
+        cNvXxPr = nvXxPr[1]
+        lock = etree.SubElement(cNvXxPr, lock_tag)
+        # Move lock to be the first child (it should come before other children)
+        cNvXxPr.remove(lock)
+        cNvXxPr.insert(0, lock)
+        return lock
+
     @property
     def cx(self) -> Length:
         return self._get_xfrm_attr("cx")

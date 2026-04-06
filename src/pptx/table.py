@@ -227,6 +227,16 @@ class _Cell(Subshape):
         return LineFormat(_CellBorderAdapter(self._tc, "lnT"))
 
     @lazyproperty
+    def border_diagonal_down(self) -> LineFormat:
+        """|LineFormat| for the top-left to bottom-right diagonal border."""
+        return LineFormat(_CellBorderAdapter(self._tc, "lnTlToBr"))
+
+    @lazyproperty
+    def border_diagonal_up(self) -> LineFormat:
+        """|LineFormat| for the bottom-left to top-right diagonal border."""
+        return LineFormat(_CellBorderAdapter(self._tc, "lnBlToTr"))
+
+    @lazyproperty
     def fill(self) -> FillFormat:
         """|FillFormat| instance for this cell.
 

@@ -122,6 +122,27 @@ class BaseShape:
         self._element._nvXxPr.cNvPr.hidden = value if value else None  # pyright: ignore[reportPrivateUsage]
 
     @property
+    def lock_aspect_ratio(self) -> bool:
+        """True when this shape's aspect ratio is locked.
+
+        Read/write. When True, resizing the shape preserves the aspect ratio.
+        """
+        lock = self._element._lock_elm  # pyright: ignore[reportPrivateUsage]
+        if lock is None:
+            return False
+        return bool(lock.noChangeAspect)
+
+    @lock_aspect_ratio.setter
+    def lock_aspect_ratio(self, value: bool):
+        if value:
+            lock = self._element._get_or_add_lock_elm()  # pyright: ignore[reportPrivateUsage]
+            lock.noChangeAspect = True
+        else:
+            lock = self._element._lock_elm  # pyright: ignore[reportPrivateUsage]
+            if lock is not None:
+                lock.noChangeAspect = None
+
+    @property
     def height(self) -> Length:
         """Read/write. Integer distance between top and bottom extents of shape in EMUs."""
         return self._element.cy

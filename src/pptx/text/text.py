@@ -446,6 +446,28 @@ class Font:
         self._rPr.i = value
 
     @property
+    def has_shadow(self) -> bool:
+        """True when this font has a shadow effect applied.
+
+        Read/write. Setting to True adds a default outer shadow to the font's effect list.
+        Setting to False removes any outer shadow effect.
+        """
+        effectLst = self._rPr.effectLst
+        if effectLst is None:
+            return False
+        return effectLst.outerShdw is not None
+
+    @has_shadow.setter
+    def has_shadow(self, value: bool):
+        if value:
+            effectLst = self._rPr.get_or_add_effectLst()
+            effectLst.get_or_add_outerShdw()
+        else:
+            effectLst = self._rPr.effectLst
+            if effectLst is not None:
+                effectLst._remove_outerShdw()  # pyright: ignore[reportPrivateUsage]
+
+    @property
     def language_id(self) -> MSO_LANGUAGE_ID | None:
         """Get or set the language id of this |Font| instance.
 
