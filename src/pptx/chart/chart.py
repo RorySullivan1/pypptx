@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Union, overload
+from typing import TYPE_CHECKING
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from pptx.chart.data import _BaseChartData
     from pptx.chart.plot import _BasePlot
     from pptx.enum.chart import XL_CHART_TYPE
-    from pptx.oxml.chart.chart import CT_ChartSpace
+    from pptx.oxml.chart.chart import CT_ChartSpace, CT_PlotArea
     from pptx.oxml.chart.shared import CT_Title
     from pptx.parts.chart import ChartPart, ChartWorkbook
 
@@ -478,12 +478,12 @@ class _Plots(Sequence):
     a superimposed line plot.
     """
 
-    def __init__(self, plotArea, chart):
+    def __init__(self, plotArea: CT_PlotArea, chart: Chart) -> None:
         super(_Plots, self).__init__()
         self._plotArea = plotArea
         self._chart = chart
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int | slice) -> _BasePlot | list[_BasePlot]:
         xCharts = self._plotArea.xCharts
         if isinstance(index, slice):
             plots = [PlotFactory(xChart, self._chart) for xChart in xCharts]
@@ -492,5 +492,5 @@ class _Plots(Sequence):
             xChart = xCharts[index]
             return PlotFactory(xChart, self._chart)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._plotArea.xCharts)
