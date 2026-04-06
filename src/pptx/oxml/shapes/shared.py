@@ -388,6 +388,41 @@ class CT_NonVisualDrawingProps(BaseOxmlElement):
     )
     del _tag_seq
 
+    _DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
+
+    @property
+    def decorative(self) -> bool:
+        """True when the shape is marked as decorative."""
+        results = self.xpath(
+            "a:extLst/a:ext/adec:decorative[@val='1']",
+        )
+        return len(results) > 0
+
+    @decorative.setter
+    def decorative(self, value: bool) -> None:
+        from lxml import etree
+
+        # Remove existing decorative ext element if present
+        for ext in self.xpath("a:extLst/a:ext"):
+            if ext.get("uri") == self._DECORATIVE_URI:
+                extLst = ext.getparent()
+                extLst.remove(ext)
+                # Clean up empty extLst
+                if len(extLst) == 0:
+                    self.remove(extLst)
+                break
+
+        if not value:
+            return
+
+        extLst = self.find(qn("a:extLst"))
+        if extLst is None:
+            extLst = etree.SubElement(self, qn("a:extLst"))
+        ext = etree.SubElement(extLst, qn("a:ext"))
+        ext.set("uri", self._DECORATIVE_URI)
+        decorative_elm = etree.SubElement(ext, qn("adec:decorative"))
+        decorative_elm.set("val", "1")
+
 
 class CT_Placeholder(BaseOxmlElement):
     """`p:ph` custom element class."""

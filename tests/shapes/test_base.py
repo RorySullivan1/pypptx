@@ -148,6 +148,59 @@ class DescribeBaseShape:
         shape.title = new_value
         assert shape._element.xml == xml(expected_cxml)
 
+    def it_knows_its_decorative_setting(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        # Shape with no extLst — defaults to False
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>" % nsdecls("p", "a", "adec")
+        )
+        sp = parse_xml(sp_xml)
+        shape = BaseShape(sp, None)
+        assert shape.decorative is False
+
+        # Shape with decorative flag set
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1">'
+            '<a:extLst><a:ext uri="{C183D7F6-B498-43B3-948B-1728B52AA6E4}">'
+            '<adec:decorative val="1"/>'
+            "</a:ext></a:extLst>"
+            "</p:cNvPr><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>"
+            % nsdecls("p", "a", "adec")
+        )
+        sp = parse_xml(sp_xml)
+        shape = BaseShape(sp, None)
+        assert shape.decorative is True
+
+    def it_can_change_its_decorative_setting(self):
+        from lxml import etree
+
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls, qn
+
+        # Set decorative to True on a shape without it
+        sp_xml = (
+            '<p:sp %s><p:nvSpPr><p:cNvPr id="1" name="sp1"/>'
+            "<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>" % nsdecls("p", "a", "adec")
+        )
+        sp = parse_xml(sp_xml)
+        shape = BaseShape(sp, None)
+        shape.decorative = True
+        assert shape.decorative is True
+        # Verify the XML structure
+        cNvPr = sp.find(qn("p:nvSpPr")).find(qn("p:cNvPr"))
+        dec_elms = cNvPr.xpath("a:extLst/a:ext/adec:decorative")
+        assert len(dec_elms) == 1
+        assert dec_elms[0].get("val") == "1"
+
+        # Set decorative to False removes the extension
+        shape.decorative = False
+        assert shape.decorative is False
+        extLst = cNvPr.find(qn("a:extLst"))
+        assert extLst is None
+
     def it_knows_its_lock_aspect_ratio_setting(self):
         from pptx.oxml import parse_xml
         from pptx.oxml.ns import nsdecls
