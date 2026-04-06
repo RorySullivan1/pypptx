@@ -436,7 +436,7 @@ _Prerequisites: Section 4.7 (picture format effects)_
 - [x] Brightness — `Picture.brightness` via `a:lum` bright attribute on blip
 - [x] Contrast — `Picture.contrast` via `a:lum` contrast attribute on blip
 - [x] Grayscale — `Picture.is_grayscale` via `a:grayscl` on blip
-- [ ] Transparency color
+- [x] Transparency color — `Picture.transparency_color` read/write via `a:clrChange` on blip
 - [x] Original image dimensions — `Picture.image_width` / `image_height` via `ImagePart._native_size`
 
 ---

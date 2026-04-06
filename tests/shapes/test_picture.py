@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.dml.color import RGBColor
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE, PP_MEDIA_TYPE
 from pptx.parts.image import Image
@@ -274,6 +275,61 @@ class DescribePicture:
         assert picture.is_grayscale is True
         picture.is_grayscale = False
         assert picture.is_grayscale is False
+
+    def it_returns_None_when_no_transparency_color(self):
+        pic = element(
+            "p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),p:blipFill/a:blip,p:spPr)"
+        )
+        picture = Picture(pic, None)
+        assert picture.transparency_color is None
+
+    def it_can_read_transparency_color(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        pic_xml = (
+            '<p:pic %s>'
+            '<p:nvPicPr><p:cNvPr id="1" name="p"/><p:cNvPicPr/></p:nvPicPr>'
+            "<p:blipFill><a:blip>"
+            '<a:clrChange><a:clrFrom><a:srgbClr val="FF00FF"/></a:clrFrom>'
+            '<a:clrTo><a:srgbClr val="FF00FF"><a:alpha val="0"/></a:srgbClr>'
+            "</a:clrTo></a:clrChange>"
+            "</a:blip></p:blipFill>"
+            "<p:spPr/>"
+            "</p:pic>" % nsdecls("p", "a", "r")
+        )
+        pic = parse_xml(pic_xml)
+        picture = Picture(pic, None)
+        assert picture.transparency_color == RGBColor(0xFF, 0x00, 0xFF)
+
+    def it_can_set_transparency_color(self):
+        pic = element(
+            "p:pic/(p:nvPicPr/(p:cNvPr{id=1,name=p},p:cNvPicPr),p:blipFill/a:blip,p:spPr)"
+        )
+        picture = Picture(pic, None)
+        picture.transparency_color = RGBColor(0x00, 0xFF, 0x00)
+        assert picture.transparency_color == RGBColor(0x00, 0xFF, 0x00)
+
+    def it_can_remove_transparency_color(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        pic_xml = (
+            '<p:pic %s>'
+            '<p:nvPicPr><p:cNvPr id="1" name="p"/><p:cNvPicPr/></p:nvPicPr>'
+            "<p:blipFill><a:blip>"
+            '<a:clrChange><a:clrFrom><a:srgbClr val="FF00FF"/></a:clrFrom>'
+            '<a:clrTo><a:srgbClr val="FF00FF"><a:alpha val="0"/></a:srgbClr>'
+            "</a:clrTo></a:clrChange>"
+            "</a:blip></p:blipFill>"
+            "<p:spPr/>"
+            "</p:pic>" % nsdecls("p", "a", "r")
+        )
+        pic = parse_xml(pic_xml)
+        picture = Picture(pic, None)
+        assert picture.transparency_color is not None
+        picture.transparency_color = None
+        assert picture.transparency_color is None
 
     def it_knows_its_masking_shape(self, autoshape_get_fixture):
         picture, expected_value = autoshape_get_fixture

@@ -27,8 +27,10 @@ from pptx.oxml.xmlchemy import (
 class CT_Blip(BaseOxmlElement):
     """`a:blip` element, specifying an image resource and optional effects."""
 
+    get_or_add_clrChange: Callable[[], CT_ColorChangeEffect]
     get_or_add_grayscl: Callable[[], BaseOxmlElement]
     get_or_add_lum: Callable[[], BaseOxmlElement]
+    _remove_clrChange: Callable[[], None]
     _remove_grayscl: Callable[[], None]
     _remove_lum: Callable[[], None]
 
@@ -52,6 +54,9 @@ class CT_Blip(BaseOxmlElement):
         "a:tint",
         "a:extLst",
     )
+    clrChange: CT_ColorChangeEffect | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:clrChange", successors=_tag_seq[10:]
+    )
     duotone = ZeroOrOne("a:duotone", successors=_tag_seq[12:])
     grayscl = ZeroOrOne("a:grayscl", successors=_tag_seq[14:])
     lum = ZeroOrOne("a:lum", successors=_tag_seq[16:])
@@ -59,6 +64,18 @@ class CT_Blip(BaseOxmlElement):
 
     rEmbed = OptionalAttribute("r:embed", ST_RelationshipId)
     rLink = OptionalAttribute("r:link", ST_RelationshipId)
+
+
+class CT_ColorChangeEffect(BaseOxmlElement):
+    """`a:clrChange` element, specifying a color-to-transparent replacement on a blip.
+
+    Contains `a:clrFrom` (color to replace) and `a:clrTo` (replacement, typically transparent).
+    """
+
+    _tag_seq = ("a:clrFrom", "a:clrTo")
+    clrFrom = ZeroOrOne("a:clrFrom", successors=_tag_seq[1:])
+    clrTo = ZeroOrOne("a:clrTo", successors=())
+    del _tag_seq
 
 
 class CT_BlipFillProperties(BaseOxmlElement):
