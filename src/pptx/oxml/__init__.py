@@ -368,6 +368,8 @@ from pptx.oxml.dml.color import (  # noqa: E402
 )
 
 register_element_cls("a:bgClr", CT_Color)
+register_element_cls("a:clrFrom", CT_Color)
+register_element_cls("a:clrTo", CT_Color)
 register_element_cls("a:fgClr", CT_Color)
 register_element_cls("a:hslClr", CT_HslColor)
 register_element_cls("a:alpha", CT_Percentage)
@@ -387,6 +389,7 @@ register_element_cls("a:sysClr", CT_SystemColor)
 from pptx.oxml.dml.fill import (  # noqa: E402
     CT_Blip,
     CT_BlipFillProperties,
+    CT_ColorChangeEffect,
     CT_GradientFillProperties,
     CT_GradientStop,
     CT_GradientStopList,
@@ -400,6 +403,7 @@ from pptx.oxml.dml.fill import (  # noqa: E402
 
 register_element_cls("a:blip", CT_Blip)
 register_element_cls("a:blipFill", CT_BlipFillProperties)
+register_element_cls("a:clrChange", CT_ColorChangeEffect)
 register_element_cls("a:gradFill", CT_GradientFillProperties)
 register_element_cls("a:grpFill", CT_GroupFillProperties)
 register_element_cls("a:gs", CT_GradientStop)
@@ -732,12 +736,18 @@ register_element_cls("p:txBody", CT_TextBody)
 from pptx.oxml.theme import (  # noqa: E402
     CT_BaseStyles,
     CT_ColorScheme,
+    CT_EffectStyleItem,
+    CT_EffectStyleList,
     CT_FontCollection,
     CT_FontScheme,
     CT_OfficeStyleSheet,
+    CT_StyleMatrix,
 )
 
 register_element_cls("a:clrScheme", CT_ColorScheme)
+register_element_cls("a:effectStyle", CT_EffectStyleItem)
+register_element_cls("a:effectStyleLst", CT_EffectStyleList)
+register_element_cls("a:fmtScheme", CT_StyleMatrix)
 register_element_cls("a:fontScheme", CT_FontScheme)
 register_element_cls("a:majorFont", CT_FontCollection)
 register_element_cls("a:minorFont", CT_FontCollection)

@@ -27,6 +27,23 @@ class Theme:
         return ColorScheme(clrScheme)
 
     @property
+    def effect_scheme(self):
+        """An |EffectScheme| providing read-only access to theme effect styles.
+
+        Returns None if no format scheme is defined.
+        """
+        themeElements = self._theme.themeElements
+        if themeElements is None:
+            return None
+        fmtScheme = themeElements.fmtScheme
+        if fmtScheme is None:
+            return None
+        effectStyleLst = fmtScheme.effectStyleLst
+        if effectStyleLst is None:
+            return None
+        return EffectScheme(effectStyleLst, fmtScheme.name)
+
+    @property
     def font_scheme(self):
         """A |FontScheme| object providing access to theme fonts.
 
@@ -241,6 +258,84 @@ class FontCollection:
     def complex_script(self, value):
         elm = self._fc.get_or_add_cs()
         elm.typeface = value
+
+
+class EffectScheme:
+    """Read-only access to the three theme effect styles (subtle, moderate, intense).
+
+    Supports indexed access (0=subtle, 1=moderate, 2=intense), iteration, and len().
+    Each effect style is an |EffectStyle| object.
+    """
+
+    _STYLE_NAMES = ("subtle", "moderate", "intense")
+
+    def __init__(self, effectStyleLst, format_scheme_name):
+        self._effectStyleLst = effectStyleLst
+        self._format_scheme_name = format_scheme_name
+
+    @property
+    def name(self):
+        """Read-only string name of the parent format scheme (e.g. ``"Office"``)."""
+        return self._format_scheme_name
+
+    def __getitem__(self, idx):
+        """Return the |EffectStyle| at the given index (0=subtle, 1=moderate, 2=intense)."""
+        styles = self._effectStyleLst.effectStyle_lst
+        return EffectStyle(styles[idx], self._STYLE_NAMES[idx])
+
+    def __iter__(self):
+        """Yield |EffectStyle| objects for each effect style."""
+        for idx, style_elm in enumerate(self._effectStyleLst.effectStyle_lst):
+            yield EffectStyle(style_elm, self._STYLE_NAMES[idx])
+
+    def __len__(self):
+        return len(self._effectStyleLst.effectStyle_lst)
+
+    @property
+    def subtle(self):
+        """The subtle (first) |EffectStyle|."""
+        return self[0]
+
+    @property
+    def moderate(self):
+        """The moderate (second) |EffectStyle|."""
+        return self[1]
+
+    @property
+    def intense(self):
+        """The intense (third) |EffectStyle|."""
+        return self[2]
+
+
+class EffectStyle:
+    """Read-only access to a single theme effect style.
+
+    Provides information about whether the style defines effects, a 3D scene, or 3D shape.
+    """
+
+    def __init__(self, effectStyle_elm, style_name):
+        self._elm = effectStyle_elm
+        self._name = style_name
+
+    @property
+    def name(self):
+        """Read-only name of this effect style (``"subtle"``, ``"moderate"``, or ``"intense"``)."""
+        return self._name
+
+    @property
+    def has_effect_list(self):
+        """True if this style defines an effect list (e.g. shadow, glow)."""
+        return self._elm.effectLst is not None
+
+    @property
+    def has_3d_scene(self):
+        """True if this style includes a 3D scene definition."""
+        return self._elm.scene3d is not None
+
+    @property
+    def has_3d_shape(self):
+        """True if this style includes 3D shape properties (bevel, etc.)."""
+        return self._elm.sp3d is not None
 
 
 def _extract_rgb(color_elm):

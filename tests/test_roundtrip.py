@@ -212,3 +212,67 @@ prs2 = Presentation(stream)
 assert prs2.first_slide_number == 5
 """)
 
+    def it_round_trips_transparency_color(self):
+        _run_roundtrip_test("""\
+from pptx.dml.color import RGBColor
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
+
+import os, tempfile
+# create a tiny valid PNG (1x1 white pixel)
+png_bytes = (
+    b'\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x00\\x01'
+    b'\\x00\\x00\\x00\\x01\\x08\\x02\\x00\\x00\\x00\\x90wS\\xde\\x00'
+    b'\\x00\\x00\\x0cIDATx\\x9cc\\xf8\\x0f\\x00\\x00\\x01\\x01\\x00'
+    b'\\x05\\x18\\xd8N\\x00\\x00\\x00\\x00IEND\\xaeB`\\x82'
+)
+with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+    f.write(png_bytes)
+    img_path = f.name
+
+try:
+    pic = slide.shapes.add_picture(img_path, Inches(1), Inches(1))
+    pic.transparency_color = RGBColor(0xFF, 0xFF, 0xFF)
+    assert pic.transparency_color == RGBColor(0xFF, 0xFF, 0xFF)
+
+    stream = BytesIO()
+    prs.save(stream)
+    stream.seek(0)
+    prs2 = Presentation(stream)
+
+    slide2 = prs2.slides[0]
+    pics = [s for s in slide2.shapes if s.shape_type is not None]
+    from pptx.shapes.picture import Picture
+    pic2 = [s for s in slide2.shapes if isinstance(s, Picture)][0]
+    assert pic2.transparency_color == RGBColor(0xFF, 0xFF, 0xFF)
+
+    # can remove it
+    pic2.transparency_color = None
+    assert pic2.transparency_color is None
+finally:
+    os.unlink(img_path)
+""")
+
+    def it_round_trips_theme_effect_scheme(self):
+        _run_roundtrip_test("""\
+from pptx.theme import EffectScheme
+
+prs = Presentation()
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+master = prs2.slide_masters[0]
+theme = master.theme
+effect_scheme = theme.effect_scheme
+assert effect_scheme is not None
+assert len(effect_scheme) == 3
+assert effect_scheme.subtle.has_effect_list is True
+assert effect_scheme.intense.has_3d_scene is True
+assert effect_scheme.intense.has_3d_shape is True
+assert effect_scheme.name == "Office"
+""")
+

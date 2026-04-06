@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from pptx.dml.color import RGBColor
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE, PP_MEDIA_TYPE
 from pptx.exc import ShapeError
@@ -220,6 +221,54 @@ class Picture(_BasePicture):
             blip.get_or_add_grayscl()
         else:
             blip._remove_grayscl()
+
+    @property
+    def transparency_color(self) -> RGBColor | None:
+        """The color set as transparent on this picture, or |None|.
+
+        Read/write. When set, the specified color in the image is rendered as fully
+        transparent (chroma key). Implemented via the ``a:clrChange`` element on the blip.
+        Setting to |None| removes the transparency color effect.
+        """
+        blip = self._pic.blipFill.blip
+        if blip is None:
+            return None
+        clrChange = blip.clrChange
+        if clrChange is None:
+            return None
+        clrFrom = clrChange.clrFrom
+        if clrFrom is None:
+            return None
+        srgbClr = clrFrom.find(
+            "{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr"
+        )
+        if srgbClr is None:
+            return None
+        return RGBColor.from_string(srgbClr.get("val"))
+
+    @transparency_color.setter
+    def transparency_color(self, value: RGBColor | None) -> None:
+        blip = self._pic.blipFill.blip
+        if blip is None:
+            return
+        if value is None:
+            blip._remove_clrChange()
+            return
+        blip._remove_clrChange()
+        clrChange = blip.get_or_add_clrChange()
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        clr_from_xml = '<a:clrFrom %s><a:srgbClr val="%s"/></a:clrFrom>' % (
+            nsdecls("a"),
+            str(value),
+        )
+        clr_to_xml = (
+            '<a:clrTo %s><a:srgbClr val="%s"><a:alpha val="0"/></a:srgbClr></a:clrTo>'
+            % (nsdecls("a"), str(value))
+        )
+        clrChange.append(parse_xml(clr_from_xml))
+        clrChange.append(parse_xml(clr_to_xml))
 
     @property
     def image_width(self) -> Length:
