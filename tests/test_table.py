@@ -7,6 +7,7 @@ from __future__ import annotations
 import pytest
 
 from pptx.dml.fill import FillFormat
+from pptx.dml.line import LineFormat
 from pptx.exc import TableError
 from pptx.enum.text import MSO_ANCHOR
 from pptx.oxml.ns import qn
@@ -79,6 +80,32 @@ class DescribeTable:
 
         _RowCollection_.assert_called_once_with(tbl, table)
         assert rows is rows_
+
+    @pytest.mark.parametrize(
+        ("tbl_cxml", "expected_value"),
+        [
+            ("a:tbl", None),
+            ("a:tbl/a:tblPr{tblStyle=abc-123}", "abc-123"),
+        ],
+    )
+    def it_knows_its_table_style_id(self, tbl_cxml: str, expected_value: str | None):
+        table = Table(element(tbl_cxml), None)
+        assert table.table_style_id == expected_value
+
+    @pytest.mark.parametrize(
+        ("tbl_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:tbl", "abc-123", "a:tbl/a:tblPr{tblStyle=abc-123}"),
+            ("a:tbl/a:tblPr{tblStyle=abc}", "xyz", "a:tbl/a:tblPr{tblStyle=xyz}"),
+            ("a:tbl/a:tblPr{tblStyle=abc}", None, "a:tbl/a:tblPr"),
+        ],
+    )
+    def it_can_change_its_table_style_id(
+        self, tbl_cxml: str, new_value: str | None, expected_cxml: str
+    ):
+        table = Table(element(tbl_cxml), None)
+        table.table_style_id = new_value
+        assert table._tbl.xml == xml(expected_cxml)
 
     def it_updates_graphic_frame_width_on_width_change(self, dx_fixture):
         table, expected_width = dx_fixture
@@ -207,6 +234,22 @@ class Describe_Cell:
 
         assert cell == cell_with_same_tc
         assert cell != cell_with_other_tc
+
+    @pytest.mark.parametrize("border_prop", ["border_left", "border_right", "border_top", "border_bottom"])
+    def it_provides_access_to_its_borders(self, border_prop: str):
+        tc = element("a:tc/a:tcPr")
+        cell = _Cell(tc, None)
+        border = getattr(cell, border_prop)
+        assert isinstance(border, LineFormat)
+
+    def it_can_set_a_border_width(self):
+        tc = element("a:tc")
+        cell = _Cell(tc, None)
+        cell.border_top.width = Pt(2)
+        # verify the ln element was created with the right width
+        lnT = tc.tcPr.lnT
+        assert lnT is not None
+        assert lnT.w == Pt(2)
 
     def it_has_a_fill(self, fill_fixture):
         cell = fill_fixture

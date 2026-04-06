@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Callable
+
 from pptx.enum.dml import MSO_RECT_ALIGNMENT
 from pptx.oxml.simpletypes import (
     ST_Angle,
@@ -159,6 +161,17 @@ class CT_SoftEdgesEffect(BaseOxmlElement):
 
 class CT_EffectList(BaseOxmlElement):
     """`a:effectLst` element, container for visual effects on a shape."""
+
+    get_or_add_glow: Callable[[], CT_GlowEffect]
+    get_or_add_innerShdw: Callable[[], CT_InnerShadowEffect]
+    get_or_add_outerShdw: Callable[[], CT_OuterShadowEffect]
+    get_or_add_reflection: Callable[[], CT_ReflectionEffect]
+    get_or_add_softEdge: Callable[[], CT_SoftEdgesEffect]
+    _remove_glow: Callable[[], None]
+    _remove_innerShdw: Callable[[], None]
+    _remove_outerShdw: Callable[[], None]
+    _remove_reflection: Callable[[], None]
+    _remove_softEdge: Callable[[], None]
 
     _tag_seq = (
         "a:blur",

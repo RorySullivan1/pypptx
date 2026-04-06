@@ -11,7 +11,16 @@ import pytest
 from pptx.dml.color import ColorFormat
 from pptx.dml.fill import FillFormat
 from pptx.enum.lang import MSO_LANGUAGE_ID
-from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, MSO_UNDERLINE, PP_ALIGN
+from pptx.enum.text import (
+    MSO_ANCHOR,
+    MSO_AUTO_SIZE,
+    MSO_TEXT_CAPS,
+    MSO_TEXT_FONT_ALIGN,
+    MSO_TEXT_STRIKE_TYPE,
+    MSO_TEXT_VERTICAL_TYPE,
+    MSO_UNDERLINE,
+    PP_ALIGN,
+)
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
 from pptx.shapes.autoshape import Shape
@@ -66,6 +75,96 @@ class DescribeTextFrame:
     ):
         text_frame = TextFrame(element(txBody_cxml), None)
         text_frame.auto_size = value
+        assert text_frame._txBody.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:bodyPr", None),
+            ("p:txBody/a:bodyPr{numCol=2}", 2),
+        ],
+    )
+    def it_knows_its_column_count(self, txBody_cxml: str, expected_value: int | None):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.columns == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:txBody/a:bodyPr", 3, "p:txBody/a:bodyPr{numCol=3}"),
+            ("p:txBody/a:bodyPr{numCol=3}", None, "p:txBody/a:bodyPr"),
+        ],
+    )
+    def it_can_change_its_column_count(
+        self, txBody_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        text_frame.columns = new_value
+        assert text_frame._txBody.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [("p:txBody/a:bodyPr", None), ("p:txBody/a:bodyPr{spcCol=914400}", 914400)],
+    )
+    def it_knows_its_column_spacing(self, txBody_cxml: str, expected_value: int | None):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.column_spacing == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:txBody/a:bodyPr", 457200, "p:txBody/a:bodyPr{spcCol=457200}"),
+            ("p:txBody/a:bodyPr{spcCol=914400}", None, "p:txBody/a:bodyPr"),
+        ],
+    )
+    def it_can_change_its_column_spacing(
+        self, txBody_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        text_frame.column_spacing = new_value
+        assert text_frame._txBody.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:p", False),
+            ('p:txBody/a:p/a:r/a:t"Hello"', True),
+        ],
+    )
+    def it_knows_whether_it_has_text(self, txBody_cxml: str, expected_value: bool):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.has_text is expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:bodyPr", None),
+            ("p:txBody/a:bodyPr{vert=vert}", MSO_TEXT_VERTICAL_TYPE.VERTICAL),
+            ("p:txBody/a:bodyPr{vert=vert270}", MSO_TEXT_VERTICAL_TYPE.VERTICAL_270),
+        ],
+    )
+    def it_knows_its_text_orientation(
+        self, txBody_cxml: str, expected_value: MSO_TEXT_VERTICAL_TYPE | None
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.text_orientation == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:txBody/a:bodyPr",
+                MSO_TEXT_VERTICAL_TYPE.VERTICAL,
+                "p:txBody/a:bodyPr{vert=vert}",
+            ),
+            ("p:txBody/a:bodyPr{vert=vert}", None, "p:txBody/a:bodyPr"),
+        ],
+    )
+    def it_can_change_its_text_orientation(
+        self, txBody_cxml: str, new_value: MSO_TEXT_VERTICAL_TYPE | None, expected_cxml: str
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        text_frame.text_orientation = new_value
         assert text_frame._txBody.xml == xml(expected_cxml)
 
     @pytest.mark.parametrize(
@@ -525,6 +624,179 @@ class DescribeFont:
         font.name = new_value
         assert font._element.xml == expected_xml
 
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr{baseline=30000}", 0.3)],
+    )
+    def it_knows_its_baseline_setting(self, rPr_cxml: str, expected_value: float | None):
+        font = Font(element(rPr_cxml))
+        assert font.baseline == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", 0.3, "a:rPr{baseline=30000}"),
+            ("a:rPr{baseline=30000}", -0.25, "a:rPr{baseline=-25000}"),
+            ("a:rPr{baseline=30000}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_baseline_setting(
+        self, rPr_cxml: str, new_value: float | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.baseline = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [
+            ("a:rPr", None),
+            ("a:rPr{cap=none}", MSO_TEXT_CAPS.NONE),
+            ("a:rPr{cap=all}", MSO_TEXT_CAPS.ALL),
+            ("a:rPr{cap=small}", MSO_TEXT_CAPS.SMALL),
+        ],
+    )
+    def it_knows_its_caps_setting(self, rPr_cxml: str, expected_value: MSO_TEXT_CAPS | None):
+        font = Font(element(rPr_cxml))
+        assert font.caps == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", MSO_TEXT_CAPS.ALL, "a:rPr{cap=all}"),
+            ("a:rPr{cap=all}", MSO_TEXT_CAPS.SMALL, "a:rPr{cap=small}"),
+            ("a:rPr{cap=small}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_caps_setting(
+        self, rPr_cxml: str, new_value: MSO_TEXT_CAPS | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.caps = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr/a:ea{typeface=MS Gothic}", "MS Gothic")],
+    )
+    def it_knows_its_east_asian_name(self, rPr_cxml: str, expected_value: str | None):
+        font = Font(element(rPr_cxml))
+        assert font.east_asian_name == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", "MS Gothic", "a:rPr/a:ea{typeface=MS Gothic}"),
+            ("a:rPr/a:ea{typeface=MS Gothic}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_east_asian_name(
+        self, rPr_cxml: str, new_value: str | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.east_asian_name = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr/a:cs{typeface=Arial}", "Arial")],
+    )
+    def it_knows_its_complex_script_name(self, rPr_cxml: str, expected_value: str | None):
+        font = Font(element(rPr_cxml))
+        assert font.complex_script_name == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", "Arial", "a:rPr/a:cs{typeface=Arial}"),
+            ("a:rPr/a:cs{typeface=Arial}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_complex_script_name(
+        self, rPr_cxml: str, new_value: str | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.complex_script_name = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr{kern=1200}", Pt(12))],
+    )
+    def it_knows_its_kerning_setting(self, rPr_cxml: str, expected_value: int | None):
+        font = Font(element(rPr_cxml))
+        assert font.kerning == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", Pt(12), "a:rPr{kern=1200}"),
+            ("a:rPr{kern=1200}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_kerning_setting(
+        self, rPr_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.kerning = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [("a:rPr", None), ("a:rPr{spc=150}", Pt(1.5))],
+    )
+    def it_knows_its_spacing_setting(self, rPr_cxml: str, expected_value: int | None):
+        font = Font(element(rPr_cxml))
+        assert font.spacing == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", Pt(1.5), "a:rPr{spc=150}"),
+            ("a:rPr{spc=150}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_spacing_setting(
+        self, rPr_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.spacing = new_value
+        assert font._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "expected_value"),
+        [
+            ("a:rPr", None),
+            ("a:rPr{strike=noStrike}", MSO_TEXT_STRIKE_TYPE.NO_STRIKE),
+            ("a:rPr{strike=sngStrike}", MSO_TEXT_STRIKE_TYPE.SINGLE_STRIKE),
+            ("a:rPr{strike=dblStrike}", MSO_TEXT_STRIKE_TYPE.DOUBLE_STRIKE),
+        ],
+    )
+    def it_knows_its_strikethrough_setting(
+        self, rPr_cxml: str, expected_value: MSO_TEXT_STRIKE_TYPE | None
+    ):
+        font = Font(element(rPr_cxml))
+        assert font.strikethrough == expected_value
+
+    @pytest.mark.parametrize(
+        ("rPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:rPr", MSO_TEXT_STRIKE_TYPE.SINGLE_STRIKE, "a:rPr{strike=sngStrike}"),
+            (
+                "a:rPr{strike=sngStrike}",
+                MSO_TEXT_STRIKE_TYPE.DOUBLE_STRIKE,
+                "a:rPr{strike=dblStrike}",
+            ),
+            ("a:rPr{strike=dblStrike}", None, "a:rPr"),
+        ],
+    )
+    def it_can_change_its_strikethrough_setting(
+        self, rPr_cxml: str, new_value: MSO_TEXT_STRIKE_TYPE | None, expected_cxml: str
+    ):
+        font = Font(element(rPr_cxml))
+        font.strikethrough = new_value
+        assert font._element.xml == xml(expected_cxml)
+
     def it_provides_access_to_its_color(self, font):
         assert isinstance(font.color, ColorFormat)
 
@@ -806,6 +1078,190 @@ class Describe_Paragraph:
         paragraph, new_value, expected_xml = alignment_set_fixture
         paragraph.alignment = new_value
         assert paragraph._element.xml == expected_xml
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr/a:buChar{char=-}", "-"),
+        ],
+    )
+    def it_knows_its_bullet_char(self, p_cxml: str, expected_value: str | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.bullet_char == expected_value
+
+    def it_can_change_its_bullet_char(self):
+        paragraph = _Paragraph(element("a:p"), None)
+        paragraph.bullet_char = "-"
+        buChar = paragraph._pPr.buChar
+        assert buChar is not None
+        assert buChar.get("char") == "-"
+
+    def it_can_remove_its_bullet_char(self):
+        paragraph = _Paragraph(element("a:p/a:pPr/a:buChar{char=-}"), None)
+        paragraph.bullet_char = None
+        assert paragraph._pPr.buChar is None
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr/a:buChar{char=-}", "char"),
+            ("a:p/a:pPr/a:buAutoNum{type=arabicPeriod}", "autoNum"),
+            ("a:p/a:pPr/a:buNone", "none"),
+        ],
+    )
+    def it_knows_its_bullet_type(self, p_cxml: str, expected_value: str | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.bullet_type == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{indent=457200}", Inches(0.5)),
+        ],
+    )
+    def it_knows_its_indent(self, p_cxml: str, expected_value: int | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.indent == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", Inches(0.5), "a:p/a:pPr{indent=457200}"),
+            ("a:p/a:pPr{indent=457200}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_indent(
+        self, p_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.indent = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{marL=457200}", Inches(0.5)),
+        ],
+    )
+    def it_knows_its_margin_left(self, p_cxml: str, expected_value: int | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.margin_left == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", Inches(0.5), "a:p/a:pPr{marL=457200}"),
+            ("a:p/a:pPr{marL=457200}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_margin_left(
+        self, p_cxml: str, new_value: int | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.margin_left = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{rtl=1}", True),
+            ("a:p/a:pPr{rtl=0}", False),
+        ],
+    )
+    def it_knows_its_rtl_setting(self, p_cxml: str, expected_value: bool | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.rtl == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", True, "a:p/a:pPr{rtl=1}"),
+            ("a:p/a:pPr{rtl=1}", False, "a:p/a:pPr{rtl=0}"),
+            ("a:p/a:pPr{rtl=0}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_rtl_setting(
+        self, p_cxml: str, new_value: bool | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.rtl = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_count"),
+        [
+            ("a:p", 0),
+            ("a:p/a:pPr", 0),
+            ("a:p/a:pPr/a:tabLst", 0),
+            ("a:p/a:pPr/a:tabLst/a:tab{pos=914400,algn=l}", 1),
+        ],
+    )
+    def it_knows_its_tab_stops(self, p_cxml: str, expected_count: int):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert len(paragraph.tab_stops) == expected_count
+
+    def it_can_add_a_tab_stop(self):
+        paragraph = _Paragraph(element("a:p"), None)
+        paragraph.add_tab_stop(914400, "ctr")
+        stops = paragraph.tab_stops
+        assert len(stops) == 1
+        assert stops[0] == (914400, "ctr")
+
+    def it_can_clear_tab_stops(self):
+        paragraph = _Paragraph(element("a:p/a:pPr/a:tabLst/a:tab{pos=914400}"), None)
+        paragraph.clear_tab_stops()
+        assert len(paragraph.tab_stops) == 0
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [("a:p", None), ("a:p/a:pPr{hangingPunct=1}", True), ("a:p/a:pPr{hangingPunct=0}", False)],
+    )
+    def it_knows_its_hanging_punctuation(self, p_cxml: str, expected_value: bool | None):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.hanging_punctuation == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", True, "a:p/a:pPr{hangingPunct=1}"),
+            ("a:p/a:pPr{hangingPunct=1}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_hanging_punctuation(
+        self, p_cxml: str, new_value: bool | None, expected_cxml: str
+    ):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.hanging_punctuation = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "expected_value"),
+        [
+            ("a:p", None),
+            ("a:p/a:pPr{fontAlgn=t}", MSO_TEXT_FONT_ALIGN.TOP),
+            ("a:p/a:pPr{fontAlgn=ctr}", MSO_TEXT_FONT_ALIGN.CENTER),
+        ],
+    )
+    def it_knows_its_font_alignment(self, p_cxml: str, expected_value):
+        paragraph = _Paragraph(element(p_cxml), None)
+        assert paragraph.font_alignment == expected_value
+
+    @pytest.mark.parametrize(
+        ("p_cxml", "new_value", "expected_cxml"),
+        [
+            ("a:p", MSO_TEXT_FONT_ALIGN.BASELINE, "a:p/a:pPr{fontAlgn=base}"),
+            ("a:p/a:pPr{fontAlgn=t}", None, "a:p/a:pPr"),
+        ],
+    )
+    def it_can_change_its_font_alignment(self, p_cxml: str, new_value, expected_cxml: str):
+        paragraph = _Paragraph(element(p_cxml), None)
+        paragraph.font_alignment = new_value
+        assert paragraph._element.xml == xml(expected_cxml)
 
     def it_can_clear_itself_of_content(self, clear_fixture):
         paragraph, expected_xml = clear_fixture

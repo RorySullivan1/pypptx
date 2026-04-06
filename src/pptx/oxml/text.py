@@ -297,7 +297,11 @@ class CT_TextCharacterProperties(BaseOxmlElement):
 
     get_or_add_hlinkClick: Callable[[], CT_Hyperlink]
     get_or_add_latin: Callable[[], CT_TextFont]
+    get_or_add_ea: Callable[[], CT_TextFont]
+    get_or_add_cs: Callable[[], CT_TextFont]
     _remove_latin: Callable[[], None]
+    _remove_ea: Callable[[], None]
+    _remove_cs: Callable[[], None]
     _remove_hlinkClick: Callable[[], None]
 
     eg_fillProperties = ZeroOrOneChoice(
@@ -555,7 +559,10 @@ class CT_TextParagraph(BaseOxmlElement):
 class CT_TextParagraphProperties(BaseOxmlElement):
     """`a:pPr` custom element class."""
 
+    get_or_add_buChar: Callable[[], BaseOxmlElement]
     get_or_add_defRPr: Callable[[], CT_TextCharacterProperties]
+    get_or_add_tabLst: Callable[[], CT_TabStopList]
+    _remove_tabLst: Callable[[], None]
     _add_lnSpc: Callable[[], CT_TextSpacing]
     _add_spcAft: Callable[[], CT_TextSpacing]
     _add_spcBef: Callable[[], CT_TextSpacing]
@@ -750,6 +757,7 @@ class CT_TabStop(BaseOxmlElement):
 class CT_TabStopList(BaseOxmlElement):
     """`a:tabLst` element, container for tab stop definitions."""
 
+    _add_tab: Callable[[], CT_TabStop]
     tab_lst: list[CT_TabStop]
 
     tab = ZeroOrMore("a:tab")

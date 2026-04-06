@@ -495,6 +495,26 @@ class _BaseGroupShapes(_BaseShapes):
         shape_elms = list(self._element.iter_shape_elms())
         return shape_elms.index(shape.element)
 
+    def move_shape_to_front(self, shape: BaseShape) -> None:
+        """Move `shape` to the front (top) of the z-order."""
+        self._grpSp.append(shape.element)
+        self._invalidate_shape_cache()
+
+    def move_shape_to_back(self, shape: BaseShape) -> None:
+        """Move `shape` to the back (bottom) of the z-order."""
+        first_shape = next(self._element.iter_shape_elms(), None)
+        if first_shape is not None and first_shape is not shape.element:
+            first_shape.addprevious(shape.element)
+        self._invalidate_shape_cache()
+
+    def remove_shape(self, shape: BaseShape) -> None:
+        """Remove `shape` from this shape tree.
+
+        The shape element is removed from the XML and the shape is no longer accessible.
+        """
+        self._grpSp.remove(shape.element)
+        self._invalidate_shape_cache()
+
     def _add_chart_graphicFrame(
         self, rId: str, x: Length, y: Length, cx: Length, cy: Length
     ) -> CT_GraphicalObjectFrame:

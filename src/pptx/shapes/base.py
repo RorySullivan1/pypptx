@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pptx.action import ActionSetting
-from pptx.dml.effect import ShadowFormat
+from pptx.dml.effect import GlowFormat, ReflectionFormat, ShadowFormat, SoftEdgeFormat
 from pptx.dml.threed import ThreeDFormat
 from pptx.exc import ShapeError
 from pptx.shared import ElementProxy
@@ -45,6 +45,19 @@ class BaseShape:
         if not isinstance(other, BaseShape):
             return True
         return self._element is not other._element
+
+    @property
+    def alternative_text(self) -> str:
+        """Alternative text for this shape, used for accessibility.
+
+        Read/write. Returns an empty string when no alt text is set.
+        """
+        descr = self._element._nvXxPr.cNvPr.descr  # pyright: ignore[reportPrivateUsage]
+        return descr if descr is not None else ""
+
+    @alternative_text.setter
+    def alternative_text(self, value: str):
+        self._element._nvXxPr.cNvPr.descr = value  # pyright: ignore[reportPrivateUsage]
 
     @lazyproperty
     def click_action(self) -> ActionSetting:
@@ -94,6 +107,19 @@ class BaseShape:
         """|True| if this shape can contain text."""
         # overridden on Shape to return True. Only <p:sp> has text frame
         return False
+
+    @property
+    def hidden(self) -> bool:
+        """True when this shape is hidden from display.
+
+        Read/write. A hidden shape is not visible on the slide but remains in the XML.
+        """
+        hidden = self._element._nvXxPr.cNvPr.hidden  # pyright: ignore[reportPrivateUsage]
+        return bool(hidden)
+
+    @hidden.setter
+    def hidden(self, value: bool):
+        self._element._nvXxPr.cNvPr.hidden = value if value else None  # pyright: ignore[reportPrivateUsage]
 
     @property
     def height(self) -> Length:
@@ -177,6 +203,21 @@ class BaseShape:
         return ShadowFormat(self._element.spPr)
 
     @lazyproperty
+    def glow(self) -> GlowFormat:
+        """|GlowFormat| object providing access to glow effect properties."""
+        return GlowFormat(self._element.spPr)
+
+    @lazyproperty
+    def reflection(self) -> ReflectionFormat:
+        """|ReflectionFormat| object providing access to reflection effect properties."""
+        return ReflectionFormat(self._element.spPr)
+
+    @lazyproperty
+    def soft_edge(self) -> SoftEdgeFormat:
+        """|SoftEdgeFormat| object providing access to soft edge effect properties."""
+        return SoftEdgeFormat(self._element.spPr)
+
+    @lazyproperty
     def three_d(self) -> ThreeDFormat:
         """|ThreeDFormat| object providing access to 3D formatting.
 
@@ -200,6 +241,19 @@ class BaseShape:
         Like ``MSO_SHAPE_TYPE.CHART``. Must be implemented by subclasses.
         """
         raise NotImplementedError(f"{type(self).__name__} does not implement `.shape_type`")
+
+    @property
+    def title(self) -> str:
+        """Title for this shape, used for accessibility.
+
+        Read/write. Returns an empty string when no title is set.
+        """
+        title = self._element._nvXxPr.cNvPr.title  # pyright: ignore[reportPrivateUsage]
+        return title if title is not None else ""
+
+    @title.setter
+    def title(self, value: str):
+        self._element._nvXxPr.cNvPr.title = value  # pyright: ignore[reportPrivateUsage]
 
     @property
     def top(self) -> Length:

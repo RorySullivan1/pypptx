@@ -76,6 +76,32 @@ class DescribePresentation:
         prs.save(file_)
         prs_part_.save.assert_called_once_with(file_)
 
+    @pytest.mark.parametrize(
+        ("prs_cxml", "expected_value"),
+        [
+            ("p:presentation", 1),
+            ("p:presentation{firstSlideNum=0}", 0),
+            ("p:presentation{firstSlideNum=5}", 5),
+        ],
+    )
+    def it_knows_its_first_slide_number(self, prs_cxml: str, expected_value: int):
+        prs = Presentation(element(prs_cxml), None)
+        assert prs.first_slide_number == expected_value
+
+    @pytest.mark.parametrize(
+        ("prs_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:presentation", 0, "p:presentation{firstSlideNum=0}"),
+            ("p:presentation{firstSlideNum=5}", 1, "p:presentation{firstSlideNum=1}"),
+        ],
+    )
+    def it_can_change_its_first_slide_number(
+        self, prs_cxml: str, new_value: int, expected_cxml: str
+    ):
+        prs = Presentation(element(prs_cxml), None)
+        prs.first_slide_number = new_value
+        assert prs._element.xml == xml(expected_cxml)
+
     # fixtures -------------------------------------------------------
 
     @pytest.fixture

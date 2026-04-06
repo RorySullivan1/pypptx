@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Callable
+
 from pptx.enum.dml import MSO_PATTERN_TYPE
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
@@ -24,6 +26,11 @@ from pptx.oxml.xmlchemy import (
 
 class CT_Blip(BaseOxmlElement):
     """`a:blip` element, specifying an image resource and optional effects."""
+
+    get_or_add_grayscl: Callable[[], BaseOxmlElement]
+    get_or_add_lum: Callable[[], BaseOxmlElement]
+    _remove_grayscl: Callable[[], None]
+    _remove_lum: Callable[[], None]
 
     _tag_seq = (
         "a:alphaBiLevel",

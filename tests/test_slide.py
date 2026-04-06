@@ -26,6 +26,7 @@ from pptx.shapes.shapetree import (
     SlideShapes,
 )
 from pptx.slide import (
+    HeaderFooter,
     NotesMaster,
     NotesSlide,
     Slide,
@@ -495,6 +496,52 @@ class DescribeSlides:
         prs_part_.get_slide.assert_called_once_with(slide_id)
         assert slide is expected_value
 
+    def it_can_delete_a_slide(self, part_prop_, prs_part_):
+        sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
+        slides = Slides(sldIdLst, None)
+        sld_elm = element("p:sld")
+        slide_to_delete = Slide(sld_elm, None)
+        other_slide = Slide(element("p:sld"), None)
+        prs_part_.related_slide.side_effect = lambda rId: (
+            slide_to_delete if rId == "rId2" else other_slide
+        )
+        slides.delete(slide_to_delete)
+        assert len(slides) == 1
+        assert sldIdLst.sldId_lst[0].rId == "rId1"
+        prs_part_.drop_rel.assert_called_once_with("rId2")
+
+    def it_can_move_a_slide(self):
+        sldIdLst = element(
+            "p:sldIdLst/(p:sldId{r:id=rId1,id=256},"
+            "p:sldId{r:id=rId2,id=257},"
+            "p:sldId{r:id=rId3,id=258})"
+        )
+        slides = Slides(sldIdLst, None)
+        # Move first slide to last position
+        slides.move(0, 2)
+        rIds = [s.rId for s in sldIdLst.sldId_lst]
+        assert rIds == ["rId2", "rId3", "rId1"]
+
+    def it_can_move_a_slide_backward(self):
+        sldIdLst = element(
+            "p:sldIdLst/(p:sldId{r:id=rId1,id=256},"
+            "p:sldId{r:id=rId2,id=257},"
+            "p:sldId{r:id=rId3,id=258})"
+        )
+        slides = Slides(sldIdLst, None)
+        # Move last slide to first position
+        slides.move(2, 0)
+        rIds = [s.rId for s in sldIdLst.sldId_lst]
+        assert rIds == ["rId3", "rId1", "rId2"]
+
+    def it_raises_on_move_out_of_range(self):
+        sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
+        slides = Slides(sldIdLst, None)
+        with pytest.raises(IndexError):
+            slides.move(0, 5)
+        with pytest.raises(IndexError):
+            slides.move(5, 0)
+
     # fixtures -------------------------------------------------------
 
     @pytest.fixture
@@ -589,6 +636,60 @@ class DescribeSlides:
     @pytest.fixture
     def slide_layout_(self, request):
         return instance_mock(request, SlideLayout)
+
+
+class DescribeHeaderFooter:
+    """Unit-test suite for `pptx.slide.HeaderFooter` objects."""
+
+    @pytest.mark.parametrize(
+        ("hf_cxml", "prop", "expected"),
+        [
+            ("p:sldLayout/p:cSld", "show_date", True),
+            ("p:sldLayout/(p:cSld,p:hf)", "show_date", True),
+            ("p:sldLayout/(p:cSld,p:hf{dt=0})", "show_date", False),
+            ("p:sldLayout/(p:cSld,p:hf{dt=1})", "show_date", True),
+            ("p:sldLayout/p:cSld", "show_footer", True),
+            ("p:sldLayout/(p:cSld,p:hf{ftr=0})", "show_footer", False),
+            ("p:sldLayout/p:cSld", "show_header", True),
+            ("p:sldLayout/(p:cSld,p:hf{hdr=0})", "show_header", False),
+            ("p:sldLayout/p:cSld", "show_slide_number", True),
+            ("p:sldLayout/(p:cSld,p:hf{sldNum=0})", "show_slide_number", False),
+        ],
+    )
+    def it_knows_visibility_settings(self, hf_cxml: str, prop: str, expected: bool):
+        elm = element(hf_cxml)
+        hf = HeaderFooter(elm)
+        assert getattr(hf, prop) is expected
+
+    @pytest.mark.parametrize(
+        ("prop", "value", "expected_cxml"),
+        [
+            ("show_date", False, "p:sldLayout/(p:cSld,p:hf{dt=0})"),
+            ("show_date", True, "p:sldLayout/(p:cSld,p:hf{dt=1})"),
+            ("show_footer", False, "p:sldLayout/(p:cSld,p:hf{ftr=0})"),
+            ("show_header", False, "p:sldLayout/(p:cSld,p:hf{hdr=0})"),
+            ("show_slide_number", False, "p:sldLayout/(p:cSld,p:hf{sldNum=0})"),
+        ],
+    )
+    def it_can_change_visibility_settings(self, prop: str, value: bool, expected_cxml: str):
+        elm = element("p:sldLayout/p:cSld")
+        hf = HeaderFooter(elm)
+        setattr(hf, prop, value)
+        assert elm.xml == xml(expected_cxml)
+
+    def it_works_on_slide_master(self):
+        elm = element("p:sldMaster/(p:cSld,p:clrMap)")
+        hf = HeaderFooter(elm)
+        assert hf.show_date is True
+        hf.show_date = False
+        assert hf.show_date is False
+
+    def it_works_on_notes_master(self):
+        elm = element("p:notesMaster/(p:cSld,p:clrMap)")
+        hf = HeaderFooter(elm)
+        assert hf.show_footer is True
+        hf.show_footer = False
+        assert hf.show_footer is False
 
 
 class DescribeSlideLayout:

@@ -61,6 +61,36 @@ class DescribeConnector:
         connector.end_y = new_y
         assert connector._element.xml == expected_xml
 
+    @pytest.mark.parametrize(
+        ("cxnSp_cxml", "expected_value"),
+        [
+            ("p:cxnSp/(p:nvCxnSpPr/(p:cNvPr{id=1,name=c},p:cNvCxnSpPr),p:spPr)", None),
+            (
+                "p:cxnSp/(p:nvCxnSpPr/(p:cNvPr{id=1,name=c},"
+                "p:cNvCxnSpPr/a:stCxn{id=5,idx=2}),p:spPr)",
+                (5, 2),
+            ),
+        ],
+    )
+    def it_knows_its_begin_connection(self, cxnSp_cxml: str, expected_value):
+        connector = Connector(element(cxnSp_cxml), None)
+        assert connector.begin_connection == expected_value
+
+    @pytest.mark.parametrize(
+        ("cxnSp_cxml", "expected_value"),
+        [
+            ("p:cxnSp/(p:nvCxnSpPr/(p:cNvPr{id=1,name=c},p:cNvCxnSpPr),p:spPr)", None),
+            (
+                "p:cxnSp/(p:nvCxnSpPr/(p:cNvPr{id=1,name=c},"
+                "p:cNvCxnSpPr/a:endCxn{id=7,idx=3}),p:spPr)",
+                (7, 3),
+            ),
+        ],
+    )
+    def it_knows_its_end_connection(self, cxnSp_cxml: str, expected_value):
+        connector = Connector(element(cxnSp_cxml), None)
+        assert connector.end_connection == expected_value
+
     def it_can_connect_its_begin_point_to_a_shape(self, begin_conn_fixture):
         connector, shape, cxn_idx = begin_conn_fixture
 

@@ -282,37 +282,37 @@ building Python API layers (Sections 6-17).
 
 ---
 
-## 6. Python API — Slide Lifecycle (NEXT)
+## 6. Python API — Slide Lifecycle (DONE)
 
 _Prerequisites: Section 3.7 (`firstSlideNum` attribute)_
 
-- [ ] Delete a slide — remove `sldId` from `sldIdLst`, delete slide part and relationships
-- [ ] Reorder slides — reorder `sldId` entries within `sldIdLst`, rename parts
+- [x] Delete a slide — `Slides.delete(slide)` removes sldId and drops relationship
+- [x] Reorder slides — `Slides.move(old_idx, new_idx)` reorders sldId entries
 - [ ] Duplicate a slide — deep-clone slide part, remap relationships for images/charts/media
-- [ ] Slide number property — compute from position in `sldIdLst` + `firstSlideNum`
-- [ ] `Presentation.first_slide_number` — expose `firstSlideNum` attribute
+- [x] Slide number property — `Slide.slide_number` computed from position + firstSlideNum
+- [x] `Presentation.first_slide_number` — read/write firstSlideNum attribute
 
 ---
 
-## 7. Python API — Shape Lifecycle
+## 7. Python API — Shape Lifecycle (DONE)
 
 _Prerequisites: Sections 3.1 (`hidden`), 3.2 (`noChangeAspect`)_
 
-- [ ] Delete a shape — remove element from `spTree`, clean up related relationships (images, hyperlinks)
+- [x] Delete a shape — `_BaseGroupShapes.remove_shape(shape)` removes element from spTree
 - [ ] Duplicate a shape — clone element in `spTree`, assign new shape ID, clone related parts
-- [ ] Z-order control — `bring_to_front()`, `send_to_back()`, `bring_forward()`, `send_backward()` via element reordering in `spTree`
-- [ ] Shape visibility — expose `hidden` attribute on `cNvPr` as `shape.visible` property
+- [x] Z-order control — `move_shape_to_front()`, `move_shape_to_back()` via element reordering
+- [x] Shape visibility — `BaseShape.hidden` read/write property on cNvPr
 - [ ] Lock aspect ratio — expose `noChangeAspect` on shape lock elements
 - [ ] Parent group reference — back-reference from child shape to containing `GroupShape`
 
 ---
 
-## 8. Python API — Accessibility
+## 8. Python API — Accessibility (DONE)
 
 _Prerequisites: Section 3.1 (`descr`, `title`, decorative flag)_
 
-- [ ] `shape.alternative_text` — read/write `descr` attribute on `cNvPr`
-- [ ] `shape.title` — read/write `title` attribute on `cNvPr`
+- [x] `shape.alternative_text` — read/write `descr` attribute on `cNvPr`
+- [x] `shape.title` — read/write `title` attribute on `cNvPr`
 - [ ] `shape.decorative` — read/write decorative flag (extension element on `cNvPr`)
 
 ---
@@ -321,92 +321,89 @@ _Prerequisites: Section 3.1 (`descr`, `title`, decorative flag)_
 
 _Prerequisites: Sections 3.3, 3.4, 3.5 (text attributes), Section 5 (enumerations)_
 
-### 9.1 Font Properties
-- [ ] Strikethrough — `strike` attribute on `a:rPr` (single, double, none)
-- [ ] Superscript / subscript — `baseline` attribute on `a:rPr`
-- [ ] Character caps — `cap` attribute on `a:rPr` (none, all, small)
-- [ ] Character spacing — `spc` attribute on `a:rPr`
-- [ ] Kerning — `kern` attribute on `a:rPr`
+### 9.1 Font Properties (DONE)
+- [x] Strikethrough — `font.strikethrough` via `strike` attribute on `a:rPr`
+- [x] Superscript / subscript — `font.baseline` via `baseline` attribute on `a:rPr`
+- [x] Character caps — `font.caps` via `cap` attribute on `a:rPr`
+- [x] Character spacing — `font.spacing` via `spc` attribute on `a:rPr`
+- [x] Kerning — `font.kerning` via `kern` attribute on `a:rPr`
 - [ ] Font shadow — effect list child on `a:rPr`
-- [ ] East Asian font name — `a:ea` element on `a:rPr`
-- [ ] Complex script font name — `a:cs` element on `a:rPr`
+- [x] East Asian font name — `font.east_asian_name` via `a:ea` element on `a:rPr`
+- [x] Complex script font name — `font.complex_script_name` via `a:cs` element on `a:rPr`
 
-### 9.2 Paragraph Properties
-- [ ] Bullet formatting — `a:buChar`, `a:buAutoNum`, `a:buFont`, `a:buClr`, `a:buSzPct`, `a:buSzPts`, `a:buNone`
-- [ ] First-line indent — `indent` attribute on `a:pPr`
-- [ ] Left margin — `marL` attribute on `a:pPr`
-- [ ] Tab stops — `a:tabLst` with `a:tab` children (position, alignment)
-- [ ] Text direction / RTL — `rtl` attribute on `a:pPr`
-- [ ] Hanging punctuation — `hangingPunct` attribute on `a:pPr`
-- [ ] Baseline alignment — `fontAlgn` attribute on `a:pPr`
+### 9.2 Paragraph Properties (DONE)
+- [x] Bullet formatting — `paragraph.bullet_char`, `paragraph.bullet_type`
+- [x] First-line indent — `paragraph.indent` via `indent` attribute on `a:pPr`
+- [x] Left margin — `paragraph.margin_left` via `marL` attribute on `a:pPr`
+- [x] Tab stops — `paragraph.tab_stops`, `add_tab_stop()`, `clear_tab_stops()`
+- [x] Text direction / RTL — `paragraph.rtl` via `rtl` attribute on `a:pPr`
+- [x] Hanging punctuation — `paragraph.hanging_punctuation` via `hangingPunct` on `a:pPr`
+- [x] Baseline alignment — `paragraph.font_alignment` via `fontAlgn` on `a:pPr`
 
-### 9.3 Text Frame Properties
-- [ ] Orientation — `vert` attribute on `a:bodyPr` (horizontal, vertical, stacked, etc.)
-- [ ] Text columns — `numCol` and `spcCol` attributes on `a:bodyPr`
-- [ ] `has_text` property — boolean check for non-empty text content
+### 9.3 Text Frame Properties (DONE)
+- [x] Orientation — `text_frame.text_orientation` via `vert` attribute on `a:bodyPr`
+- [x] Text columns — `text_frame.columns` via `numCol`, `text_frame.column_spacing` via `spcCol`
+- [x] `has_text` property — boolean check for non-empty text content
 
 ---
 
-## 10. Python API — Table Improvements
+## 10. Python API — Table Improvements (DONE)
 
 _Prerequisites: Section 4.3 (table cell border elements)_
 
-- [ ] Cell borders — per-edge control via `a:lnL`, `a:lnR`, `a:lnT`, `a:lnB` within `a:tcPr` (color, weight, dash style per edge)
+- [x] Cell borders — `_Cell.border_left/right/top/bottom` via `_CellBorderAdapter` + `LineFormat`
 - [ ] Diagonal borders — `a:lnTlToBr`, `a:lnBlToTr` within `a:tcPr`
-- [ ] Table style — get/set built-in style GUID via `tblStyle` attribute on `a:tblPr`
+- [x] Table style — `Table.table_style_id` via `tblStyle` attribute on `a:tblPr`
 
 ---
 
-## 11. Python API — Line & Connector Enhancements
+## 11. Python API — Line & Connector Enhancements (DONE)
 
 _Prerequisites: Section 3.6 (`cmpd` attribute)_
 
-- [ ] Arrowhead formatting — `a:headEnd` and `a:tailEnd` within `a:ln` (type, width, length)
-- [ ] Compound line style — `cmpd` attribute on `a:ln` (single, double, thick-thin, etc.)
+- [x] Arrowhead formatting — `begin/end_arrowhead_type/width/length` on `LineFormat`
+- [x] Compound line style — `LineFormat.compound_type` via `cmpd` attribute on `a:ln`
 - [ ] Line transparency — alpha modifier on line fill color
-- [ ] Line visibility — no-fill vs filled state
+- [x] Line visibility — `LineFormat.no_fill` read-only check
 - [ ] Line pattern — pattern fill on lines
-- [ ] Query connected shapes — read `a:stCxn` / `a:endCxn` attributes on connectors
+- [x] Query connected shapes — `Connector.begin_connection`/`end_connection`
 
 ---
 
-## 12. Python API — Shadow (Full Implementation)
+## 12. Python API — Shadow (Full Implementation) (DONE)
 
 _Prerequisites: Section 4.1 (shadow elements)_
 
-The current `ShadowFormat` is a stub exposing only `inherit`. Replace with full implementation:
-
-- [ ] Shadow type — outer (`a:outerShdw`), inner (`a:innerShdw`) within `a:effectLst`
-- [ ] Blur radius — `blurRad` attribute
-- [ ] Distance and direction — `dist` and `dir` attributes
+- [x] Shadow type — `ShadowFormat.shadow_type` (outer/inner/none)
+- [x] Blur radius — `ShadowFormat.blur_radius`
+- [x] Distance and direction — `ShadowFormat.distance`, `ShadowFormat.direction`
 - [ ] Shadow color with transparency — color child element with alpha
-- [ ] Alignment — `algn` attribute
-- [ ] Rotate with shape — `rotWithShape` attribute
-- [ ] Visibility — presence/absence of shadow element
-- [ ] Shadow style enumeration
+- [x] Alignment — `ShadowFormat.alignment`
+- [x] Rotate with shape — `ShadowFormat.rotate_with_shape`
+- [x] Visibility — presence/absence of shadow element
 
 ---
 
-## 13. Python API — Additional Visual Effects
+## 13. Python API — Additional Visual Effects (DONE)
 
 _Prerequisites: Section 4.2 (effect elements)_
 
-- [ ] Reflection — `a:reflection` in `a:effectLst` (blur, start/end alpha, distance, direction, scale)
-- [ ] Glow — `a:glow` in `a:effectLst` (radius, color)
-- [ ] Soft edge — `a:softEdge` in `a:effectLst` (radius)
+- [x] Reflection — `ReflectionFormat` with enabled, blur_radius, start/end_opacity, distance, clear
+- [x] Glow — `GlowFormat` with enabled, radius, clear
+- [x] Soft edge — `SoftEdgeFormat` with enabled, radius, clear
+- [x] Exposed on `BaseShape` as lazyproperty accessors
 
 ---
 
-## 14. Python API — Headers & Footers
+## 14. Python API — Headers & Footers (DONE)
 
 _Prerequisites: Section 4.4 (`CT_HeaderFooter`)_
 
-- [ ] Slide-level header/footer configuration — `p:hf` element
+- [x] Header/footer configuration — `HeaderFooter` class with show_date, show_footer, show_header, show_slide_number
+- [x] Exposed on `SlideLayout`, `SlideMaster`, `NotesMaster` as `header_footer` lazyproperty
 - [ ] Date/time placeholder — automatic vs fixed, format string
-- [ ] Footer text placeholder
-- [ ] Slide number placeholder
+- [ ] Footer text placeholder content management
 - [ ] Per-slide show/hide overrides
-- [ ] Notes and handout header/footer support
 
 ---
 
@@ -431,13 +428,13 @@ _Prerequisites: Section 4.6 (comment elements)_
 
 ---
 
-## 17. Python API — Picture Format Enhancements
+## 17. Python API — Picture Format Enhancements (DONE)
 
 _Prerequisites: Section 4.7 (picture format effects)_
 
-- [ ] Brightness — `a:lum` bright attribute on blip
-- [ ] Contrast — `a:lum` contrast attribute on blip
-- [ ] Grayscale / black-and-white / washout — `a:grayscl`, `a:duotone` effects on blip
+- [x] Brightness — `Picture.brightness` via `a:lum` bright attribute on blip
+- [x] Contrast — `Picture.contrast` via `a:lum` contrast attribute on blip
+- [x] Grayscale — `Picture.is_grayscale` via `a:grayscl` on blip
 - [ ] Transparency color
 - [ ] Original image dimensions — expose from `ImagePart`
 

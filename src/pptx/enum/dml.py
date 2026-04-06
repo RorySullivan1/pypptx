@@ -469,3 +469,50 @@ class MSO_RECT_ALIGNMENT(BaseXmlEnum):
 
     BOTTOM_RIGHT = (8, "br", "Bottom-right alignment.")
     """Bottom-right alignment."""
+
+
+class MSO_LINE_END_TYPE(BaseXmlEnum):
+    """Specifies the style of arrowhead at the end of a line.
+
+    Used with :attr:`.LineFormat.begin_arrowhead_type` and
+    :attr:`.LineFormat.end_arrowhead_type`.
+
+    MS API Name: ``MsoArrowheadStyle``
+    """
+
+    NONE = (0, "none", "No arrowhead.")
+    """No arrowhead."""
+
+    TRIANGLE = (1, "triangle", "Triangular arrowhead.")
+    """Triangular arrowhead."""
+
+    STEALTH = (2, "stealth", "Stealth arrowhead.")
+    """Stealth arrowhead."""
+
+    DIAMOND = (3, "diamond", "Diamond-shaped arrowhead.")
+    """Diamond-shaped arrowhead."""
+
+    OVAL = (4, "oval", "Oval arrowhead.")
+    """Oval arrowhead."""
+
+    OPEN = (5, "arrow", "Open arrowhead.")
+    """Open arrowhead."""
+
+
+class MSO_LINE_END_SIZE(BaseXmlEnum):
+    """Specifies the size of an arrowhead (width or length).
+
+    Used with :attr:`.LineFormat.begin_arrowhead_width`,
+    :attr:`.LineFormat.end_arrowhead_width`, etc.
+
+    MS API Name: ``MsoArrowheadLength`` / ``MsoArrowheadWidth``
+    """
+
+    SMALL = (0, "sm", "Small.")
+    """Small."""
+
+    MEDIUM = (1, "med", "Medium (default).")
+    """Medium (default)."""
+
+    LARGE = (2, "lg", "Large.")
+    """Large."""

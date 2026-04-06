@@ -7,7 +7,15 @@ from typing import TYPE_CHECKING, Iterator, cast
 from pptx.dml.fill import FillFormat
 from pptx.enum.dml import MSO_FILL
 from pptx.enum.lang import MSO_LANGUAGE_ID
-from pptx.enum.text import MSO_AUTO_SIZE, MSO_UNDERLINE, MSO_VERTICAL_ANCHOR
+from pptx.enum.text import (
+    MSO_AUTO_SIZE,
+    MSO_TEXT_CAPS,
+    MSO_TEXT_FONT_ALIGN,
+    MSO_TEXT_STRIKE_TYPE,
+    MSO_TEXT_VERTICAL_TYPE,
+    MSO_UNDERLINE,
+    MSO_VERTICAL_ANCHOR,
+)
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.simpletypes import ST_TextWrappingType
 from pptx.shapes import Subshape
@@ -142,6 +150,35 @@ class TextFrame(Subshape):
         self._bodyPr.tIns = emu
 
     @property
+    def columns(self) -> int | None:
+        """Number of text columns in this text frame.
+
+        Read/write. |None| indicates the default (1 column). Valid values are 1-16.
+        """
+        return self._bodyPr.numCol
+
+    @columns.setter
+    def columns(self, value: int | None):
+        self._bodyPr.numCol = value
+
+    @property
+    def column_spacing(self) -> Length | None:
+        """Spacing between text columns in EMU.
+
+        Read/write. |None| indicates the default spacing. Only applicable when columns > 1.
+        """
+        return self._bodyPr.spcCol
+
+    @column_spacing.setter
+    def column_spacing(self, value: Length | None):
+        self._bodyPr.spcCol = value
+
+    @property
+    def has_text(self) -> bool:
+        """True when this text frame contains at least one non-empty paragraph."""
+        return any(p.text for p in self.paragraphs)
+
+    @property
     def paragraphs(self) -> tuple[_Paragraph, ...]:
         """Sequence of paragraphs in this text frame.
 
@@ -176,6 +213,20 @@ class TextFrame(Subshape):
         for p_text in text.split("\n"):
             p = txBody.add_p()
             p.append_text(p_text)
+
+    @property
+    def text_orientation(self) -> MSO_TEXT_VERTICAL_TYPE | None:
+        """Text direction/orientation within this text frame.
+
+        Read/write. A member of :ref:`MsoTextVerticalType` or |None|. |None| indicates the
+        default (horizontal text). Common values include ``MSO_TEXT_VERTICAL_TYPE.HORIZONTAL``,
+        ``MSO_TEXT_VERTICAL_TYPE.VERTICAL``, and ``MSO_TEXT_VERTICAL_TYPE.VERTICAL_270``.
+        """
+        return self._bodyPr.vert
+
+    @text_orientation.setter
+    def text_orientation(self, value: MSO_TEXT_VERTICAL_TYPE | None):
+        self._bodyPr.vert = value
 
     @property
     def vertical_anchor(self) -> MSO_VERTICAL_ANCHOR | None:
@@ -289,6 +340,20 @@ class Font:
         self._element = self._rPr = rPr
 
     @property
+    def baseline(self) -> float | None:
+        """Vertical baseline offset as a percentage.
+
+        Read/write. Positive values move text up (superscript), negative values move text down
+        (subscript). A value of 30.0 represents a 30% superscript. |None| indicates the setting
+        is inherited.
+        """
+        return self._rPr.baseline
+
+    @baseline.setter
+    def baseline(self, value: float | None):
+        self._rPr.baseline = value
+
+    @property
     def bold(self) -> bool | None:
         """Get or set boolean bold value of |Font|, e.g. `paragraph.font.bold = True`.
 
@@ -301,6 +366,19 @@ class Font:
     @bold.setter
     def bold(self, value: bool | None):
         self._rPr.b = value
+
+    @property
+    def caps(self) -> MSO_TEXT_CAPS | None:
+        """Capitalization setting for this font.
+
+        Read/write. A member of :ref:`MsoTextCaps` or |None|. |None| indicates the setting is
+        inherited. Assigning |None| removes any directly-applied capitalization setting.
+        """
+        return self._rPr.cap
+
+    @caps.setter
+    def caps(self, value: MSO_TEXT_CAPS | None):
+        self._rPr.cap = value
 
     @lazyproperty
     def color(self) -> ColorFormat:
@@ -316,6 +394,44 @@ class Font:
         Provides access to fill properties such as fill color.
         """
         return FillFormat.from_fill_parent(self._rPr)
+
+    @property
+    def east_asian_name(self) -> str | None:
+        """Typeface name for East Asian characters.
+
+        Read/write. Returns |None| when inherited from the theme.
+        """
+        ea = self._rPr.ea
+        if ea is None:
+            return None
+        return ea.typeface
+
+    @east_asian_name.setter
+    def east_asian_name(self, value: str | None):
+        if value is None:
+            self._rPr._remove_ea()  # pyright: ignore[reportPrivateUsage]
+        else:
+            ea = self._rPr.get_or_add_ea()
+            ea.typeface = value
+
+    @property
+    def complex_script_name(self) -> str | None:
+        """Typeface name for Complex Script (right-to-left) characters.
+
+        Read/write. Returns |None| when inherited from the theme.
+        """
+        cs = self._rPr.cs
+        if cs is None:
+            return None
+        return cs.typeface
+
+    @complex_script_name.setter
+    def complex_script_name(self, value: str | None):
+        if value is None:
+            self._rPr._remove_cs()  # pyright: ignore[reportPrivateUsage]
+        else:
+            cs = self._rPr.get_or_add_cs()
+            cs.typeface = value
 
     @property
     def italic(self) -> bool | None:
@@ -346,6 +462,19 @@ class Font:
         if value == MSO_LANGUAGE_ID.NONE:
             value = None
         self._rPr.lang = value
+
+    @property
+    def kerning(self) -> Length | None:
+        """Minimum font size at which kerning is applied, in EMU.
+
+        Read/write. |None| indicates the kerning setting is inherited. When set, text at or above
+        this font size will have kerning applied. Use ``Pt(12)`` to set a 12-point threshold.
+        """
+        return self._rPr.kern
+
+    @kerning.setter
+    def kerning(self, value: Length | None):
+        self._rPr.kern = value
 
     @property
     def name(self) -> str | None:
@@ -395,6 +524,32 @@ class Font:
         else:
             sz = Emu(emu).centipoints
             self._rPr.sz = sz
+
+    @property
+    def spacing(self) -> Length | None:
+        """Character spacing (tracking) in EMU.
+
+        Read/write. Positive values increase spacing, negative values decrease it. |None|
+        indicates the setting is inherited. Use ``Pt(1.5)`` to add 1.5 points of spacing.
+        """
+        return self._rPr.spc
+
+    @spacing.setter
+    def spacing(self, value: Length | None):
+        self._rPr.spc = value
+
+    @property
+    def strikethrough(self) -> MSO_TEXT_STRIKE_TYPE | None:
+        """Strikethrough setting for this font.
+
+        Read/write. A member of :ref:`MsoTextStrikeType` or |None|. |None| indicates the setting
+        is inherited. Assigning |None| removes any directly-applied strikethrough setting.
+        """
+        return self._rPr.strike
+
+    @strikethrough.setter
+    def strikethrough(self, value: MSO_TEXT_STRIKE_TYPE | None):
+        self._rPr.strike = value
 
     @property
     def underline(self) -> bool | MSO_TEXT_UNDERLINE_TYPE | None:
@@ -494,6 +649,55 @@ class _Paragraph(Subshape):
     def alignment(self, value: PP_PARAGRAPH_ALIGNMENT | None):
         self._pPr.algn = value
 
+    @property
+    def bullet_char(self) -> str | None:
+        """Character used as the bullet for this paragraph.
+
+        Read/write. |None| when no character bullet is defined. Setting a character also
+        implicitly sets the bullet type to character. Setting to |None| removes the character
+        bullet (but does not disable bullets entirely; use ``bullet_type`` for that).
+        """
+        pPr = self._pPr
+        buChar = pPr.buChar
+        if buChar is None:
+            return None
+        return buChar.get("char")
+
+    @bullet_char.setter
+    def bullet_char(self, value: str | None):
+        pPr = self._pPr
+        if value is None:
+            buChar = pPr.buChar
+            if buChar is not None:
+                pPr.remove(buChar)
+            return
+        # Remove any existing bullet type elements
+        for tag in ("buNone", "buAutoNum", "buChar", "buBlip"):
+            existing = getattr(pPr, tag)
+            if existing is not None:
+                pPr.remove(existing)
+        buChar = pPr.get_or_add_buChar()
+        buChar.set("char", value)
+
+    @property
+    def bullet_type(self) -> str | None:
+        """The type of bullet for this paragraph.
+
+        Read-only. Returns ``"char"`` for character bullets, ``"autoNum"`` for numbered bullets,
+        ``"blip"`` for picture bullets, ``"none"`` when bullets are explicitly disabled,
+        or |None| when bullet type is inherited.
+        """
+        pPr = self._pPr
+        if pPr.buChar is not None:
+            return "char"
+        if pPr.buAutoNum is not None:
+            return "autoNum"
+        if pPr.buBlip is not None:
+            return "blip"
+        if pPr.buNone is not None:
+            return "none"
+        return None
+
     def clear(self):
         """Remove all content from this paragraph.
 
@@ -512,6 +716,19 @@ class _Paragraph(Subshape):
         properties set at the run level.
         """
         return Font(self._defRPr)
+
+    @property
+    def indent(self) -> Length | None:
+        """First-line indent of this paragraph in EMU.
+
+        Read/write. A positive value indents the first line; a negative value creates a hanging
+        indent. |None| indicates the setting is inherited.
+        """
+        return self._pPr.indent
+
+    @indent.setter
+    def indent(self, value: Length | None):
+        self._pPr.indent = value
 
     @property
     def level(self) -> int:
@@ -546,6 +763,86 @@ class _Paragraph(Subshape):
     def line_spacing(self, value: int | float | Length | None):
         pPr = self._p.get_or_add_pPr()
         pPr.line_spacing = value
+
+    @property
+    def margin_left(self) -> Length | None:
+        """Left margin of this paragraph in EMU.
+
+        Read/write. |None| indicates the setting is inherited.
+        """
+        return self._pPr.marL
+
+    @margin_left.setter
+    def margin_left(self, value: Length | None):
+        self._pPr.marL = value
+
+    @property
+    def tab_stops(self) -> tuple[tuple[int, str | None], ...]:
+        """Sequence of tab stops defined for this paragraph.
+
+        Each tab stop is a ``(position, alignment)`` tuple where *position* is in EMU
+        and *alignment* is a string like ``"l"``, ``"r"``, ``"ctr"``, ``"dec"`` or |None|.
+        Read-only. Use :meth:`add_tab_stop` and :meth:`clear_tab_stops` to modify.
+        """
+        pPr = self._p.pPr
+        if pPr is None or pPr.tabLst is None:
+            return ()
+        return tuple((tab.pos or 0, tab.algn) for tab in pPr.tabLst.tab_lst)
+
+    def add_tab_stop(self, position: int, alignment: str = "l") -> None:
+        """Add a tab stop at `position` EMU with the given `alignment`.
+
+        `alignment` can be ``"l"`` (left), ``"r"`` (right), ``"ctr"`` (center),
+        or ``"dec"`` (decimal).
+        """
+        pPr = self._pPr
+        tabLst = pPr.get_or_add_tabLst()
+        tab = tabLst._add_tab()  # pyright: ignore[reportPrivateUsage]
+        tab.pos = position
+        tab.algn = alignment
+
+    def clear_tab_stops(self) -> None:
+        """Remove all tab stops from this paragraph."""
+        pPr = self._p.pPr
+        if pPr is not None and pPr.tabLst is not None:
+            pPr._remove_tabLst()  # pyright: ignore[reportPrivateUsage]
+
+    @property
+    def rtl(self) -> bool | None:
+        """Right-to-left text direction for this paragraph.
+
+        Read/write. |True| indicates right-to-left, |False| left-to-right. |None| indicates
+        the setting is inherited.
+        """
+        return self._pPr.rtl
+
+    @rtl.setter
+    def rtl(self, value: bool | None):
+        self._pPr.rtl = value
+
+    @property
+    def hanging_punctuation(self) -> bool | None:
+        """Whether hanging punctuation is enabled for this paragraph.
+
+        Read/write. |None| indicates the setting is inherited.
+        """
+        return self._pPr.hangingPunct
+
+    @hanging_punctuation.setter
+    def hanging_punctuation(self, value: bool | None):
+        self._pPr.hangingPunct = value
+
+    @property
+    def font_alignment(self) -> MSO_TEXT_FONT_ALIGN | None:
+        """Vertical alignment of text relative to the text body baseline.
+
+        Read/write. A member of :ref:`MsoTextFontAlign` or |None| if inherited.
+        """
+        return self._pPr.fontAlgn
+
+    @font_alignment.setter
+    def font_alignment(self, value: MSO_TEXT_FONT_ALIGN | None):
+        self._pPr.fontAlgn = value
 
     @property
     def runs(self) -> tuple[_Run, ...]:

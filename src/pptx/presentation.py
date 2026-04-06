@@ -26,6 +26,19 @@ class Presentation(PartElementProxy):
     part: PresentationPart  # pyright: ignore[reportIncompatibleMethodOverride]
 
     @property
+    def first_slide_number(self) -> int:
+        """Starting slide number for this presentation.
+
+        Read/write. Defaults to 1 when not explicitly set.
+        """
+        val = self._element.firstSlideNum
+        return val if val is not None else 1
+
+    @first_slide_number.setter
+    def first_slide_number(self, value: int):
+        self._element.firstSlideNum = value
+
+    @property
     def core_properties(self):
         """|CoreProperties| instance for this presentation.
 

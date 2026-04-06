@@ -25,8 +25,10 @@ if TYPE_CHECKING:
     from pptx.oxml.presentation import CT_SlideIdList, CT_SlideMasterIdList
     from pptx.oxml.slide import (
         CT_CommonSlideData,
+        CT_NotesMaster,
         CT_NotesSlide,
         CT_Slide,
+        CT_SlideLayout,
         CT_SlideLayoutIdList,
         CT_SlideMaster,
     )
@@ -98,6 +100,13 @@ class NotesMaster(_BaseMaster):
 
     Provides access to shapes, the most commonly used of which are placeholders.
     """
+
+    _element: CT_NotesMaster  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on notes."""
+        return HeaderFooter(self._element)
 
 
 class NotesSlide(_BaseSlide):
@@ -236,6 +245,17 @@ class Slide(_BaseSlide):
         """|SlideLayout| object this slide inherits appearance from."""
         return self.part.slide_layout
 
+    @property
+    def slide_number(self) -> int:
+        """The display slide number for this slide.
+
+        Computed from the slide's position in the presentation and the presentation's
+        ``first_slide_number`` setting. Read-only.
+        """
+        prs = cast("Presentation", self._parent)
+        first_num = prs._element.firstSlideNum
+        return prs.slides.index(self) + (first_num if first_num is not None else 1)
+
 
 class Slides(ParentedElementProxy):
     """Sequence of slides belonging to an instance of |Presentation|.
@@ -294,6 +314,36 @@ class Slides(ParentedElementProxy):
                 return idx
         raise SlideError("%s is not in slide collection" % slide)
 
+    def delete(self, slide: Slide) -> None:
+        """Remove `slide` from the presentation.
+
+        The slide part and its relationship are removed. Raises |ValueError| if `slide` is not
+        in this collection.
+        """
+        idx = self.index(slide)
+        sldId = self._sldIdLst.sldId_lst[idx]
+        rId = sldId.rId
+        self._sldIdLst.remove(sldId)
+        self.part.drop_rel(rId)
+
+    def move(self, old_idx: int, new_idx: int) -> None:
+        """Move the slide at position `old_idx` to position `new_idx`.
+
+        Both indices are zero-based. Raises |IndexError| if either index is out of range.
+        """
+        sldId_lst = self._sldIdLst.sldId_lst
+        if old_idx < 0 or old_idx >= len(sldId_lst):
+            raise IndexError("old_idx out of range")
+        if new_idx < 0 or new_idx >= len(sldId_lst):
+            raise IndexError("new_idx out of range")
+        sldId = sldId_lst[old_idx]
+        if new_idx >= len(sldId_lst) - 1:
+            # Move to end
+            self._sldIdLst.append(sldId)
+        else:
+            target = sldId_lst[new_idx] if new_idx < old_idx else sldId_lst[new_idx + 1]
+            target.addprevious(sldId)
+
 
 class SlideLayout(_BaseSlide):
     """Slide layout object.
@@ -301,7 +351,13 @@ class SlideLayout(_BaseSlide):
     Provides access to placeholders, regular shapes, and slide layout-level properties.
     """
 
+    _element: CT_SlideLayout  # pyright: ignore[reportIncompatibleVariableOverride]
     part: SlideLayoutPart  # pyright: ignore[reportIncompatibleMethodOverride]
+
+    @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on this layout."""
+        return HeaderFooter(self._element)
 
     def iter_cloneable_placeholders(self) -> Iterator[LayoutPlaceholder]:
         """Generate layout-placeholders on this slide-layout that should be cloned to a new slide.
@@ -423,6 +479,11 @@ class SlideMaster(_BaseMaster):
     _element: CT_SlideMaster  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @lazyproperty
+    def header_footer(self) -> HeaderFooter:
+        """|HeaderFooter| object controlling header/footer visibility on this master."""
+        return HeaderFooter(self._element)
+
+    @lazyproperty
     def slide_layouts(self) -> SlideLayouts:
         """|SlideLayouts| object providing access to this slide-master's layouts."""
         return SlideLayouts(self._element.get_or_add_sldLayoutIdLst(), self)
@@ -464,6 +525,69 @@ class SlideMasters(ParentedElementProxy):
     def __len__(self):
         """Support len() built-in function, e.g. `len(slide_masters) == 4`."""
         return len(self._sldMasterIdLst)
+
+
+class HeaderFooter:
+    """Provides access to header/footer visibility settings.
+
+    Controls whether date/time, footer, header, and slide number placeholders
+    are shown on slides inheriting from this layout or master.
+    """
+
+    def __init__(self, slide_elm: CT_SlideLayout | CT_SlideMaster | CT_NotesMaster):
+        self._slide_elm = slide_elm
+
+    @property
+    def show_date(self) -> bool:
+        """Whether the date/time placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.dt is not False
+
+    @show_date.setter
+    def show_date(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.dt = value
+
+    @property
+    def show_footer(self) -> bool:
+        """Whether the footer placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.ftr is not False
+
+    @show_footer.setter
+    def show_footer(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.ftr = value
+
+    @property
+    def show_header(self) -> bool:
+        """Whether the header placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.hdr is not False
+
+    @show_header.setter
+    def show_header(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.hdr = value
+
+    @property
+    def show_slide_number(self) -> bool:
+        """Whether the slide number placeholder is visible."""
+        hf = self._slide_elm.hf
+        if hf is None:
+            return True
+        return hf.sldNum is not False
+
+    @show_slide_number.setter
+    def show_slide_number(self, value: bool):
+        hf = self._slide_elm.get_or_add_hf()
+        hf.sldNum = value
 
 
 class _Background(ElementProxy):
