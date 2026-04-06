@@ -60,6 +60,18 @@ class BaseShape:
     def alternative_text(self, value: str):
         self._element._nvXxPr.cNvPr.descr = value  # pyright: ignore[reportPrivateUsage]
 
+    @property
+    def decorative(self) -> bool:
+        """True when this shape is marked as decorative for accessibility.
+
+        Read/write. Decorative shapes are ignored by screen readers.
+        """
+        return self._element._nvXxPr.cNvPr.decorative  # pyright: ignore[reportPrivateUsage]
+
+    @decorative.setter
+    def decorative(self, value: bool) -> None:
+        self._element._nvXxPr.cNvPr.decorative = value  # pyright: ignore[reportPrivateUsage]
+
     @lazyproperty
     def click_action(self) -> ActionSetting:
         """|ActionSetting| instance providing access to click behaviors.

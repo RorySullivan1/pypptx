@@ -313,7 +313,7 @@ _Prerequisites: Section 3.1 (`descr`, `title`, decorative flag)_
 
 - [x] `shape.alternative_text` — read/write `descr` attribute on `cNvPr`
 - [x] `shape.title` — read/write `title` attribute on `cNvPr`
-- [ ] `shape.decorative` — read/write decorative flag (extension element on `cNvPr`)
+- [x] `shape.decorative` — read/write decorative flag (extension element on `cNvPr`)
 
 ---
 
