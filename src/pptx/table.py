@@ -14,6 +14,7 @@ from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
     from pptx.enum.text import MSO_VERTICAL_ANCHOR
+    from pptx.oxml.shapes.shared import CT_LineProperties
     from pptx.oxml.table import CT_Table, CT_TableCell, CT_TableCol, CT_TableRow
     from pptx.parts.slide import BaseSlidePart
     from pptx.shapes.graphfrm import GraphicFrame
@@ -157,12 +158,12 @@ class Table:
         return tblPr.tblStyle
 
     @table_style_id.setter
-    def table_style_id(self, value: str | None):
+    def table_style_id(self, value: str | None) -> None:
         tblPr = self._tbl.get_or_add_tblPr()
         tblPr.tblStyle = value
 
     @lazyproperty
-    def rows(self):
+    def rows(self) -> _RowCollection:
         """|_RowCollection| instance for this table.
 
         Provides access to |_Row| objects representing the table's rows. |_Row| objects are
@@ -180,7 +181,7 @@ class Table:
         return self._tbl.bandCol
 
     @vert_banding.setter
-    def vert_banding(self, value: bool):
+    def vert_banding(self, value: bool) -> None:
         self._tbl.bandCol = value
 
 
@@ -441,7 +442,7 @@ class _Column(Subshape):
         return self._gridCol.w
 
     @width.setter
-    def width(self, width: Length):
+    def width(self, width: Length) -> None:
         self._gridCol.w = width
         self._parent.notify_width_changed()
 
@@ -455,7 +456,7 @@ class _Row(Subshape):
         self._tr = tr
 
     @property
-    def cells(self):
+    def cells(self) -> _CellCollection:
         """Read-only reference to collection of cells in row.
 
         An individual cell is referenced using list notation, e.g. `cell = row.cells[0]`.
@@ -468,7 +469,7 @@ class _Row(Subshape):
         return self._tr.h
 
     @height.setter
-    def height(self, height: Length):
+    def height(self, height: Length) -> None:
         self._tr.h = height
         self._parent.notify_height_changed()
 
@@ -505,18 +506,18 @@ class _ColumnCollection(Subshape):
         self._parent = parent
         self._tbl = tbl
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> _Column:
         """Provides indexed access, (e.g. 'columns[0]')."""
         if idx < 0 or idx >= len(self._tbl.tblGrid.gridCol_lst):
             msg = "column index [%d] out of range" % idx
             raise IndexError(msg)
         return _Column(self._tbl.tblGrid.gridCol_lst[idx], self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Supports len() function (e.g. 'len(columns) == 1')."""
         return len(self._tbl.tblGrid.gridCol_lst)
 
-    def notify_width_changed(self):
+    def notify_width_changed(self) -> None:
         """Called by a column when its width changes. Pass along to parent."""
         self._parent.notify_width_changed()
 
@@ -536,11 +537,11 @@ class _RowCollection(Subshape):
             raise IndexError(msg)
         return _Row(self._tbl.tr_lst[idx], self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Supports len() function (e.g. 'len(rows) == 1')."""
         return len(self._tbl.tr_lst)
 
-    def notify_height_changed(self):
+    def notify_height_changed(self) -> None:
         """Called by a row when its height changes. Pass along to parent."""
         self._parent.notify_height_changed()
 
@@ -556,14 +557,14 @@ class _CellBorderAdapter:
         self._border_tag = border_tag
 
     @property
-    def ln(self):
+    def ln(self) -> CT_LineProperties | None:
         """Return the border line element, or None."""
         tcPr = self._tc.tcPr
         if tcPr is None:
             return None
         return getattr(tcPr, self._border_tag)
 
-    def get_or_add_ln(self):
+    def get_or_add_ln(self) -> CT_LineProperties:
         """Return the border line element, creating it if necessary."""
         tcPr = self._tc.get_or_add_tcPr()
         get_or_add = getattr(tcPr, f"get_or_add_{self._border_tag}")

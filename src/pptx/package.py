@@ -57,15 +57,11 @@ class Package(OpcPackage):
             self.relate_to(authors_part, RT.COMMENT_AUTHORS)
             return authors_part
 
-    def get_or_add_image_part(self, image_file: str | IO[bytes]):
-        """
-        Return an |ImagePart| object containing the image in *image_file*. If
-        the image part already exists in this package, it is reused,
-        otherwise a new one is created.
-        """
+    def get_or_add_image_part(self, image_file: str | IO[bytes]) -> ImagePart:
+        """Return |ImagePart| containing the image in `image_file`, reusing if present."""
         return self._image_parts.get_or_add_image_part(image_file)
 
-    def get_or_add_media_part(self, media):
+    def get_or_add_media_part(self, media: MediaPart) -> MediaPart:
         """Return a |MediaPart| object containing the media in *media*.
 
         If a media part for this media bytestream ("file") is already present
@@ -100,7 +96,7 @@ class Package(OpcPackage):
         idx = first_available_image_idx()
         return PackURI("/ppt/media/image%d.%s" % (idx, ext))
 
-    def next_media_partname(self, ext):
+    def next_media_partname(self, ext: str) -> PackURI:
         """Return |PackURI| instance for next available media partname.
 
         Partname is first available, starting at sequence number 1. Empty
@@ -126,34 +122,25 @@ class Package(OpcPackage):
         return PackURI("/ppt/media/media%d.%s" % (idx, ext))
 
     @property
-    def presentation_part(self):
-        """
-        Reference to the |Presentation| instance contained in this package.
-        """
+    def presentation_part(self) -> OpcPackage:
+        """Reference to the |PresentationPart| instance contained in this package."""
         return self.main_document_part
 
     @lazyproperty
-    def _image_parts(self):
-        """
-        |_ImageParts| object providing access to the image parts in this
-        package.
-        """
+    def _image_parts(self) -> _ImageParts:
+        """_ImageParts| object providing access to the image parts in this package."""
         return _ImageParts(self)
 
     @lazyproperty
-    def _media_parts(self):
-        """Return |_MediaParts| object for this package.
-
-        The media parts object provides access to all the media parts in this
-        package.
-        """
+    def _media_parts(self) -> _MediaParts:
+        """Return |_MediaParts| object for this package."""
         return _MediaParts(self)
 
 
 class _ImageParts:
     """Provides access to the image parts in a package."""
 
-    def __init__(self, package):
+    def __init__(self, package: Package):
         super(_ImageParts, self).__init__()
         self._package = package
 
@@ -204,11 +191,11 @@ class _MediaParts:
     its key.
     """
 
-    def __init__(self, package):
+    def __init__(self, package: Package):
         super(_MediaParts, self).__init__()
         self._package = package
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[MediaPart]:
         """Generate a reference to each |MediaPart| object in the package."""
         # A media part can appear in more than one relationship (and commonly
         # does in the case of video). Use media_parts to keep track of those
@@ -225,7 +212,7 @@ class _MediaParts:
             media_parts.append(media_part)
             yield media_part
 
-    def get_or_add_media_part(self, media):
+    def get_or_add_media_part(self, media: MediaPart) -> MediaPart:
         """Return a |MediaPart| object containing the media in *media*.
 
         If this package already contains a media part for the same
@@ -237,13 +224,8 @@ class _MediaParts:
             media_part = MediaPart.new(self._package, media)
         return media_part
 
-    def _find_by_sha1(self, sha1):
-        """Return |MediaPart| object having *sha1* hash or None if not found.
-
-        All media parts belonging to this package are considered. A media
-        part is identified by the SHA1 hash digest of its bytestream
-        ("file").
-        """
+    def _find_by_sha1(self, sha1: str) -> MediaPart | None:
+        """Return |MediaPart| object having *sha1* hash or None if not found."""
         for media_part in self:
             if media_part.sha1 == sha1:
                 return media_part

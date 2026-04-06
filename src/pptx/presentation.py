@@ -11,9 +11,11 @@ from pptx.util import lazyproperty
 if TYPE_CHECKING:
     from pptx.oxml.presentation import CT_Presentation, CT_SlideId
     from pptx.oxml.section import CT_Section, CT_SectionList
+    from pptx.parts.coreprops import CorePropertiesPart
     from pptx.parts.custprops import CustomPropertiesPart
     from pptx.parts.presentation import PresentationPart
-    from pptx.slide import NotesMaster, SlideLayouts
+    from pptx.slide import NotesMaster, SlideLayouts, SlideMaster
+    from pptx.theme import Theme
     from pptx.util import Length
 
 
@@ -37,11 +39,11 @@ class Presentation(PartElementProxy):
         return val if val is not None else 1
 
     @first_slide_number.setter
-    def first_slide_number(self, value: int):
+    def first_slide_number(self, value: int) -> None:
         self._element.firstSlideNum = value
 
     @property
-    def core_properties(self):
+    def core_properties(self) -> CorePropertiesPart:
         """|CoreProperties| instance for this presentation.
 
         Provides read/write access to the Dublin Core document properties for the presentation.
@@ -67,7 +69,7 @@ class Presentation(PartElementProxy):
         """
         return self.part.notes_master
 
-    def save(self, file: str | IO[bytes]):
+    def save(self, file: str | IO[bytes]) -> None:
         """Writes this presentation to `file`.
 
         `file` can be either a file-path or a file-like object open for writing bytes.
@@ -86,7 +88,7 @@ class Presentation(PartElementProxy):
         return sldSz.cy
 
     @slide_height.setter
-    def slide_height(self, height: Length):
+    def slide_height(self, height: Length) -> None:
         sldSz = self._element.get_or_add_sldSz()
         sldSz.cy = height
 
@@ -101,7 +103,7 @@ class Presentation(PartElementProxy):
         return self.slide_masters[0].slide_layouts
 
     @property
-    def slide_master(self):
+    def slide_master(self) -> SlideMaster:
         """
         First |SlideMaster| object belonging to this presentation. Typically,
         presentations have only a single slide master. This property provides
@@ -110,7 +112,7 @@ class Presentation(PartElementProxy):
         return self.slide_masters[0]
 
     @property
-    def theme(self):
+    def theme(self) -> Theme | None:
         """A |Theme| object for this presentation's first slide master theme.
 
         Returns None if no theme is available. This is a convenience for
@@ -124,7 +126,7 @@ class Presentation(PartElementProxy):
         return SlideMasters(self._element.get_or_add_sldMasterIdLst(), self)
 
     @property
-    def slide_width(self):
+    def slide_width(self) -> Length | None:
         """
         Width of slides in this presentation, in English Metric Units (EMU).
         Returns |None| if no slide width is defined. Read/write.
@@ -135,7 +137,7 @@ class Presentation(PartElementProxy):
         return sldSz.cx
 
     @slide_width.setter
-    def slide_width(self, width: Length):
+    def slide_width(self, width: Length) -> None:
         sldSz = self._element.get_or_add_sldSz()
         sldSz.cx = width
 
@@ -145,7 +147,7 @@ class Presentation(PartElementProxy):
         return Sections(self._element)
 
     @lazyproperty
-    def slides(self):
+    def slides(self) -> Slides:
         """|Slides| object containing the slides in this presentation."""
         sldIdLst = self._element.get_or_add_sldIdLst()
         self.part.rename_slide_parts([cast("CT_SlideId", sldId).rId for sldId in sldIdLst])
@@ -206,7 +208,7 @@ class Section:
         return self._section_elm.name
 
     @name.setter
-    def name(self, value: str):
+    def name(self, value: str) -> None:
         self._section_elm.name = value
 
     @property

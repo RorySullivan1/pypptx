@@ -70,7 +70,7 @@ class _BaseSlide(PartElementProxy):
         return self._element.cSld.name
 
     @name.setter
-    def name(self, value: str | None):
+    def name(self, value: str | None) -> None:
         new_value = "" if value is None else value
         self._element.cSld.name = new_value
 
@@ -90,7 +90,7 @@ class _BaseMaster(_BaseSlide):
         return MasterPlaceholders(self._element.spTree, self)
 
     @lazyproperty
-    def shapes(self):
+    def shapes(self) -> MasterShapes:
         """
         Instance of |MasterShapes| containing sequence of shape objects
         appearing on this slide.
@@ -216,7 +216,7 @@ class Slide(_BaseSlide):
         return self.part.tags_part
 
     @property
-    def follow_master_background(self):
+    def follow_master_background(self) -> bool:
         """|True| if this slide inherits the slide master background.
 
         Assigning |False| causes background inheritance from the master to be
@@ -418,7 +418,7 @@ class SlideLayout(_BaseSlide):
         return self.part.slide_master
 
     @property
-    def used_by_slides(self):
+    def used_by_slides(self) -> tuple[Slide, ...]:
         """Tuple of slide objects based on this slide layout."""
         # ---getting Slides collection requires going around the horn a bit---
         slides = self.part.package.presentation_part.presentation.slides
@@ -543,12 +543,12 @@ class SlideMasters(ParentedElementProxy):
             raise SlideError("slide master index out of range")
         return self.part.related_slide_master(sldMasterId.rId)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SlideMaster]:
         """Generate each |SlideMaster| instance in the collection, in sequence."""
         for smi in self._sldMasterIdLst.sldMasterId_lst:
             yield self.part.related_slide_master(smi.rId)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Support len() built-in function, e.g. `len(slide_masters) == 4`."""
         return len(self._sldMasterIdLst)
 
@@ -572,7 +572,7 @@ class HeaderFooter:
         return hf.dt is not False
 
     @show_date.setter
-    def show_date(self, value: bool):
+    def show_date(self, value: bool) -> None:
         hf = self._slide_elm.get_or_add_hf()
         hf.dt = value
 
@@ -585,7 +585,7 @@ class HeaderFooter:
         return hf.ftr is not False
 
     @show_footer.setter
-    def show_footer(self, value: bool):
+    def show_footer(self, value: bool) -> None:
         hf = self._slide_elm.get_or_add_hf()
         hf.ftr = value
 
@@ -598,7 +598,7 @@ class HeaderFooter:
         return hf.hdr is not False
 
     @show_header.setter
-    def show_header(self, value: bool):
+    def show_header(self, value: bool) -> None:
         hf = self._slide_elm.get_or_add_hf()
         hf.hdr = value
 
@@ -611,7 +611,7 @@ class HeaderFooter:
         return hf.sldNum is not False
 
     @show_slide_number.setter
-    def show_slide_number(self, value: bool):
+    def show_slide_number(self, value: bool) -> None:
         hf = self._slide_elm.get_or_add_hf()
         hf.sldNum = value
 
@@ -629,7 +629,7 @@ class _Background(ElementProxy):
         self._cSld = cSld
 
     @lazyproperty
-    def fill(self):
+    def fill(self) -> FillFormat:
         """|FillFormat| instance for this background.
 
         This |FillFormat| object is used to interrogate or specify the fill
@@ -745,7 +745,7 @@ class Comment:
         return text_elm.text or ""
 
     @text.setter
-    def text(self, value: str):
+    def text(self, value: str) -> None:
         if self._cm.text is None:
             from lxml import etree
 

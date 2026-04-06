@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from pptx.oxml.text import (
         CT_RegularTextRun,
         CT_TextBody,
+        CT_TextBodyProperties,
         CT_TextCharacterProperties,
         CT_TextParagraph,
         CT_TextParagraphProperties,
@@ -53,7 +54,7 @@ class TextFrame(Subshape):
         self._element = self._txBody = txBody
         self._parent = parent
 
-    def add_paragraph(self):
+    def add_paragraph(self) -> _Paragraph:
         """
         Return new |_Paragraph| instance appended to the sequence of
         paragraphs contained in this text frame.
@@ -73,10 +74,10 @@ class TextFrame(Subshape):
         return self._bodyPr.autofit
 
     @auto_size.setter
-    def auto_size(self, value: MSO_AUTO_SIZE | None):
+    def auto_size(self, value: MSO_AUTO_SIZE | None) -> None:
         self._bodyPr.autofit = value
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all paragraphs except one empty one."""
         for p in self._txBody.p_lst[1:]:
             self._txBody.remove(p)
@@ -90,7 +91,7 @@ class TextFrame(Subshape):
         bold: bool = False,
         italic: bool = False,
         font_file: str | None = None,
-    ):
+    ) -> None:
         """Fit text-frame text entirely within bounds of its shape.
 
         Make the text in this text frame fit entirely within the bounds of its shape by setting
@@ -119,7 +120,7 @@ class TextFrame(Subshape):
         return self._bodyPr.bIns
 
     @margin_bottom.setter
-    def margin_bottom(self, emu: Length):
+    def margin_bottom(self, emu: Length) -> None:
         self._bodyPr.bIns = emu
 
     @property
@@ -128,7 +129,7 @@ class TextFrame(Subshape):
         return self._bodyPr.lIns
 
     @margin_left.setter
-    def margin_left(self, emu: Length):
+    def margin_left(self, emu: Length) -> None:
         self._bodyPr.lIns = emu
 
     @property
@@ -137,7 +138,7 @@ class TextFrame(Subshape):
         return self._bodyPr.rIns
 
     @margin_right.setter
-    def margin_right(self, emu: Length):
+    def margin_right(self, emu: Length) -> None:
         self._bodyPr.rIns = emu
 
     @property
@@ -146,7 +147,7 @@ class TextFrame(Subshape):
         return self._bodyPr.tIns
 
     @margin_top.setter
-    def margin_top(self, emu: Length):
+    def margin_top(self, emu: Length) -> None:
         self._bodyPr.tIns = emu
 
     @property
@@ -158,7 +159,7 @@ class TextFrame(Subshape):
         return self._bodyPr.numCol
 
     @columns.setter
-    def columns(self, value: int | None):
+    def columns(self, value: int | None) -> None:
         self._bodyPr.numCol = value
 
     @property
@@ -170,7 +171,7 @@ class TextFrame(Subshape):
         return self._bodyPr.spcCol
 
     @column_spacing.setter
-    def column_spacing(self, value: Length | None):
+    def column_spacing(self, value: Length | None) -> None:
         self._bodyPr.spcCol = value
 
     @property
@@ -207,7 +208,7 @@ class TextFrame(Subshape):
         return "\n".join(paragraph.text for paragraph in self.paragraphs)
 
     @text.setter
-    def text(self, text: str):
+    def text(self, text: str) -> None:
         txBody = self._txBody
         txBody.clear_content()
         for p_text in text.split("\n"):
@@ -225,7 +226,7 @@ class TextFrame(Subshape):
         return self._bodyPr.vert
 
     @text_orientation.setter
-    def text_orientation(self, value: MSO_TEXT_VERTICAL_TYPE | None):
+    def text_orientation(self, value: MSO_TEXT_VERTICAL_TYPE | None) -> None:
         self._bodyPr.vert = value
 
     @property
@@ -237,7 +238,7 @@ class TextFrame(Subshape):
         return self._txBody.bodyPr.anchor
 
     @vertical_anchor.setter
-    def vertical_anchor(self, value: MSO_VERTICAL_ANCHOR | None):
+    def vertical_anchor(self, value: MSO_VERTICAL_ANCHOR | None) -> None:
         bodyPr = self._txBody.bodyPr
         bodyPr.anchor = value
 
@@ -256,7 +257,7 @@ class TextFrame(Subshape):
         }[self._txBody.bodyPr.wrap]
 
     @word_wrap.setter
-    def word_wrap(self, value: bool | None):
+    def word_wrap(self, value: bool | None) -> None:
         if value not in (True, False, None):
             raise ValueError(  # pragma: no cover
                 "assigned value must be True, False, or None, got %s" % value
@@ -267,7 +268,7 @@ class TextFrame(Subshape):
             None: None,
         }[value]
 
-    def _apply_fit(self, font_family: str, font_size: int, is_bold: bool, is_italic: bool):
+    def _apply_fit(self, font_family: str, font_size: int, is_bold: bool, is_italic: bool) -> None:
         """Arrange text in this text frame to fit inside its extents.
 
         This is accomplished by setting auto size off, wrap on, and setting the font of
@@ -292,7 +293,7 @@ class TextFrame(Subshape):
         return TextFitter.best_fit_font_size(self.text, self._extents, max_size, font_file)
 
     @property
-    def _bodyPr(self):
+    def _bodyPr(self) -> CT_TextBodyProperties:
         return self._txBody.bodyPr
 
     @property
@@ -307,7 +308,7 @@ class TextFrame(Subshape):
             Length(parent.height - self.margin_top - self.margin_bottom),
         )
 
-    def _set_font(self, family: str, size: int, bold: bool, italic: bool):
+    def _set_font(self, family: str, size: int, bold: bool, italic: bool) -> None:
         """Set the font properties of all the text in this text frame."""
 
         def iter_rPrs(txBody: CT_TextBody) -> Iterator[CT_TextCharacterProperties]:
@@ -350,7 +351,7 @@ class Font:
         return self._rPr.baseline
 
     @baseline.setter
-    def baseline(self, value: float | None):
+    def baseline(self, value: float | None) -> None:
         self._rPr.baseline = value
 
     @property
@@ -364,7 +365,7 @@ class Font:
         return self._rPr.b
 
     @bold.setter
-    def bold(self, value: bool | None):
+    def bold(self, value: bool | None) -> None:
         self._rPr.b = value
 
     @property
@@ -377,7 +378,7 @@ class Font:
         return self._rPr.cap
 
     @caps.setter
-    def caps(self, value: MSO_TEXT_CAPS | None):
+    def caps(self, value: MSO_TEXT_CAPS | None) -> None:
         self._rPr.cap = value
 
     @lazyproperty
@@ -407,7 +408,7 @@ class Font:
         return ea.typeface
 
     @east_asian_name.setter
-    def east_asian_name(self, value: str | None):
+    def east_asian_name(self, value: str | None) -> None:
         if value is None:
             self._rPr._remove_ea()  # pyright: ignore[reportPrivateUsage]
         else:
@@ -426,7 +427,7 @@ class Font:
         return cs.typeface
 
     @complex_script_name.setter
-    def complex_script_name(self, value: str | None):
+    def complex_script_name(self, value: str | None) -> None:
         if value is None:
             self._rPr._remove_cs()  # pyright: ignore[reportPrivateUsage]
         else:
@@ -442,7 +443,7 @@ class Font:
         return self._rPr.i
 
     @italic.setter
-    def italic(self, value: bool | None):
+    def italic(self, value: bool | None) -> None:
         self._rPr.i = value
 
     @property
@@ -458,7 +459,7 @@ class Font:
         return effectLst.outerShdw is not None
 
     @has_shadow.setter
-    def has_shadow(self, value: bool):
+    def has_shadow(self, value: bool) -> None:
         if value:
             effectLst = self._rPr.get_or_add_effectLst()
             effectLst.get_or_add_outerShdw()
@@ -480,7 +481,7 @@ class Font:
         return self._rPr.lang
 
     @language_id.setter
-    def language_id(self, value: MSO_LANGUAGE_ID | None):
+    def language_id(self, value: MSO_LANGUAGE_ID | None) -> None:
         if value == MSO_LANGUAGE_ID.NONE:
             value = None
         self._rPr.lang = value
@@ -495,7 +496,7 @@ class Font:
         return self._rPr.kern
 
     @kerning.setter
-    def kerning(self, value: Length | None):
+    def kerning(self, value: Length | None) -> None:
         self._rPr.kern = value
 
     @property
@@ -512,7 +513,7 @@ class Font:
         return latin.typeface
 
     @name.setter
-    def name(self, value: str | None):
+    def name(self, value: str | None) -> None:
         if value is None:
             self._rPr._remove_latin()  # pyright: ignore[reportPrivateUsage]
         else:
@@ -540,7 +541,7 @@ class Font:
         return Centipoints(sz)
 
     @size.setter
-    def size(self, emu: Length | None):
+    def size(self, emu: Length | None) -> None:
         if emu is None:
             self._rPr.sz = None
         else:
@@ -557,7 +558,7 @@ class Font:
         return self._rPr.spc
 
     @spacing.setter
-    def spacing(self, value: Length | None):
+    def spacing(self, value: Length | None) -> None:
         self._rPr.spc = value
 
     @property
@@ -570,7 +571,7 @@ class Font:
         return self._rPr.strike
 
     @strikethrough.setter
-    def strikethrough(self, value: MSO_TEXT_STRIKE_TYPE | None):
+    def strikethrough(self, value: MSO_TEXT_STRIKE_TYPE | None) -> None:
         self._rPr.strike = value
 
     @property
@@ -591,7 +592,7 @@ class Font:
         return u
 
     @underline.setter
-    def underline(self, value: bool | MSO_TEXT_UNDERLINE_TYPE | None):
+    def underline(self, value: bool | MSO_TEXT_UNDERLINE_TYPE | None) -> None:
         if value is True:
             value = MSO_UNDERLINE.SINGLE_LINE
         elif value is False:
@@ -620,7 +621,7 @@ class _Hyperlink(Subshape):
         return self.part.target_ref(self._hlinkClick.rId)
 
     @address.setter
-    def address(self, url: str | None):
+    def address(self, url: str | None) -> None:
         # implements all three of add, change, and remove hyperlink
         if self._hlinkClick is not None:
             self._remove_hlinkClick()
@@ -648,7 +649,7 @@ class _Paragraph(Subshape):
         super(_Paragraph, self).__init__(parent)
         self._element = self._p = p
 
-    def add_line_break(self):
+    def add_line_break(self) -> None:
         """Add line break at end of this paragraph."""
         self._p.add_br()
 
@@ -668,7 +669,7 @@ class _Paragraph(Subshape):
         return self._pPr.algn
 
     @alignment.setter
-    def alignment(self, value: PP_PARAGRAPH_ALIGNMENT | None):
+    def alignment(self, value: PP_PARAGRAPH_ALIGNMENT | None) -> None:
         self._pPr.algn = value
 
     @property
@@ -686,7 +687,7 @@ class _Paragraph(Subshape):
         return buChar.get("char")
 
     @bullet_char.setter
-    def bullet_char(self, value: str | None):
+    def bullet_char(self, value: str | None) -> None:
         pPr = self._pPr
         if value is None:
             buChar = pPr.buChar
@@ -720,7 +721,7 @@ class _Paragraph(Subshape):
             return "none"
         return None
 
-    def clear(self):
+    def clear(self) -> _Paragraph:
         """Remove all content from this paragraph.
 
         Paragraph properties are preserved. Content includes runs, line breaks, and fields.
@@ -749,7 +750,7 @@ class _Paragraph(Subshape):
         return self._pPr.indent
 
     @indent.setter
-    def indent(self, value: Length | None):
+    def indent(self, value: Length | None) -> None:
         self._pPr.indent = value
 
     @property
@@ -763,7 +764,7 @@ class _Paragraph(Subshape):
         return self._pPr.lvl
 
     @level.setter
-    def level(self, level: int):
+    def level(self, level: int) -> None:
         self._pPr.lvl = level
 
     @property
@@ -782,7 +783,7 @@ class _Paragraph(Subshape):
         return pPr.line_spacing
 
     @line_spacing.setter
-    def line_spacing(self, value: int | float | Length | None):
+    def line_spacing(self, value: int | float | Length | None) -> None:
         pPr = self._p.get_or_add_pPr()
         pPr.line_spacing = value
 
@@ -795,7 +796,7 @@ class _Paragraph(Subshape):
         return self._pPr.marL
 
     @margin_left.setter
-    def margin_left(self, value: Length | None):
+    def margin_left(self, value: Length | None) -> None:
         self._pPr.marL = value
 
     @property
@@ -839,7 +840,7 @@ class _Paragraph(Subshape):
         return self._pPr.rtl
 
     @rtl.setter
-    def rtl(self, value: bool | None):
+    def rtl(self, value: bool | None) -> None:
         self._pPr.rtl = value
 
     @property
@@ -851,7 +852,7 @@ class _Paragraph(Subshape):
         return self._pPr.hangingPunct
 
     @hanging_punctuation.setter
-    def hanging_punctuation(self, value: bool | None):
+    def hanging_punctuation(self, value: bool | None) -> None:
         self._pPr.hangingPunct = value
 
     @property
@@ -863,7 +864,7 @@ class _Paragraph(Subshape):
         return self._pPr.fontAlgn
 
     @font_alignment.setter
-    def font_alignment(self, value: MSO_TEXT_FONT_ALIGN | None):
+    def font_alignment(self, value: MSO_TEXT_FONT_ALIGN | None) -> None:
         self._pPr.fontAlgn = value
 
     @property
@@ -886,7 +887,7 @@ class _Paragraph(Subshape):
         return pPr.space_after
 
     @space_after.setter
-    def space_after(self, value: Length | None):
+    def space_after(self, value: Length | None) -> None:
         pPr = self._p.get_or_add_pPr()
         pPr.space_after = value
 
@@ -904,7 +905,7 @@ class _Paragraph(Subshape):
         return pPr.space_before
 
     @space_before.setter
-    def space_before(self, value: Length | None):
+    def space_before(self, value: Length | None) -> None:
         pPr = self._p.get_or_add_pPr()
         pPr.space_before = value
 
@@ -930,7 +931,7 @@ class _Paragraph(Subshape):
         return "".join(elm.text for elm in self._element.content_children)
 
     @text.setter
-    def text(self, text: str):
+    def text(self, text: str) -> None:
         self.clear()
         self._element.append_text(text)
 
@@ -996,5 +997,5 @@ class _Run(Subshape):
         return self._r.text
 
     @text.setter
-    def text(self, text: str):
+    def text(self, text: str) -> None:
         self._r.text = text

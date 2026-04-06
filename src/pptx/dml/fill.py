@@ -21,7 +21,7 @@ from pptx.shared import ElementProxy
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
-    from pptx.enum.dml import MSO_FILL_TYPE
+    from pptx.enum.dml import MSO_FILL_TYPE, MSO_PATTERN_TYPE
     from pptx.oxml.xmlchemy import BaseOxmlElement
 
 
@@ -49,14 +49,14 @@ class FillFormat:
         return fill_format
 
     @property
-    def back_color(self):
+    def back_color(self) -> ColorFormat:
         """Return a |ColorFormat| object representing background color.
 
         This property is only applicable to pattern fills and lines.
         """
         return self._fill.back_color
 
-    def background(self):
+    def background(self) -> None:
         """
         Sets the fill type to noFill, i.e. transparent.
         """
@@ -64,14 +64,14 @@ class FillFormat:
         self._fill = _NoFill(noFill)
 
     @property
-    def fore_color(self):
+    def fore_color(self) -> ColorFormat:
         """
         Return a |ColorFormat| instance representing the foreground color of
         this fill.
         """
         return self._fill.fore_color
 
-    def gradient(self):
+    def gradient(self) -> None:
         """Sets the fill type to gradient.
 
         If the fill is not already a gradient, a default gradient is added.
@@ -85,7 +85,7 @@ class FillFormat:
         self._fill = _GradFill(gradFill)
 
     @property
-    def gradient_angle(self):
+    def gradient_angle(self) -> float | None:
         """Angle in float degrees of line of a linear gradient.
 
         Read/Write. May be |None|, indicating the angle should be inherited
@@ -101,13 +101,13 @@ class FillFormat:
         return self._fill.gradient_angle
 
     @gradient_angle.setter
-    def gradient_angle(self, value):
+    def gradient_angle(self, value: float) -> None:
         if self.type != MSO_FILL.GRADIENT:
             raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         self._fill.gradient_angle = value
 
     @property
-    def gradient_stops(self):
+    def gradient_stops(self) -> _GradientStops:
         """|GradientStops| object providing access to stops of this gradient.
 
         Raises |ShapeError| when fill is not gradient (call `fill.gradient()`
@@ -119,7 +119,7 @@ class FillFormat:
         return self._fill.gradient_stops
 
     @property
-    def pattern(self):
+    def pattern(self) -> MSO_PATTERN_TYPE | None:
         """Return member of :ref:`MsoPatternType` indicating fill pattern.
 
         Raises |ShapeError| when fill is not patterned (call
@@ -132,10 +132,10 @@ class FillFormat:
         return self._fill.pattern
 
     @pattern.setter
-    def pattern(self, pattern_type):
+    def pattern(self, pattern_type: MSO_PATTERN_TYPE | None) -> None:
         self._fill.pattern = pattern_type
 
-    def patterned(self):
+    def patterned(self) -> None:
         """Selects the pattern fill type.
 
         Note that calling this method does not by itself set a foreground or
@@ -146,7 +146,7 @@ class FillFormat:
         pattFill = self._xPr.get_or_change_to_pattFill()
         self._fill = _PattFill(pattFill)
 
-    def solid(self):
+    def solid(self) -> None:
         """
         Sets the fill type to solid, i.e. a solid color. Note that calling
         this method does not set a color or by itself cause the shape to
@@ -169,7 +169,7 @@ class _Fill:
     fill classes
     """
 
-    def __new__(cls, xFill):
+    def __new__(cls, xFill: BaseOxmlElement | None) -> _Fill:
         if xFill is None:
             fill_cls = _NoneFill
         elif isinstance(xFill, CT_BlipFillProperties):
@@ -189,19 +189,19 @@ class _Fill:
         return super(_Fill, cls).__new__(fill_cls)
 
     @property
-    def back_color(self):
+    def back_color(self) -> ColorFormat:
         """Raise ShapeError for types that do not override this property."""
         tmpl = "fill type %s has no background color, call .patterned() first"
         raise ShapeError(tmpl % self.__class__.__name__)
 
     @property
-    def fore_color(self):
+    def fore_color(self) -> ColorFormat:
         """Raise ShapeError for types that do not override this property."""
         tmpl = "fill type %s has no foreground color, call .solid() or .patterned() first"
         raise ShapeError(tmpl % self.__class__.__name__)
 
     @property
-    def pattern(self):
+    def pattern(self) -> MSO_PATTERN_TYPE | None:
         """Raise ShapeError for fills that do not override this property."""
         tmpl = "fill type %s has no pattern, call .patterned() first"
         raise ShapeError(tmpl % self.__class__.__name__)
@@ -215,18 +215,18 @@ class _Fill:
 
 class _BlipFill(_Fill):
     @property
-    def type(self):
+    def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.PICTURE
 
 
 class _GradFill(_Fill):
     """Proxies an `a:gradFill` element."""
 
-    def __init__(self, gradFill):
+    def __init__(self, gradFill: CT_GradientFillProperties) -> None:
         self._element = self._gradFill = gradFill
 
     @property
-    def gradient_angle(self):
+    def gradient_angle(self) -> float | None:
         """Angle in float degrees of line of a linear gradient.
 
         Read/Write. May be |None|, indicating the angle is inherited from the
@@ -256,14 +256,14 @@ class _GradFill(_Fill):
         return counter_clockwise_angle
 
     @gradient_angle.setter
-    def gradient_angle(self, value):
+    def gradient_angle(self, value: float) -> None:
         lin = self._gradFill.lin
         if lin is None:
             raise ShapeError("not a linear gradient")
         lin.ang = 360.0 - value
 
     @lazyproperty
-    def gradient_stops(self):
+    def gradient_stops(self) -> _GradientStops:
         """|_GradientStops| object providing access to gradient colors.
 
         Each stop represents a color between which the gradient smoothly
@@ -272,49 +272,49 @@ class _GradFill(_Fill):
         return _GradientStops(self._gradFill.get_or_add_gsLst())
 
     @property
-    def type(self):
+    def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.GRADIENT
 
 
 class _GrpFill(_Fill):
     @property
-    def type(self):
+    def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.GROUP
 
 
 class _NoFill(_Fill):
     @property
-    def type(self):
+    def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.BACKGROUND
 
 
 class _NoneFill(_Fill):
     @property
-    def type(self):
+    def type(self) -> None:
         return None
 
 
 class _PattFill(_Fill):
     """Provides access to patterned fill properties."""
 
-    def __init__(self, pattFill):
+    def __init__(self, pattFill: CT_PatternFillProperties) -> None:
         super(_PattFill, self).__init__()
         self._element = self._pattFill = pattFill
 
     @lazyproperty
-    def back_color(self):
+    def back_color(self) -> ColorFormat:
         """Return |ColorFormat| object that controls background color."""
         bgClr = self._pattFill.get_or_add_bgClr()
         return ColorFormat.from_colorchoice_parent(bgClr)
 
     @lazyproperty
-    def fore_color(self):
+    def fore_color(self) -> ColorFormat:
         """Return |ColorFormat| object that controls foreground color."""
         fgClr = self._pattFill.get_or_add_fgClr()
         return ColorFormat.from_colorchoice_parent(fgClr)
 
     @property
-    def pattern(self):
+    def pattern(self) -> MSO_PATTERN_TYPE | None:
         """Return member of :ref:`MsoPatternType` indicating fill pattern.
 
         Returns |None| if no pattern has been set; PowerPoint may display the
@@ -324,28 +324,28 @@ class _PattFill(_Fill):
         return self._pattFill.prst
 
     @pattern.setter
-    def pattern(self, pattern_type):
+    def pattern(self, pattern_type: MSO_PATTERN_TYPE | None) -> None:
         self._pattFill.prst = pattern_type
 
     @property
-    def type(self):
+    def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.PATTERNED
 
 
 class _SolidFill(_Fill):
     """Provides access to fill properties such as color for solid fills."""
 
-    def __init__(self, solidFill):
+    def __init__(self, solidFill: CT_SolidColorFillProperties) -> None:
         super(_SolidFill, self).__init__()
         self._solidFill = solidFill
 
     @lazyproperty
-    def fore_color(self):
+    def fore_color(self) -> ColorFormat:
         """Return |ColorFormat| object controlling fill color."""
         return ColorFormat.from_colorchoice_parent(self._solidFill)
 
     @property
-    def type(self):
+    def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.SOLID
 
 
@@ -358,13 +358,13 @@ class _GradientStops(Sequence):
     through.
     """
 
-    def __init__(self, gsLst):
+    def __init__(self, gsLst: BaseOxmlElement) -> None:
         self._gsLst = gsLst
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> _GradientStop:
         return _GradientStop(self._gsLst[idx])
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._gsLst)
 
 
@@ -374,17 +374,17 @@ class _GradientStop(ElementProxy):
     A gradient stop defines a color and a position.
     """
 
-    def __init__(self, gs):
+    def __init__(self, gs: BaseOxmlElement) -> None:
         super(_GradientStop, self).__init__(gs)
         self._gs = gs
 
     @lazyproperty
-    def color(self):
+    def color(self) -> ColorFormat:
         """Return |ColorFormat| object controlling stop color."""
         return ColorFormat.from_colorchoice_parent(self._gs)
 
     @property
-    def position(self):
+    def position(self) -> float:
         """Location of stop in gradient path as float between 0.0 and 1.0.
 
         The value represents a percentage, where 0.0 (0%) represents the
@@ -395,5 +395,5 @@ class _GradientStop(ElementProxy):
         return self._gs.pos
 
     @position.setter
-    def position(self, value):
+    def position(self, value: float) -> None:
         self._gs.pos = float(value)

@@ -7,10 +7,16 @@ elbows, or can be curved.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.shapes.base import BaseShape
 from pptx.util import Emu, lazyproperty
+
+if TYPE_CHECKING:
+    from pptx.oxml.shapes.shared import CT_LineProperties
+    from pptx.util import Length
 
 
 class Connector(BaseShape):
@@ -21,7 +27,7 @@ class Connector(BaseShape):
     have elbows, or can be curved.
     """
 
-    def begin_connect(self, shape, cxn_pt_idx):
+    def begin_connect(self, shape: BaseShape, cxn_pt_idx: int) -> None:
         """
         **EXPERIMENTAL** - *The current implementation only works properly
         with rectangular shapes, such as pictures and rectangles. Use with
@@ -43,7 +49,7 @@ class Connector(BaseShape):
         self._move_begin_to_cxn(shape, cxn_pt_idx)
 
     @property
-    def begin_x(self):
+    def begin_x(self) -> Length:
         """
         Return the X-position of the begin point of this connector, in
         English Metric Units (as a |Length| object).
@@ -54,7 +60,7 @@ class Connector(BaseShape):
         return Emu(begin_x)
 
     @begin_x.setter
-    def begin_x(self, value):
+    def begin_x(self, value: int | Length) -> None:
         cxnSp = self._element
         x, cx, flipH, new_x = cxnSp.x, cxnSp.cx, cxnSp.flipH, int(value)
 
@@ -83,7 +89,7 @@ class Connector(BaseShape):
                 cxnSp.cx = dx - cx
 
     @property
-    def begin_y(self):
+    def begin_y(self) -> Length:
         """
         Return the Y-position of the begin point of this connector, in
         English Metric Units (as a |Length| object).
@@ -94,7 +100,7 @@ class Connector(BaseShape):
         return Emu(begin_y)
 
     @begin_y.setter
-    def begin_y(self, value):
+    def begin_y(self, value: int | Length) -> None:
         cxnSp = self._element
         y, cy, flipV, new_y = cxnSp.y, cxnSp.cy, cxnSp.flipV, int(value)
 
@@ -122,7 +128,7 @@ class Connector(BaseShape):
                 cxnSp.y = y + cy
                 cxnSp.cy = dy - cy
 
-    def end_connect(self, shape, cxn_pt_idx):
+    def end_connect(self, shape: BaseShape, cxn_pt_idx: int) -> None:
         """
         **EXPERIMENTAL** - *The current implementation only works properly
         with rectangular shapes, such as pictures and rectangles. Use with
@@ -139,7 +145,7 @@ class Connector(BaseShape):
         self._move_end_to_cxn(shape, cxn_pt_idx)
 
     @property
-    def end_x(self):
+    def end_x(self) -> Length:
         """
         Return the X-position of the end point of this connector, in English
         Metric Units (as a |Length| object).
@@ -150,7 +156,7 @@ class Connector(BaseShape):
         return Emu(end_x)
 
     @end_x.setter
-    def end_x(self, value):
+    def end_x(self, value: int | Length) -> None:
         cxnSp = self._element
         x, cx, flipH, new_x = cxnSp.x, cxnSp.cx, cxnSp.flipH, int(value)
 
@@ -179,7 +185,7 @@ class Connector(BaseShape):
                 cxnSp.cx = dx - cx
 
     @property
-    def end_y(self):
+    def end_y(self) -> Length:
         """
         Return the Y-position of the end point of this connector, in English
         Metric Units (as a |Length| object).
@@ -190,7 +196,7 @@ class Connector(BaseShape):
         return Emu(end_y)
 
     @end_y.setter
-    def end_y(self, value):
+    def end_y(self, value: int | Length) -> None:
         cxnSp = self._element
         y, cy, flipV, new_y = cxnSp.y, cxnSp.cy, cxnSp.flipV, int(value)
 
@@ -244,12 +250,12 @@ class Connector(BaseShape):
             return None
         return (endCxn.id, endCxn.idx)
 
-    def get_or_add_ln(self):
+    def get_or_add_ln(self) -> CT_LineProperties:
         """Helper method required by |LineFormat|."""
         return self._element.spPr.get_or_add_ln()
 
     @lazyproperty
-    def line(self):
+    def line(self) -> LineFormat:
         """|LineFormat| instance for this connector.
 
         Provides access to line properties such as line color, width, and
@@ -258,7 +264,7 @@ class Connector(BaseShape):
         return LineFormat(self)
 
     @property
-    def ln(self):
+    def ln(self) -> CT_LineProperties | None:
         """Helper method required by |LineFormat|.
 
         The ``<a:ln>`` element containing the line format properties such as
@@ -267,14 +273,14 @@ class Connector(BaseShape):
         return self._element.spPr.ln
 
     @property
-    def shape_type(self):
+    def shape_type(self) -> MSO_SHAPE_TYPE:
         """Member of `MSO_SHAPE_TYPE` identifying the type of this shape.
 
         Unconditionally `MSO_SHAPE_TYPE.LINE` for a `Connector` object.
         """
         return MSO_SHAPE_TYPE.LINE
 
-    def _connect_begin_to(self, shape, cxn_pt_idx):
+    def _connect_begin_to(self, shape: BaseShape, cxn_pt_idx: int) -> None:
         """
         Add or update a stCxn element for this connector that connects its
         begin point to the connection point of *shape* specified by
@@ -285,7 +291,7 @@ class Connector(BaseShape):
         stCxn.id = shape.shape_id
         stCxn.idx = cxn_pt_idx
 
-    def _connect_end_to(self, shape, cxn_pt_idx):
+    def _connect_end_to(self, shape: BaseShape, cxn_pt_idx: int) -> None:
         """
         Add or update an endCxn element for this connector that connects its
         end point to the connection point of *shape* specified by
@@ -296,7 +302,7 @@ class Connector(BaseShape):
         endCxn.id = shape.shape_id
         endCxn.idx = cxn_pt_idx
 
-    def _move_begin_to_cxn(self, shape, cxn_pt_idx):
+    def _move_begin_to_cxn(self, shape: BaseShape, cxn_pt_idx: int) -> None:
         """
         Move the begin point of this connector to coordinates of the
         connection point of *shape* specified by *cxn_pt_idx*.
@@ -309,7 +315,7 @@ class Connector(BaseShape):
             3: (x + cx, int(y + cy / 2)),
         }[cxn_pt_idx]
 
-    def _move_end_to_cxn(self, shape, cxn_pt_idx):
+    def _move_end_to_cxn(self, shape: BaseShape, cxn_pt_idx: int) -> None:
         """
         Move the end point of this connector to the coordinates of the
         connection point of *shape* specified by *cxn_pt_idx*.
