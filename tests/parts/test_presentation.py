@@ -204,26 +204,58 @@ class DescribePresentationPart:
         layout_part.partname = PackURI("/ppt/slideLayouts/slideLayout1.xml")
         src_slide_part.relate_to(layout_part, RT.SLIDE_LAYOUT)
 
+        # Package.next_partname provides the new slide partname
+        package_.next_partname.return_value = PackURI("/ppt/slides/slide2.xml")
+
         # Set up the PresentationPart with a valid partname
         prs_elm = element("p:presentation/p:sldIdLst/p:sldId{r:id=rId1,id=256}")
         prs_part = PresentationPart(
             PackURI("/ppt/presentation.xml"), CT.PML_PRESENTATION, package_, prs_elm
-        )
-        property_mock(
-            request,
-            PresentationPart,
-            "_next_slide_partname",
-            return_value=PackURI("/ppt/slides/slide2.xml"),
         )
 
         rId, new_slide = prs_part.duplicate_slide(src_slide_part)
 
         assert rId is not None
         assert new_slide is not None
+        package_.next_partname.assert_called_once_with("/ppt/slides/slide%d.xml")
         # Verify the new slide part has a relationship to the same layout
         new_slide_part = new_slide.part
         layout_rel = new_slide_part.part_related_by(RT.SLIDE_LAYOUT)
         assert layout_rel is layout_part
+
+    def it_remaps_rIds_across_all_relationship_attribute_types(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls, qn
+        from pptx.parts.presentation import _remap_rIds
+
+        # XML with r:id (hyperlink), r:embed (image), and r:link (linked resource)
+        xml_str = (
+            '<p:sld %s><p:cSld><p:spTree>'
+            '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+            '<p:grpSpPr/>'
+            '<p:sp><p:nvSpPr><p:cNvPr id="2" name="sp1">'
+            '<a:hlinkClick r:id="rId1"/>'
+            '</p:cNvPr><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/></p:sp>'
+            '<p:pic><p:nvPicPr><p:cNvPr id="3" name="pic1"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>'
+            '<p:blipFill><a:blip r:embed="rId2" r:link="rId3"/></p:blipFill>'
+            '<p:spPr/></p:pic>'
+            '</p:spTree></p:cSld></p:sld>' % nsdecls("p", "a", "r")
+        )
+        sld = parse_xml(xml_str)
+
+        rId_map = {"rId1": "rId10", "rId2": "rId20", "rId3": "rId30"}
+        _remap_rIds(sld, rId_map)
+
+        # Verify r:id was remapped (hyperlink)
+        hlinkClick = sld.xpath("//a:hlinkClick")[0]
+        assert hlinkClick.get(qn("r:id")) == "rId10"
+
+        # Verify r:embed was remapped (image)
+        blip = sld.xpath("//a:blip")[0]
+        assert blip.get(qn("r:embed")) == "rId20"
+
+        # Verify r:link was remapped (linked resource)
+        assert blip.get(qn("r:link")) == "rId30"
 
     # fixture components ---------------------------------------------
 

@@ -14,6 +14,7 @@ from pptx.presentation import Presentation
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.coreprops import CorePropertiesPart
     from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
@@ -40,34 +41,30 @@ class PresentationPart(XmlPart):
 
         The new slide is a deep clone of the source slide with all relationships
         (images, charts, media, layout, etc.) re-established on the new part.
+        Notes slide and comments are not carried over to the duplicate.
         """
         from pptx.opc.constants import CONTENT_TYPE as CT
 
-        partname = self._next_slide_partname
+        partname = self.package.next_partname("/ppt/slides/slide%d.xml")
         new_element = deepcopy(slide_part._element)
         new_slide_part = SlidePart(partname, CT.PML_SLIDE, self.package, new_element)
+
+        # --- per-slide parts that should NOT be shared with the duplicate ---
+        _skip_reltypes = {RT.NOTES_SLIDE, RT.COMMENTS, RT.TAGS}
 
         # --- build rId mapping from old slide to new slide ---
         rId_map: dict[str, str] = {}
         for rId, rel in slide_part.rels.items():
+            if rel.reltype in _skip_reltypes:
+                continue
             if rel.is_external:
                 new_rId = new_slide_part.relate_to(rel.target_ref, rel.reltype, is_external=True)
             else:
                 new_rId = new_slide_part.relate_to(rel.target_part, rel.reltype)
             rId_map[rId] = new_rId
 
-        # --- update rId references in the cloned XML ---
-        for old_rId, new_rId in rId_map.items():
-            if old_rId != new_rId:
-                for attr in new_element.xpath("//@r:id"):
-                    elm = attr.getparent()
-                    attr_name = None
-                    for name, val in elm.attrib.items():
-                        if val == old_rId:
-                            attr_name = name
-                            break
-                    if attr_name is not None:
-                        elm.set(attr_name, new_rId)
+        # --- update rId references in the cloned XML (r:id, r:embed, r:link) ---
+        _remap_rIds(new_element, rId_map)
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
         return rId, new_slide_part.slide
@@ -163,3 +160,20 @@ class PresentationPart(XmlPart):
         sldIdLst = self._element.get_or_add_sldIdLst()
         partname_str = "/ppt/slides/slide%d.xml" % (len(sldIdLst) + 1)
         return PackURI(partname_str)
+
+
+def _remap_rIds(element: BaseOxmlElement, rId_map: dict[str, str]) -> None:
+    """Replace rId references in `element` XML tree per `rId_map`.
+
+    Handles all relationship attribute forms: ``r:id``, ``r:embed``, and ``r:link``.
+    """
+    from pptx.oxml.ns import qn
+
+    r_attrib_names = (qn("r:id"), qn("r:embed"), qn("r:link"))
+    for descendant in element.iter():
+        for attr_name in r_attrib_names:
+            old_rId = descendant.get(attr_name)
+            if old_rId is not None and old_rId in rId_map:
+                new_rId = rId_map[old_rId]
+                if old_rId != new_rId:
+                    descendant.set(attr_name, new_rId)
