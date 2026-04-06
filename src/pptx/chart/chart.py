@@ -407,7 +407,7 @@ class Chart(PartElementProxy):
         return View3D(chart.get_or_add_view3D())
 
     @property
-    def _workbook(self):
+    def _workbook(self) -> ChartWorkbook:
         """
         The |ChartWorkbook| object providing access to the Excel source data
         for this chart.
@@ -423,12 +423,12 @@ class ChartTitle(ElementProxy):
     # actually differ in certain fuller behaviors, but at present they're
     # essentially identical.
 
-    def __init__(self, title):
+    def __init__(self, title: CT_Title) -> None:
         super(ChartTitle, self).__init__(title)
         self._title = title
 
     @lazyproperty
-    def format(self):
+    def format(self) -> ChartFormat:
         """|ChartFormat| object providing access to line and fill formatting.
 
         Return the |ChartFormat| object providing shape formatting properties
@@ -437,7 +437,7 @@ class ChartTitle(ElementProxy):
         return ChartFormat(self._title)
 
     @property
-    def has_text_frame(self):
+    def has_text_frame(self) -> bool:
         """Read/write Boolean specifying whether this title has a text frame.
 
         Return |True| if this chart title has a text frame, and |False|
@@ -450,14 +450,14 @@ class ChartTitle(ElementProxy):
         return True
 
     @has_text_frame.setter
-    def has_text_frame(self, value):
+    def has_text_frame(self, value: bool) -> None:
         if bool(value) is False:
             self._title._remove_tx()
             return
         self._title.get_or_add_tx_rich()
 
     @property
-    def text_frame(self):
+    def text_frame(self) -> TextFrame:
         """|TextFrame| instance for this chart title.
 
         Return a |TextFrame| instance allowing read/write access to the text
