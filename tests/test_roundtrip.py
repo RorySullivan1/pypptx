@@ -364,6 +364,28 @@ for slide in merged.slides:
 assert texts == ["Slide A", "Slide B1", "Slide B2"]
 """)
 
+    def it_preserves_potx_content_type_on_round_trip(self):
+        _run_roundtrip_test("""\
+from pptx.opc.constants import CONTENT_TYPE as CT
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[0])
+slide.shapes.title.text = "Template Slide"
+
+# Override the main part content type to template
+del prs.part.__dict__['content_type']  # clear lazyproperty cache
+prs.part._content_type = CT.PML_TEMPLATE_MAIN
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+
+# Reload and verify content type is preserved
+prs2 = Presentation(stream)
+assert prs2.part.content_type == CT.PML_TEMPLATE_MAIN
+assert prs2.slides[0].shapes.title.text == "Template Slide"
+""")
+
     def it_round_trips_shape_range_alignment(self):
         _run_roundtrip_test("""\
 from pptx.shapes.range import ShapeRange
