@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes.groupshape import CT_GroupShape
     from pptx.parts.image import ImagePart
     from pptx.parts.slide import SlidePart
+    from pptx.shapes.range import ShapeRange
     from pptx.slide import Slide, SlideLayout
     from pptx.types import ProvidesPart
     from pptx.util import Length
@@ -135,6 +136,18 @@ class _BaseShapes(ParentedElementProxy):
         if shape_elm is not None:
             return self._shape_factory(shape_elm)
         return default
+
+    def shape_range(self, shapes: Iterable[BaseShape] | None = None) -> ShapeRange:
+        """Return a |ShapeRange| for bulk operations on *shapes*.
+
+        When *shapes* is |None|, all non-placeholder shapes in this collection are
+        included. *shapes* can be any iterable of |BaseShape| instances.
+        """
+        from pptx.shapes.range import ShapeRange
+
+        if shapes is None:
+            shapes = [s for s in self if not s.is_placeholder]
+        return ShapeRange(shapes)
 
     def _get_name_index(self) -> dict[str, ShapeElement]:
         """Return cached name-to-element index, building it on first access.

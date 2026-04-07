@@ -677,8 +677,8 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 
 ## 24. Python API — Bulk / Range Operations
 
-- [ ] `ShapeRange`-like API for operating on multiple shapes at once (align, distribute, format)
-- [ ] Batch shape property updates without repeated XML tree walks
+- [x] `ShapeRange`-like API for operating on multiple shapes at once (align, distribute, format)
+- [x] Batch shape property updates without repeated XML tree walks
 
 ---
 
