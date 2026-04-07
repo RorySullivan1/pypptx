@@ -364,6 +364,39 @@ for slide in merged.slides:
 assert texts == ["Slide A", "Slide B1", "Slide B2"]
 """)
 
+    def it_round_trips_shape_range_alignment(self):
+        _run_roundtrip_test("""\
+from pptx.shapes.range import ShapeRange
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[5])
+
+s1 = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(2), Inches(1))
+s2 = slide.shapes.add_textbox(Inches(3), Inches(2), Inches(2), Inches(1))
+s3 = slide.shapes.add_textbox(Inches(5), Inches(3), Inches(2), Inches(1))
+
+# use shape_range convenience method
+sr = slide.shapes.shape_range()
+assert len(sr) == 3
+
+# align left and distribute vertical
+sr.align_left()
+sr.distribute_vertical()
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+slide2 = prs2.slides[0]
+shapes = [s for s in slide2.shapes if not s.is_placeholder]
+assert len(shapes) == 3
+
+# all shapes should have the same left edge after align_left
+lefts = [s.left for s in shapes]
+assert len(set(lefts)) == 1
+""")
+
     def it_imports_slide_with_image(self):
         _run_roundtrip_test("""\
 import os, tempfile
