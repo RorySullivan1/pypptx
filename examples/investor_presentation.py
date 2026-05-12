@@ -29,13 +29,16 @@ prs = Presentation()
 # Helper: add a dark-background slide with an optional title bar
 # ======================================================================
 
+
 def _dark_slide(prs, title_text=None):
     """Return a blank slide with a navy background and optional title."""
     slide = prs.slides.add_slide(prs.slide_layouts[5])
     slide.background.fill.solid()
     slide.background.fill.fore_color.rgb = NAVY
     if title_text:
-        tb = slide.shapes.add_textbox(Inches(0.6), Inches(0.3), Inches(8.8), Inches(0.6))
+        tb = slide.shapes.add_textbox(
+            Inches(0.6), Inches(0.3), Inches(8.8), Inches(0.6)
+        )
         tf = tb.text_frame
         tf.text = title_text
         p = tf.paragraphs[0]
@@ -45,7 +48,10 @@ def _dark_slide(prs, title_text=None):
         # accent underline
         line = slide.shapes.add_shape(
             1,  # MSO_AUTO_SHAPE_TYPE.RECTANGLE
-            Inches(0.6), Inches(0.95), Inches(1.6), Pt(3),
+            Inches(0.6),
+            Inches(0.95),
+            Inches(1.6),
+            Pt(3),
         )
         line.fill.solid()
         line.fill.fore_color.rgb = ACCENT_BLUE
@@ -90,7 +96,11 @@ p3.alignment = PP_ALIGN.CENTER
 
 # Decorative line
 accent = cover.shapes.add_shape(
-    1, Inches(3.5), Inches(4.5), Inches(3.0), Pt(2),
+    1,
+    Inches(3.5),
+    Inches(4.5),
+    Inches(3.0),
+    Pt(2),
 )
 accent.fill.solid()
 accent.fill.fore_color.rgb = ACCENT_BLUE
@@ -111,18 +121,27 @@ p4.alignment = PP_ALIGN.CENTER
 rationale = _dark_slide(prs, "Investment Rationale")
 
 bullets = [
-    ("Differentiated Strategy", [
-        "Systematic long/short equity approach across developed markets",
-        "Proprietary factor model blending value, momentum, and quality signals",
-    ]),
-    ("Robust Risk Management", [
-        "Dynamic portfolio hedging with real-time exposure monitoring",
-        "Maximum single-name concentration of 3%; sector cap of 20%",
-    ]),
-    ("Alignment of Interests", [
-        "Partners have over $50 M co-invested alongside clients",
-        "High-water mark with 18-month crystallization period",
-    ]),
+    (
+        "Differentiated Strategy",
+        [
+            "Systematic long/short equity approach across developed markets",
+            "Proprietary factor model blending value, momentum, and quality signals",
+        ],
+    ),
+    (
+        "Robust Risk Management",
+        [
+            "Dynamic portfolio hedging with real-time exposure monitoring",
+            "Maximum single-name concentration of 3%; sector cap of 20%",
+        ],
+    ),
+    (
+        "Alignment of Interests",
+        [
+            "Partners have over $50 M co-invested alongside clients",
+            "High-water mark with 18-month crystallization period",
+        ],
+    ),
 ]
 
 tx = rationale.shapes.add_textbox(Inches(0.8), Inches(1.4), Inches(8.4), Inches(5.2))
@@ -135,7 +154,7 @@ for heading, subs in bullets:
     p.font.size = Pt(18)
     p.font.bold = True
     p.font.color.rgb = ACCENT_BLUE
-    p.bullet_char = "\u25A0"  # filled square
+    p.bullet_char = "\u25a0"  # filled square
     p.level = 0
     p.space_before = Pt(14)
     for sub in subs:
@@ -179,14 +198,22 @@ for h in highlights:
 # --- Line chart (right column) ---
 chart_data = CategoryChartData()
 chart_data.categories = [
-    "2020", "2021", "2022", "2023", "2024", "2025",
+    "2020",
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
 ]
 chart_data.add_series("Apex Global Equity", (100, 118.5, 109.3, 132.6, 151.0, 168.4))
 chart_data.add_series("MSCI World (TR)", (100, 114.2, 98.7, 117.5, 128.3, 139.6))
 
 chart_frame = perf.shapes.add_chart(
     XL_CHART_TYPE.LINE_MARKERS,
-    Inches(4.5), Inches(1.3), Inches(5.2), Inches(2.7),
+    Inches(4.5),
+    Inches(1.3),
+    Inches(5.2),
+    Inches(2.7),
     chart_data,
 )
 chart = chart_frame.chart
@@ -200,13 +227,34 @@ chart.chart_title.text_frame.paragraphs[0].font.size = Pt(10)
 # --- Performance table (full width, bottom) ---
 rows, cols = 4, 7
 tbl_shape = perf.shapes.add_table(
-    rows, cols, Inches(0.6), Inches(4.3), Inches(8.8), Inches(2.2),
+    rows,
+    cols,
+    Inches(0.6),
+    Inches(4.3),
+    Inches(8.8),
+    Inches(2.2),
 )
 tbl = tbl_shape.table
 
 col_headers = ["", "2020", "2021", "2022", "2023", "2024", "2025"]
-fund_returns = ["Apex Global Equity", "12.8%", "18.5%", "\u22127.8%", "21.3%", "13.9%", "11.5%"]
-bench_returns = ["MSCI World (TR)", "10.1%", "14.2%", "\u221213.3%", "19.1%", "9.2%", "8.8%"]
+fund_returns = [
+    "Apex Global Equity",
+    "12.8%",
+    "18.5%",
+    "\u22127.8%",
+    "21.3%",
+    "13.9%",
+    "11.5%",
+]
+bench_returns = [
+    "MSCI World (TR)",
+    "10.1%",
+    "14.2%",
+    "\u221213.3%",
+    "19.1%",
+    "9.2%",
+    "8.8%",
+]
 
 for ci, text in enumerate(col_headers):
     cell = tbl.cell(0, ci)
@@ -237,10 +285,14 @@ for ri in range(1, rows):
     for ci in range(cols):
         cell = tbl.cell(ri, ci)
         cell.fill.solid()
-        cell.fill.fore_color.rgb = RGBColor(0x0F, 0x24, 0x40) if ri % 2 == 1 else RGBColor(0x14, 0x2D, 0x54)
+        cell.fill.fore_color.rgb = (
+            RGBColor(0x0F, 0x24, 0x40) if ri % 2 == 1 else RGBColor(0x14, 0x2D, 0x54)
+        )
         for p in cell.text_frame.paragraphs:
             p.font.size = Pt(9)
-            p.font.color.rgb = WHITE if ci == 0 else (GREEN if not text.startswith("\u2212") else RED)
+            p.font.color.rgb = (
+                WHITE if ci == 0 else (GREEN if not text.startswith("\u2212") else RED)
+            )
 
 # Color excess row green
 for ci in range(1, cols):
@@ -272,24 +324,60 @@ ctf.paragraphs[0].font.color.rgb = RGBColor(0xBB, 0xBB, 0xBB)
 # Drawdown line chart
 dd_data = CategoryChartData()
 dd_data.categories = [
-    "Jan 20", "Jul 20", "Jan 21", "Jul 21",
-    "Jan 22", "Jul 22", "Jan 23", "Jul 23",
-    "Jan 24", "Jul 24", "Jan 25", "Dec 25",
+    "Jan 20",
+    "Jul 20",
+    "Jan 21",
+    "Jul 21",
+    "Jan 22",
+    "Jul 22",
+    "Jan 23",
+    "Jul 23",
+    "Jan 24",
+    "Jul 24",
+    "Jan 25",
+    "Dec 25",
 ]
-dd_data.add_series("Apex Global Equity", (
-    0, -2.1, 0, -1.5,
-    -3.8, -12.4, -4.2, 0,
-    -1.9, -5.3, -2.0, 0,
-))
-dd_data.add_series("MSCI World (TR)", (
-    0, -4.5, 0, -3.2,
-    -8.1, -18.9, -9.7, -1.3,
-    -3.6, -8.0, -4.1, 0,
-))
+dd_data.add_series(
+    "Apex Global Equity",
+    (
+        0,
+        -2.1,
+        0,
+        -1.5,
+        -3.8,
+        -12.4,
+        -4.2,
+        0,
+        -1.9,
+        -5.3,
+        -2.0,
+        0,
+    ),
+)
+dd_data.add_series(
+    "MSCI World (TR)",
+    (
+        0,
+        -4.5,
+        0,
+        -3.2,
+        -8.1,
+        -18.9,
+        -9.7,
+        -1.3,
+        -3.6,
+        -8.0,
+        -4.1,
+        0,
+    ),
+)
 
 dd_frame = dd.shapes.add_chart(
     XL_CHART_TYPE.LINE,
-    Inches(0.6), Inches(2.2), Inches(8.8), Inches(4.2),
+    Inches(0.6),
+    Inches(2.2),
+    Inches(8.8),
+    Inches(4.2),
     dd_data,
 )
 dd_chart = dd_frame.chart
@@ -329,7 +417,10 @@ contacts = [
 y_offset = 1.6
 for person in contacts:
     tb = contact.shapes.add_textbox(
-        Inches(1.2), Inches(y_offset), Inches(7.6), Inches(1.2),
+        Inches(1.2),
+        Inches(y_offset),
+        Inches(7.6),
+        Inches(1.2),
     )
     tf = tb.text_frame
     tf.word_wrap = True
@@ -359,7 +450,9 @@ for person in contacts:
 # Office address
 addr = contact.shapes.add_textbox(Inches(1.2), Inches(6.2), Inches(7.6), Inches(0.5))
 atf = addr.text_frame
-atf.text = "Apex Capital Partners  \u2022  450 Park Avenue, 28th Floor, New York, NY 10022"
+atf.text = (
+    "Apex Capital Partners  \u2022  450 Park Avenue, 28th Floor, New York, NY 10022"
+)
 atf.paragraphs[0].font.size = Pt(10)
 atf.paragraphs[0].font.color.rgb = RGBColor(0x66, 0x77, 0x88)
 atf.paragraphs[0].alignment = PP_ALIGN.CENTER

@@ -6,7 +6,9 @@
       "Bash(git remote:*)",
       "Bash(git fetch:*)",
       "Bash(git checkout:*)",
-      "Bash(code .:*)"
+      "Bash(code .:*)",
+      "Bash(python -c \"import pptx; print\\(pptx.__file__\\)\")",
+      "Bash(python -c \"import tomllib; tomllib.load\\(open\\('pyproject.toml','rb'\\)\\); print\\('TOML OK'\\)\")"
     ]
   }
 }

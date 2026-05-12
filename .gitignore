@@ -1,14 +1,11 @@
-/build/
 .cache
 .coverage
+*.pyc
+/example_output/
 /.tox/
 /src/*.egg-info
-*.pyc
-/dist/
 /docs/.build
 out.txt
-_scratch/
-/spec/gen_spec/spec*.db
 tags
 /tests/debug.py
 *.pptx
