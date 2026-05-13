@@ -133,6 +133,13 @@ class DescribeChart:
         delete_val = secondary_catAx.xpath("c:delete/@val")[0]
         assert delete_val in ("1", "true")
 
+        # Secondary valAx must cross the category axis at its maximum so it
+        # renders on the right side of the plot rather than stacking on the
+        # left next to the primary value axis.
+        secondary_valAx = chartSpace.xpath(".//c:valAx")[1]
+        assert secondary_valAx.xpath("c:axPos/@val")[0] == "r"
+        assert secondary_valAx.xpath("c:crosses/@val")[0] == "max"
+
     def it_can_add_an_overlay_plot_sharing_primary_axes(self):
         chartSpace = element(
             "c:chartSpace/c:chart/c:plotArea/(c:barChart/(c:axId{val=1},c:axId{val=2})"

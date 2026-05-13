@@ -335,6 +335,7 @@ class CT_PlotArea(BaseOxmlElement):
             f'  <c:delete val="0"/>'
             f'  <c:axPos val="r"/>'
             f'  <c:crossAx val="{cat_ax_id}"/>'
+            f'  <c:crosses val="max"/>'
             f"</c:valAx>"
         )
         self.append(parse_xml(cat_ax_xml))
