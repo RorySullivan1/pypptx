@@ -41,7 +41,8 @@
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
 - Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
-- Issue #51: perf harness for v0.5.0, trim the issue's checklist (see session log); `examples/batch_process.py` added.
+- Issue #51: trim the issue's checklist; perf harness now on main (`tests/perf/`, `pytest -m perf`, `python -m tests.perf.run_baseline`),
+  plan + baseline in `.claude/context/performance.md`; `examples/batch_process.py` added.
 - `unverified` surfaces (verification-surface.md): type checker, Sphinx build, real-world corpus.
 
 ## Log              (append-only pointers)
