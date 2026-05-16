@@ -14,7 +14,7 @@ from pptx.chart.plot import _BasePlot
 from pptx.chart.series import SeriesCollection
 from pptx.chart.xmlwriter import _BaseSeriesXmlRewriter
 from pptx.dml.chtfmt import ChartFormat
-from pptx.enum.chart import XL_CHART_TYPE
+from pptx.enum.chart import XL_CHART_TYPE, XL_DISPLAY_BLANKS_AS
 from pptx.parts.chart import ChartWorkbook
 from pptx.text.text import Font
 
@@ -213,20 +213,20 @@ class DescribeChart:
         chartSpace = element("c:chartSpace/c:chart")
         chart = Chart(chartSpace, None)
 
-        # Default is "gap" when element absent
-        assert chart.display_blanks_as == "gap"
+        # Default is GAP when element absent
+        assert chart.display_blanks_as == XL_DISPLAY_BLANKS_AS.GAP
 
-        # Setting to "zero" adds element
-        chart.display_blanks_as = "zero"
-        assert chart.display_blanks_as == "zero"
+        # Setting to enum member ZERO adds element
+        chart.display_blanks_as = XL_DISPLAY_BLANKS_AS.ZERO
+        assert chart.display_blanks_as == XL_DISPLAY_BLANKS_AS.ZERO
 
-        # Setting to "span"
+        # Setting to legacy string "span" still works
         chart.display_blanks_as = "span"
-        assert chart.display_blanks_as == "span"
+        assert chart.display_blanks_as == XL_DISPLAY_BLANKS_AS.SPAN
 
-        # Setting to "gap" removes element (default)
-        chart.display_blanks_as = "gap"
-        assert chart.display_blanks_as == "gap"
+        # Setting to GAP removes element (default)
+        chart.display_blanks_as = XL_DISPLAY_BLANKS_AS.GAP
+        assert chart.display_blanks_as == XL_DISPLAY_BLANKS_AS.GAP
 
         # Invalid value raises
         with pytest.raises(ChartError):

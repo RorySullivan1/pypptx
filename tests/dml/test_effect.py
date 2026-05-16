@@ -6,7 +6,7 @@ import pytest
 
 from pptx.dml.color import ColorFormat, RGBColor
 from pptx.dml.effect import GlowFormat, ReflectionFormat, ShadowFormat, SoftEdgeFormat
-from pptx.enum.dml import MSO_RECT_ALIGNMENT
+from pptx.enum.dml import MSO_RECT_ALIGNMENT, MSO_SHADOW_TYPE
 from pptx.util import Emu, Pt
 
 from ..unitutil.cxml import element, xml
@@ -80,11 +80,13 @@ class DescribeShadowFormat:
         ("spPr_cxml", "expected_value"),
         [
             ("p:spPr", None),
-            ("p:spPr/a:effectLst/a:outerShdw", "outer"),
-            ("p:spPr/a:effectLst/a:innerShdw", "inner"),
+            ("p:spPr/a:effectLst/a:outerShdw", MSO_SHADOW_TYPE.OUTER),
+            ("p:spPr/a:effectLst/a:innerShdw", MSO_SHADOW_TYPE.INNER),
         ],
     )
-    def it_knows_its_shadow_type(self, spPr_cxml: str, expected_value: str | None):
+    def it_knows_its_shadow_type(
+        self, spPr_cxml: str, expected_value: MSO_SHADOW_TYPE | None
+    ):
         shadow = ShadowFormat(element(spPr_cxml))
         assert shadow.shadow_type == expected_value
 
@@ -118,7 +120,7 @@ class DescribeShadowFormat:
         shadow = ShadowFormat(element("p:spPr"))
         shadow.color.rgb = RGBColor(0x00, 0x80, 0xFF)
         assert shadow.color.rgb == RGBColor(0x00, 0x80, 0xFF)
-        assert shadow.shadow_type == "outer"
+        assert shadow.shadow_type == MSO_SHADOW_TYPE.OUTER
 
     def it_provides_access_to_shadow_color_alpha(self):
         from pptx.oxml import parse_xml

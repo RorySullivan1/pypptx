@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pptx.enum.dml import MSO_BEVEL_PRESET
 from pptx.util import Emu, lazyproperty
 
 
@@ -121,17 +122,25 @@ class Bevel:
         self._bevel.h = None if value is None else int(value)
 
     @property
-    def preset(self):
-        """Read/write string for the bevel preset type, or None if not set.
+    def preset(self) -> MSO_BEVEL_PRESET | None:
+        """Read/write |MSO_BEVEL_PRESET| value for the bevel preset, or None if not set.
 
-        Common values: ``"circle"``, ``"relaxedInset"``, ``"angle"``,
-        ``"cross"``, ``"convex"``, ``"coolSlant"``, ``"divot"``,
-        ``"riblet"``, ``"hardEdge"``, ``"artDeco"``, etc.
+        Setter also accepts the legacy raw OOXML string (e.g. ``"circle"``) for
+        backwards compatibility.
         """
-        return self._bevel.prst
+        prst = self._bevel.prst
+        if prst is None:
+            return None
+        return MSO_BEVEL_PRESET.from_xml(prst)
 
     @preset.setter
-    def preset(self, value):
+    def preset(self, value: MSO_BEVEL_PRESET | str | None) -> None:
+        if value is None:
+            self._bevel.prst = None
+            return
+        if isinstance(value, MSO_BEVEL_PRESET):
+            self._bevel.prst = value.xml_value
+            return
         self._bevel.prst = value
 
     @property

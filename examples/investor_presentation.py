@@ -9,6 +9,7 @@ from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
+from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
@@ -47,7 +48,7 @@ def _dark_slide(prs, title_text=None):
         p.font.color.rgb = WHITE
         # accent underline
         line = slide.shapes.add_shape(
-            1,  # MSO_AUTO_SHAPE_TYPE.RECTANGLE
+            MSO_AUTO_SHAPE_TYPE.RECTANGLE,
             Inches(0.6),
             Inches(0.95),
             Inches(1.6),
@@ -96,7 +97,7 @@ p3.alignment = PP_ALIGN.CENTER
 
 # Decorative line
 accent = cover.shapes.add_shape(
-    1,
+    MSO_AUTO_SHAPE_TYPE.RECTANGLE,
     Inches(3.5),
     Inches(4.5),
     Inches(3.0),

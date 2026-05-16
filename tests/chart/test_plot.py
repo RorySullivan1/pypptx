@@ -28,7 +28,7 @@ from pptx.chart.plot import (
 )
 from pptx.chart.series import SeriesCollection
 from pptx.exc import ChartError
-from pptx.enum.chart import XL_CHART_TYPE as XL
+from pptx.enum.chart import XL_BAR_DIRECTION, XL_CHART_TYPE as XL, XL_GROUPING
 
 from ..unitutil.cxml import element, xml
 from ..unitutil.mock import class_mock, instance_mock
@@ -44,6 +44,22 @@ class Describe_BasePlot:
         xChart = element("c:pieChart")
         plot = _BasePlot(xChart, None)
         assert plot.axis_ids == ()
+
+    @pytest.mark.parametrize(
+        ("xChart_cxml", "expected_value"),
+        [
+            ("c:lineChart", XL_GROUPING.STANDARD),
+            ("c:lineChart/c:grouping{val=stacked}", XL_GROUPING.STACKED),
+            ("c:areaChart/c:grouping{val=percentStacked}", XL_GROUPING.PERCENT_STACKED),
+            ("c:barChart", XL_GROUPING.CLUSTERED),
+            ("c:pieChart", None),
+        ],
+    )
+    def it_knows_its_grouping(
+        self, xChart_cxml: str, expected_value: XL_GROUPING | None
+    ):
+        plot = _BasePlot(element(xChart_cxml), None)
+        assert plot.grouping == expected_value
 
     def it_knows_which_chart_it_belongs_to(self, chart_fixture):
         plot, expected_value = chart_fixture
@@ -214,6 +230,19 @@ class Describe_BasePlot:
 
 
 class DescribeBarPlot:
+    @pytest.mark.parametrize(
+        ("xChart_cxml", "expected_value"),
+        [
+            ("c:barChart/c:barDir{val=bar}", XL_BAR_DIRECTION.BAR),
+            ("c:barChart/c:barDir{val=col}", XL_BAR_DIRECTION.COLUMN),
+        ],
+    )
+    def it_knows_its_bar_direction(
+        self, xChart_cxml: str, expected_value: XL_BAR_DIRECTION
+    ):
+        bar_plot = BarPlot(element(xChart_cxml), None)
+        assert bar_plot.bar_direction == expected_value
+
     def it_knows_its_gap_width(self, gap_width_get_fixture):
         bar_plot, expected_value = gap_width_get_fixture
         assert bar_plot.gap_width == expected_value
