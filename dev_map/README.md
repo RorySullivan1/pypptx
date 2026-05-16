@@ -22,7 +22,9 @@ detail at the time development on that branch begins.
 | Version | Theme | Status |
 |---|---|---|
 | `v0.1.0` | Initial alpha + enum expansion | **Released** |
-| `v0.2.0` | Documentation & MANIFEST resync | Planned |
+| `v0.2.0` | Documentation & MANIFEST resync | In Progress |
+| `v0.2.1` | Example scripts for under-demonstrated areas | Planned |
+| `v0.2.2` | Docstring audit & Sphinx scaffold | Planned |
 | `v0.3.0` | Stability & real-world round-trip | Planned |
 | `v0.4.0` | Transitions, animations (read), custom layouts | Planned |
 | `v0.5.0` | Performance & developer experience | Planned |

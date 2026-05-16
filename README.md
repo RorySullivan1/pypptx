@@ -42,19 +42,20 @@ prs.save("hello.pptx")
 
 ## Features
 
-- **Presentations** — create blank, open existing, save to file or stream, core document properties
-- **Slides** — add, delete, duplicate, reorder, import across presentations, merge
-- **180+ shape types** — autoshapes, pictures, tables, connectors, group shapes, freeforms, placeholders, OLE objects
-- **Rich text formatting** — bold, italic, underline, color, size, shadow, strikethrough, caps, superscript/subscript, character spacing, kerning, bullets, tab stops, columns, RTL
+- **Presentations** — create blank, open existing (`.pptx` / `.pptm` / `.potx`), save to file or stream, core + custom document properties
+- **Slides** — add, delete, duplicate, reorder, import across presentations, merge, computed slide numbers
+- **180+ shape types** — autoshapes, pictures, tables, connectors, group shapes, freeforms, placeholders, OLE objects, movies, callouts
+- **Shape control** — z-order, visibility, lock aspect ratio, group containment, hyperlinks, click actions
+- **Rich text formatting** — bold, italic, underline, color, size, shadow, strikethrough, caps, superscript/subscript, character spacing, kerning, bullets, tab stops, columns, RTL, vertical orientation
 - **Fill styles** — solid, gradient, pattern, background (no fill)
-- **Line formatting** — width, color, dash styles, compound styles, arrowheads, transparency
-- **75+ chart types** — bar, line, pie, scatter, area, radar, stock, surface, combo charts with trendlines, error bars, secondary axes, data labels
+- **Line formatting** — width, color, dash styles, compound styles, arrowheads, transparency, pattern fill
+- **75+ chart types** — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie (plus 3D variants); combo charts with trendlines, error bars, secondary axes, drop / hi-lo / up-down lines, log scale, 3D view, data labels with leader lines
 - **Tables** — create, merge/split cells, borders (including diagonal), cell fills, banding, table styles
-- **Visual effects** — outer/inner shadow, reflection, glow, soft edges
+- **Visual effects** — outer/inner shadow with transparency, reflection, glow, soft edges
 - **3D formatting** — extrusion, bevel, 3D scene, lighting, camera
-- **Headers & footers** — slide-level date/time, footer text, slide numbers
+- **Headers & footers** — per-slide date/time, footer text, slide-number overrides
 - **Metadata** — tags, sections, custom document properties
-- **Comments** — add, read, delete with author tracking
+- **Comments** — add, read, delete with author tracking and positioning
 - **Picture effects** — brightness, contrast, grayscale, transparency color
 - **Theme access** — color schemes, font schemes, effect schemes
 - **Bulk operations** — ShapeRange API for alignment, distribution, batch property setting
