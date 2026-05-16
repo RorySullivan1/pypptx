@@ -26,6 +26,10 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+python_files = ["test_*.py", "bench_*.py"]
 python_classes = ["Describe*"]
-python_functions = ["it_*", "test_*"]
+python_functions = ["it_*", "test_*", "bench_*"]
+markers = [
+    "perf: opt-in performance benchmark (run with `pytest -m perf`)",
+]
+addopts = "-m 'not perf'"

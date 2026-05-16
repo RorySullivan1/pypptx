@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-05-16T16:16:07.694861+00:00",
+  "platform": {
+    "python": "3.11.15",
+    "implementation": "CPython",
+    "system": "Linux",
+    "machine": "x86_64"
+  },
+  "corpus": {
+    "small": {
+      "n_slides": 5,
+      "shapes_per_slide": 5,
+      "paragraphs_per_shape": 2,
+      "n_images": 0,
+      "file_size_bytes": 32331
+    },
+    "medium": {
+      "n_slides": 30,
+      "shapes_per_slide": 15,
+      "paragraphs_per_shape": 4,
+      "n_images": 5,
+      "file_size_bytes": 72912
+    },
+    "large": {
+      "n_slides": 100,
+      "shapes_per_slide": 25,
+      "paragraphs_per_shape": 5,
+      "n_images": 10,
+      "file_size_bytes": 195927
+    }
+  },
+  "timings_seconds": {
+    "small": {
+      "open_median_s": 0.00477162300001055,
+      "iter_text_single_s": 0.00221259900001769,
+      "iter_text_repeated_s": 0.00681502999998429,
+      "save_s": 0.005548285000031683
+    },
+    "medium": {
+      "open_median_s": 0.01349476699999741,
+      "iter_text_single_s": 0.0553860679999616,
+      "iter_text_repeated_s": 0.19836799999995947,
+      "save_s": 0.013695013999949879
+    },
+    "large": {
+      "open_median_s": 0.05055137099998319,
+      "iter_text_single_s": 0.24108210800000052,
+      "iter_text_repeated_s": 1.3146189410000488,
+      "save_s": 0.04442270300000928
+    }
+  },
+  "memory_bytes_on_open": {
+    "small": {
+      "current_bytes": 110636,
+      "peak_bytes": 156073
+    },
+    "medium": {
+      "current_bytes": 108202,
+      "peak_bytes": 227221
+    },
+    "large": {
+      "current_bytes": 468149,
+      "peak_bytes": 468831
+    }
+  },
+  "iter_repeat_access_count": 10,
+  "open_iterations": 5
+}

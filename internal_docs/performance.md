@@ -1,88 +1,154 @@
-# Performance: speedups for batch presentation processing
+# Performance
 
-## Problem statement
+## Status
 
-`pypptx` is a pure-Python library, but it leans heavily on C-extension dependencies (`lxml`, `Pillow`, stdlib `zipfile`). Profiling reasoning (no measured corpus yet — see Phase 1) suggests roughly:
+**Stage 1: profiling harness baseline.** Preparatory infrastructure for the
+`v0.5.0` milestone (see `../dev_map/v0.5.0.md`). No `src/pptx/` code changes
+in Stage 1 — measurement only.
 
-- **~75–80% of wall-clock time** in a typical read-modify-write workload is already in C (lxml parse/serialize, Pillow image decode, zip I/O).
-- **~20–25%** is in pure-Python glue: element-proxy attribute access, namespace resolution, type conversion of XML attribute strings, relationship lookup.
+## Scope alignment
 
-For users processing **large amounts of presentations** the relevant bottleneck is *per-file wall-clock × N files*. That framing changes which optimizations matter.
+This document feeds `dev_map/v0.5.0.md` ("Performance & Developer Experience").
+The v0.5.0 overview explicitly puts the following out of scope; this document
+honors those boundaries:
 
-## Is Cython a viable route?
+- **No native (C-extension) optimization.** `lxml` is already C-backed; pure
+  Python only.
+- **No library-level multi-threading or async save.** The OPC zip format and
+  `lxml` element trees are not thread-safe; concurrency belongs in user code.
 
-Honest answer: **possible, but it is the lowest-leverage option on the table.** Three structural reasons:
+A user-facing `concurrent.futures.ProcessPoolExecutor` recipe is a possible
+future addition under `examples/` but is library-orthogonal — `pypptx` has
+no module-level mutable state, so per-file fan-out is safe today.
 
-1. The C-extension dependencies are already as fast as Cython would make them. You cannot Cython your way past `libxml2`.
-2. The pure-Python descriptor most often cited as a candidate — `lazyproperty` at `src/pptx/util.py:108-214` — carries an explicit upstream note that it costs ~0.4 µs per access and is "probably not a rich target for optimization efforts" (`src/pptx/util.py:210-212`).
-3. There is no C-extension build infrastructure yet. `pyproject.toml` is plain `setuptools` + `setuptools-scm`. Introducing Cython adds a compile-time toolchain dependency and complicates wheel builds for every supported platform.
+## What already exists (verify, do not reimplement)
 
-If, after Phases 1–3 below, profiling shows pure-Python overhead is still ≥10% of total runtime, Cython is worth a focused spike on the two surfaces called out in Phase 4.
+- **Shape name / ID indexes** at `src/pptx/shapes/shapetree.py:152-184`.
+  Lazy build on first lookup, dict-cached, invalidated on mutation. Stage 1
+  measures lookup linearity to confirm O(1) amortized behavior.
+- **Lazy blob loading** at `src/pptx/opc/serialized.py:172-209`.
+  `_ZipPkgReader.__getitem__` reads each part on demand via
+  `zipfile.ZipFile.read`; only member names load eagerly. Stage 1 measures
+  the per-deck memory footprint with `tracemalloc`.
 
-## Phased plan
+## Confirmed Python-side hot spots (not addressed in Stage 1)
 
-### Phase 1 — Profile first (mandatory prerequisite)
+- `TextFrame.paragraphs` at `src/pptx/text/text.py:182-188` and
+  `_Paragraph.runs` at `src/pptx/text/text.py:870-873` are plain `@property`,
+  not `@lazyproperty`. Each access rebuilds a fresh tuple of proxy objects.
+  The `iter1x` vs `iterNx` columns of the baseline isolate this cost.
+- `_BaseShapes.__getitem__` / `__iter__` / `__len__` at
+  `src/pptx/shapes/shapetree.py:92-113` rebuild `list(_iter_member_elms())`
+  on each call.
 
-No optimization without a benchmark. Deliverables:
+These are candidate v0.5.0 work items, not Stage 1 deliverables.
 
-- A `tests/perf/` benchmark harness that generates and processes a representative corpus (e.g. 100 decks × 50 slides × representative shape mix).
-- `cProfile` baseline (`python -m cProfile -o batch.prof scripts/bench_batch.py`) plus a `pyinstrument` flame view.
-- Documented baseline numbers in this file (wall-clock, peak RSS, top-20 by cumulative time).
+## Stage 1 deliverables
 
-Acceptance: numbers are reproducible on CI and on a developer laptop.
+- `tests/perf/corpus.py` — synthetic deck generator parametrized by slide
+  count, shapes/slide, paragraphs/shape, and image count.
+- `tests/perf/conftest.py` — session-scoped `synth_small`, `synth_medium`,
+  `synth_large` fixtures.
+- `tests/perf/bench_open.py` — cold-open wall-clock.
+- `tests/perf/bench_iterate.py` — shape and text iteration; isolates the
+  `paragraphs`/`runs` rebuild cost via single-pass vs repeated access.
+- `tests/perf/bench_save.py` — save-to-`BytesIO` wall-clock.
+- `tests/perf/bench_lookup.py` — index linearity assertion across
+  n ∈ {10, 100, 1000} shape counts.
+- `tests/perf/run_baseline.py` — standalone runner that writes
+  `tests/perf/baseline.json` and appends the "Baseline (Stage 1)" section
+  below.
+- `pyproject.toml` — registers `@pytest.mark.perf` and adds
+  `addopts = "-m 'not perf'"` so default `pytest` skips perf tests.
+  Users opt in with `pytest -m perf`.
 
-### Phase 2 — Process-level parallelism (highest ROI)
+## Reproducing
 
-The library has **no module-level mutable state** and `lxml` custom-element classes pickle cleanly, so per-file work is safe to fan out across processes today, with no library changes required.
+```
+pytest -m perf                       # opt-in pytest run
+python -m tests.perf.run_baseline    # full baseline + cProfile report
+```
 
-Deliverables:
+The runner writes `tests/perf/baseline.json` and appends a
+"Baseline (Stage 1)" section to this file containing the current numbers.
 
-- `examples/batch_process.py` demonstrating `concurrent.futures.ProcessPoolExecutor` over a directory of `.pptx` files.
-- README section: "Processing many presentations".
-- Phase 1 corpus re-run with N workers; capture wall-clock improvement.
+## Handoff to v0.5.0
 
-Expected outcome: on a 4-core machine, ~3–3.5× wall-clock speedup over Phase 1 baseline.
+The harness, corpus generator, and baseline JSON schema are designed to be
+picked up unchanged by the `v0.5.0` branch when it opens. v0.3.0's
+real-world corpus can be added as additional fixtures alongside the
+synthetic ones with no change to the bench modules.
 
-### Phase 3 — Low-cost Python-level wins
+## Baseline (Stage 1)
 
-Run in parallel with Phase 2 once Phase 1 numbers exist:
+Captured: `2026-05-16T16:16:07.694861+00:00`
+Platform: `CPython 3.11.15` on `Linux / x86_64`
 
-- **Add `__slots__`** to `ElementProxy`, `ParentedElementProxy`, `PartElementProxy` (`src/pptx/shared.py:13-83`). Proxy objects are instantiated thousands of times per deck; expected ~10–15% memory reduction and a small attribute-access speedup.
-- **Compile and cache hot XPath expressions** via `lxml.etree.XPath(...)` instead of `element.xpath(str, namespaces=...)` per call. ~50 call sites under `src/pptx/oxml/`; lift the most-used ones to class-level compiled XPaths cached with `@lazyproperty`. Expected 20–40% local speedup on repeated queries.
-- **Expose a `compression` option** on `Presentation.save()` so batch users can choose `ZIP_STORED` when CPU matters more than size. Touch site: `src/pptx/opc/serialized.py:256`.
+### Corpus
 
-Acceptance: full test suite green, no public-API breakage, Phase 1 benchmark shows measurable improvement (target ≥10% on the Python-side share).
+| fixture | slides | shapes/slide | paragraphs/shape | images | size |
+| --- | --- | --- | --- | --- | --- |
+| small | 5 | 5 | 2 | 0 | 31.6 KiB |
+| medium | 30 | 15 | 4 | 5 | 71.2 KiB |
+| large | 100 | 25 | 5 | 10 | 191.3 KiB |
 
-### Phase 4 — Cython (conditional)
+### Wall-clock (ms)
 
-Only proceed if Phases 2–3 leave a residual pure-Python bottleneck ≥10% of total runtime. Candidate surfaces:
+Open is median of 5 cold opens.
+`iter1x` walks `slides -> shapes -> paragraphs -> runs` once per text frame.
+`iter10x` repeats the inner walk
+10 times to amplify the cost of
+`paragraphs`/`runs` rebuilding on every access
+(`src/pptx/text/text.py:182-188`, `src/pptx/text/text.py:870-873`).
 
-- `BaseFloatType.convert_from_xml` / `BaseIntType.convert_from_xml` at `src/pptx/oxml/simpletypes.py:66-97` — every numeric XML attribute access pays a Python `int()`/`float()`.
-- `NamespacePrefixedTag` construction at `src/pptx/oxml/ns.py:45-98` — string-split and Clark-name formatting.
+| fixture | open | iter1x | iter10x | save |
+| --- | --- | --- | --- | --- |
+| small | 4.77 | 2.21 | 6.82 | 5.55 |
+| medium | 13.49 | 55.39 | 198.37 | 13.70 |
+| large | 50.55 | 241.08 | 1314.62 | 44.42 |
 
-Expected per-site gain: 1.2–2×. Translation to total runtime: single-digit %. Build cost: real (compiler toolchain, wheel matrix, source-build fallback). The honest framing: do this only if the profile demands it.
+### Memory on open (KiB, tracemalloc)
 
-## Critical files
+| fixture | current | peak |
+| --- | --- | --- |
+| small | 108.0 | 152.4 |
+| medium | 105.7 | 221.9 |
+| large | 457.2 | 457.8 |
 
-| Path | Why it matters |
-| --- | --- |
-| `src/pptx/util.py:108-214` | `lazyproperty` descriptor; pervasive caching utility; reuse for XPath caching. |
-| `src/pptx/shared.py:13-83` | Proxy bases — `__slots__` target. |
-| `src/pptx/oxml/xmlchemy.py` | `xpath()` machinery and element-class registration; XPath compilation site. |
-| `src/pptx/oxml/simpletypes.py:66-97` | Per-attribute type conversion; Cython candidate (Phase 4). |
-| `src/pptx/oxml/ns.py:45-98` | Namespace/tag resolution; Cython candidate (Phase 4). |
-| `src/pptx/opc/serialized.py:256` | ZIP compression flag; expose via API in Phase 3. |
-| `pyproject.toml` | Will need `[build-system]` changes only if Phase 4 proceeds. |
+### cProfile top 20 (medium fixture, open + iterate + save)
 
-## Existing utilities to reuse
+```
+573149 function calls (571770 primitive calls) in 0.410 seconds
 
-- `lazyproperty` (`src/pptx/util.py:108`) — use to memoise compiled XPaths at class scope.
-- `register_element_cls` (`src/pptx/oxml/ns.py`) — keep using; do not bypass lxml's element-class lookup with Python-side dispatch.
+   Ordered by: cumulative time
+   List reduced from 331 to 20 due to restriction <20>
 
-## Verification
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.024    0.024    0.361    0.361 run_baseline.py:68(_bench_iterate_text)
+    18000    0.021    0.000    0.142    0.000 text.py:870(runs)
+    22610    0.067    0.000    0.121    0.000 xmlchemy.py:397(get_child_element_list)
+    18000    0.007    0.000    0.108    0.000 text.py:984(text)
+    18000    0.010    0.000    0.101    0.000 text.py:70(text)
+    42987    0.034    0.000    0.096    0.000 ns.py:126(qn)
+    18060    0.051    0.000    0.091    0.000 xmlchemy.py:491(get_child_element)
+     4500    0.005    0.000    0.053    0.000 text.py:182(paragraphs)
+    43041    0.025    0.000    0.030    0.000 ns.py:51(__init__)
+    36000    0.011    0.000    0.027    0.000 text.py:873(<genexpr>)
+        1    0.000    0.000    0.027    0.027 presentation.py:72(save)
+        1    0.000    0.000    0.027    0.027 presentation.py:320(save)
+        1    0.000    0.000    0.027    0.027 package.py:152(save)
+2919/1807    0.003    0.000    0.026    0.000 util.py:166(__get__)
+        1    0.000    0.000    0.025    0.025 serialized.py:70(write)
+        1    0.000    0.000    0.025    0.025 serialized.py:81(_write)
+      485    0.000    0.000    0.025    0.000 shapetree.py:101(__iter__)
+      456    0.000    0.000    0.023    0.000 shapetree.py:777(_shape_factory)
+      456    0.000    0.000    0.023    0.000 shapetree.py:994(SlideShapeFactory)
+        1    0.000    0.000    0.022    0.022 api.py:22(Presentation)
+```
 
-1. `pytest` stays green after each phase.
-2. Phase 1 produces a reproducible `cProfile` baseline checked into `tests/perf/`.
-3. Phase 2: wall-clock on the Phase 1 corpus drops to ~25–35% of baseline on a 4-core host.
-4. Phase 3: re-run profile; `tracemalloc` shows reduced proxy-object footprint; `pyinstrument` shows fewer ticks under `xpath`.
-5. Phase 4 is gated on (3) leaving ≥10% residual pure-Python overhead; otherwise close as "not justified by data".
+### Reproducing
+
+```
+python -m tests.perf.run_baseline
+pytest -m perf
+```
