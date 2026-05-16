@@ -8,7 +8,7 @@ The library provides a Pythonic object model that mirrors the structure of the V
 
 ## Version
 
-0.0.01
+0.1.0
 
 ---
 
@@ -42,70 +42,131 @@ The codebase is organized in four layers, from low-level to high-level:
 ## Implemented Features
 
 ### Presentation Lifecycle
-- Create blank presentations from built-in template
-- Open existing `.pptx` files (including macro-enabled and template variants)
+- Create blank presentations from the built-in template
+- Open existing `.pptx`, `.pptm` (macro-enabled), and `.potx` (template) files
 - Save to file path or file-like stream
-- Access and modify core document properties (title, author, subject, etc.)
+- Core document properties (title, author, subject, etc.)
+- Custom document properties — typed values (str/int/float/bool) via `Presentation.custom_properties`
+- First-slide-number — `Presentation.first_slide_number` r/w (`firstSlideNum`)
 
 ### Slide Management
 - Add slides from existing slide layouts
+- Delete slides — `Slides.delete(slide)` with relationship cleanup
+- Duplicate slides — `Slides.duplicate(slide)` deep-clones the part and remaps relationships (images, charts, media)
+- Reorder slides — `Slides.move(old_idx, new_idx)`
+- Import slides from another presentation — `Slides.import_slide(slide)` with resource deduplication
+- Merge presentations — `Slides.merge(presentation)` preserving order, with layout matching and automatic master/theme import
 - Access slides by index or slide ID
-- Query slide count and slide position
-- Access slide background and background fill
+- Computed slide number — `Slide.slide_number` from position + `firstSlideNum`
+- Slide background and background fill
 
 ### Slide Hierarchy
 - Slide masters and slide layouts (read, iterate, remove layouts)
 - Notes master and notes slides (create, read, access notes text)
 - Layout-to-master and slide-to-layout relationships
-- Placeholder inheritance chain (master -> layout -> slide)
+- Placeholder inheritance chain (master → layout → slide)
+- Headers & footers — `header_footer` on slide, layout, master, and notes master; per-slide show/hide of date, footer, slide number; date format (read-only field-type string) and auto-vs-fixed mode; footer text r/w
+
+### Sections, Tags & Comments
+- Sections — `Presentation.sections` with add, remove, rename, iterate, and per-section slide-ID enumeration (`p14:sectionLst`)
+- Tags — dict-like API on slides (and shapes) via `TagsPart` (get/set/del/contains/iter/items)
+- Slide comments — `Slide.comments` with add/iterate/clear/indexed access; per-comment `author`, `text` (r/w), `datetime`, `position`, `delete()`
+- Comment authors — auto-managed via package-level `CommentAuthorsPart`
 
 ### Shapes
-- **AutoShapes** — all preset geometries (180+ shape types), adjustment handles, text, fill, line
+- **AutoShapes** — 180+ preset geometries (`MSO_SHAPE`), adjustment handles, text, fill, line
 - **Pictures** — insert from file or stream, crop (all four edges), line formatting
-- **Tables** — create with rows/columns, cell access, merge/split cells, cell margins, vertical anchor, fill per cell, banding properties (first/last row/col, horizontal/vertical banding)
-- **Charts** — 75+ chart types, category/XY/bubble data, axes, legends, data labels, series formatting, markers, chart title, gridlines, replace data
-- **Connectors** — straight/elbow/curve types, begin/end positioning, connect to shape connection points
+- **Tables** — create with rows/columns, cell access, merge/split cells, cell margins, vertical anchor, fill per cell, banding properties (first/last row/col, horizontal/vertical banding), table style (`tblStyle`), per-edge + diagonal borders with full `LineFormat`
+- **Charts** — see Charts section below
+- **Connectors** — straight/elbow/curve types, begin/end positioning, connect to shape connection points; queryable connected shapes via `Connector.begin_connection`/`end_connection`
 - **Group shapes** — group existing shapes, access child shapes
 - **Freeform shapes** — programmatic path construction with line segments
 - **Graphic frames** — charts, tables, and OLE objects
 - **Placeholders** — typed placeholders (title, body, picture, chart, table) with insert operations
 - **Movies** — insert video with poster frame
+- **Callout shapes** — `MSO_SHAPE.LINE_CALLOUT_*` presets with adjustment handles
+- **Bulk operations** — `ShapeRange` API for alignment, distribution, and batch property updates without repeated XML walks
 
 ### Shape Properties (Common)
 - Position (left, top) and size (width, height) in EMUs
 - Rotation
-- Name (read/write)
-- Shape ID (read-only)
+- Name (read/write) and shape ID (read-only)
 - Shape type enumeration
 - Click action and hyperlink
 - Placeholder format (index, type)
+- Visibility — `BaseShape.hidden`
+- Lock aspect ratio — `BaseShape.lock_aspect_ratio`
+- Group containment — `BaseShape.is_in_group`, `BaseShape.parent_group`
+- Z-order — `move_shape_to_front()`, `move_shape_to_back()`
+- Accessibility — `alternative_text`, `title`, `decorative`
 
 ### Text
 - Text frames with auto-size control (none, shrink text, resize shape)
-- Paragraphs with alignment, level, line spacing, space before/after
+- `has_text` boolean
+- Vertical anchor, word wrap, four-edge margins
+- Text orientation (`vert`) and columns (`numCol`, `spcCol`)
+- Paragraphs — alignment, level, line spacing, space before/after, first-line indent (`indent`), left margin (`marL`), RTL, hanging punctuation, baseline / font alignment (`fontAlgn`)
+- Tab stops — `paragraph.tab_stops`, `add_tab_stop`, `clear_tab_stops`
+- Bullet formatting — character, numbered, picture; bullet font, color, size; no-bullet
 - Runs with per-run font formatting
-- Font: bold, italic, underline (16 styles), color, size, name, language, fill
+- Font — bold, italic, underline (16 styles), color, size, name, language, fill
+- Strikethrough, super/subscript (`baseline`), caps (all/small/none), character spacing (`spc`), kerning (`kern`), font shadow
+- East Asian (`a:ea`) and complex-script (`a:cs`) font names
 - Hyperlinks on runs
-- Fit text to shape (requires font metrics file)
-- Margins (top, bottom, left, right)
-- Vertical anchor
-- Word wrap
+- Fit text to shape (requires font-metrics file)
 
 ### Drawing / Formatting
 - **Fill** — solid, gradient (angle, stops with color and position), patterned (50+ patterns), background (no fill), foreground/background colors
-- **Line** — width, color, dash style (8 styles), fill
-- **Color** — RGB, theme color with brightness adjustment, color type detection
-- **Shadow** — inherit flag only (stub implementation)
-- **Chart formatting** — fill and line on chart elements via ChartFormat proxy
+- **Line** — width, color, dash style (8 presets), solid/pattern fill, no-fill check, transparency (color alpha), arrowheads (head + tail: type, width, length), compound type (`MSO_LINE_COMPOUND_TYPE`: single, double, thick-thin, etc.)
+- **Color** — RGB, theme color with brightness adjustment, color-type detection, alpha
+- **Shadow** — full read/write via `ShadowFormat`: type (outer/inner/none), blur radius, distance, direction, alignment, color with transparency, rotate-with-shape, visibility
+- **Reflection / Glow / Soft Edge** — full read/write via `ReflectionFormat`, `GlowFormat`, `SoftEdgeFormat` on `BaseShape`
+- **Chart formatting** — fill and line on chart elements via `ChartFormat` proxy
+
+### 3D Formatting
+- Shape extrusion — `ThreeDFormat.extrusion_height`, `contour_width`, `material`
+- Bevel — top and bottom profiles via `Bevel.width`, `height`, `preset`
+- Scene — `Scene3D.camera` with `Camera.preset`, `field_of_view`
+- Lighting rig — `Scene3D.light_rig` with `LightRig.rig_type`, `direction`
+
+### Charts
+- 16 chart families (75+ enumerated `XL_CHART_TYPE` values) — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie, plus 3D variants (bar3D, line3D, pie3D, area3D, surface3D)
+- Series formatting — markers, fill, line; pie/bar/bubble per-series properties (explosion, bar shape, bubble-3D)
+- Axes — value, category, date; primary + secondary; log scale; tick / label skip; label offset and rotation; display units; date axis time units; axis crossing
+- Legends — `Legend.format` (`ChartFormat` for box formatting); per-entry overrides
+- Data labels — collection and per-point: position, separator, leader lines, show val / cat / ser / percent / bubble size toggles
+- Trendlines — `XL_TRENDLINE_TYPE` (linear, exponential, logarithmic, moving-average, polynomial, power), order/period, forward/backward, intercept, R² and equation display
+- Error bars — type (custom, fixed value, percent, stddev, stderr), direction (X/Y), include (both/plus/minus), value, end-cap
+- 3D view — rotation X/Y, right-angle axes, perspective, depth percent, height percent
+- 3D surfaces — `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` with format and thickness
+- Plot area — `PlotArea` layout (left/top/width/height as fractions) and formatting
+- Chart area — `Chart.chart_format`, `rounded_corners`, `plot_visible_only`, `show_data_labels_over_max`, `display_blanks_as`
+- Drop lines, hi-lo lines, up-down bars, series lines on applicable plot types
+- Replace chart data; combo charts via `Chart.add_plot(plot_type, use_secondary_axis, grouping)`
+- Pie / doughnut — first-slice angle, hole size; of-pie split type/pos/second-pie-size; gap-width
+
+### Picture Format
+- Brightness — `Picture.brightness` (`a:lum` bright)
+- Contrast — `Picture.contrast` (`a:lum` contrast)
+- Grayscale — `Picture.is_grayscale` (`a:grayscl`)
+- Transparency color — `Picture.transparency_color` r/w (`a:clrChange`)
+- Original image dimensions — `Picture.image_width` / `image_height` via `ImagePart`
+
+### Theme
+- Color schemes — read/write `a:clrScheme`
+- Font schemes — major and minor font families
+- Effect schemes — `Theme.effect_scheme` returning `EffectScheme` with indexed/named access to subtle/moderate/intense `EffectStyle` objects
 
 ### Enumerations
-- 180+ auto shape types (MSO_SHAPE)
-- 75+ chart types (XL_CHART_TYPE)
+- 180+ auto shape types (`MSO_SHAPE`)
+- 75+ chart types (`XL_CHART_TYPE`)
 - 137 language identifiers
 - Shape types, placeholder types, connector types, media types
 - Fill types, color types, line dash styles, pattern types, theme colors
-- Text alignment, auto size, underline types, vertical anchor
+- Line compound types (`MSO_LINE_COMPOUND_TYPE`)
+- Text alignment, auto size, underline types, vertical anchor, font caps, font baseline
 - Chart axis types, data label positions, legend positions, marker styles, tick marks
+- Trendline types, error-bar type / direction / include
 - Action types
 
 ### OLE Objects
@@ -115,7 +176,7 @@ The codebase is organized in four layers, from low-level to high-level:
 
 ### Utilities
 - Length units: EMU, Inches, Cm, Mm, Pt, Centipoints (all interconvertible)
-- Lazy property decorator for performance
+- `@lazyproperty` cache decorator for derived collections
 
 ---
 
@@ -140,136 +201,27 @@ These are inherent constraints of a file-format library that edits XML. They can
 - VBA macro execution (macros are preserved in the file but cannot be run or edited)
 - AddIns, CommandBars, FileDialog
 
+### Decorative Effects (Out of Scope)
+- WordArt / preset text warp (`a:prstTxWarp` on `a:bodyPr`) — OXML layer exists (`CT_PresetTextShape`) for direct access if needed, but no high-level API is planned
+- Text-level 3D scene, fill, and outline effects
+
 ### Text Range Model Limitations
-- VBA's `TextRange` provides `Characters()`, `Words()`, `Sentences()`, `Lines()`, `Find()`, `Replace()`, `InsertBefore()`, `InsertAfter()`. The `Lines()` method requires a rendering engine to know where visual line breaks occur. The string-search operations are theoretically possible but complicated by the run-splitting model where a single visual word may span multiple XML runs.
+- VBA's `TextRange` provides `Characters()`, `Words()`, `Sentences()`, `Lines()`, `Find()`, `Replace()`, `InsertBefore()`, `InsertAfter()`. The `Lines()` method requires a rendering engine to know where visual line breaks occur. The string-search operations are theoretically possible but complicated by the run-splitting model where a single visual word may span multiple XML runs — planned for a future milestone (see `dev_map/v0.6.0.md`).
 
 ---
 
 ## Feature Gaps
 
-These are features that **are representable in the OOXML schema** and are therefore implementable, but are not yet present in the library. They are grouped by the area of the object model they belong to.
-
-### Slide Lifecycle
-- Delete a slide (remove from `sldIdLst`, delete part and relationships)
-- Reorder slides (reorder `sldId` entries in `sldIdLst`)
-- Duplicate a slide (deep-clone slide part, remap relationships)
-- Import slides from another presentation (clone parts, merge masters/layouts)
-- Slide number (computed from position + `firstSlideNum`)
-
-### Shape Lifecycle
-- Delete a shape (remove element from `spTree`, clean up relationships)
-- Duplicate a shape (clone element, assign new ID, clone related parts)
-- Z-order control (reorder elements within `spTree`; document order = z-order)
-- Shape visibility (`hidden` attribute on `cNvPr`)
-- Lock aspect ratio (`noChangeAspect` on shape locks)
-- Parent group reference (Python-side back-reference during tree traversal)
-
-### Accessibility
-- Alternative text (`descr` attribute on `cNvPr`)
-- Shape title (`title` attribute on `cNvPr`)
-- Decorative flag (extension element on `cNvPr`)
-
-### Text & Font
-- Strikethrough (`strike` attribute on `a:rPr`)
-- Superscript / subscript (`baseline` attribute on `a:rPr`)
-- Font shadow (effect list child on `a:rPr`)
-- Character caps — none, all caps, small caps (`cap` attribute on `a:rPr`)
-- Character spacing (`spc` attribute on `a:rPr`)
-- Kerning (`kern` attribute on `a:rPr`)
-- Baseline offset for super/subscript positioning (`baseline` attribute on `a:rPr`)
-- East Asian font name (`a:ea` element)
-- Complex script font name (`a:cs` element)
-- Text frame orientation (`vert` attribute on `a:bodyPr`)
-- Text frame columns (`numCol`, `spcCol` on `a:bodyPr`)
-- `HasText` property on text frame
-
-### Paragraph
-- Bullet formatting — character bullets (`a:buChar`), numbered bullets (`a:buAutoNum`), picture bullets, bullet font (`a:buFont`), bullet color (`a:buClr`), bullet size (`a:buSzPct`, `a:buSzPts`), no bullet (`a:buNone`)
-- First-line indent (`indent` attribute on `a:pPr`)
-- Left margin (`marL` attribute on `a:pPr`)
-- Tab stops (`a:tabLst` with `a:tab` children)
-- Text direction / RTL (`rtl` attribute on `a:pPr`)
-- Hanging punctuation (`hangingPunct` attribute)
-- Baseline alignment (`fontAlgn` attribute)
-
-### Table
-- Cell borders — per-edge control: left, right, top, bottom, diagonal (`a:lnL`, `a:lnR`, `a:lnT`, `a:lnB`, `a:lnTlToBr`, `a:lnBlToTr` within `a:tcPr`) with full line formatting (color, weight, dash style)
-- Table style application (built-in style GUIDs via `tblStyle` attribute)
-
-### Line & Connector
-- Arrowhead formatting — head and tail: type, width, length (`a:headEnd`, `a:tailEnd` within `a:ln`)
-- Compound line style — single, double, thick-thin, etc. (`cmpd` attribute on `a:ln`)
-- Line transparency (alpha modifier on line fill color)
-- Line visibility (no-fill vs filled)
-- Line pattern
-- Query connected shapes on connectors (read `a:stCxn` / `a:endCxn` attributes)
-
-### Shadow (Full Implementation)
-- Shadow type — outer, inner, perspective (`a:outerShdw`, `a:innerShdw` within `a:effectLst`)
-- Blur radius, distance, direction, alignment
-- Shadow color with transparency
-- Rotate with shape flag
-- Visibility
-
-### Additional Effects
-- Reflection (`a:reflection` in effect list)
-- Glow (`a:glow` in effect list)
-- Soft edge (`a:softEdge` in effect list)
-
-### 3D Formatting
-- Extrusion depth, contour, material (`a:sp3d`)
-- Bevel (top and bottom profiles)
-- 3D scene — camera preset, rotation, field of view (`a:scene3d` → `a:camera`)
-- Lighting rig — type, direction (`a:scene3d` → `a:lightRig`)
-
-### Headers & Footers
-- Slide-level header/footer configuration (`p:hf` element)
-- Date/time, footer text, slide number placeholders on masters and layouts
-
-### Metadata & Organization
-- Tags — key-value string pairs on shapes and slides (separate `tags[N].xml` parts)
-- Sections — named groups of slides (`p14:sectionLst` in presentation extensions)
-- Custom document properties (beyond core properties)
-
-### Comments
-- Slide comments — author, text, position, datetime (`comments[N].xml` parts + `commentAuthors.xml`)
-
-### Picture Format
-- Brightness and contrast (`a:lum` on blip)
-- Grayscale / black-and-white / washout (`a:grayscl`, `a:duotone` on blip)
-- Transparency color
-- Original image dimensions (from ImagePart)
-
-### Chart
-- Plot area positioning and formatting
-- Chart area formatting
-- Display blanks as (gap, zero, span)
-- Secondary value and category axes
-- 3D chart view (rotation, elevation, perspective)
-- 3D chart surfaces (floor, walls)
-
-### Themes
-- Read/write theme color schemes
-- Read/write theme font schemes (major and minor fonts)
-- Theme effect schemes
-
-### Callout Shapes
-- Callout-specific formatting (accent bar, angle, length, gap) via adjustment handles on callout preset geometries
-
-### WordArt / Text Effects
-- Preset text warp (`a:prstTxWarp` on `a:bodyPr`)
-- Text-level 3D scene and fill/outline
-
-### Performance
-- Shape lookup by name — build and maintain a name-indexed dictionary for O(1) access
-- Shape lookup by ID — same approach with shape ID keys
-- Lazy part loading — defer reading of image/media blobs until accessed
-- Bulk shape operations — operate on multiple shapes without repeated XML tree walks
+These are features that **are representable in the OOXML schema** and are therefore implementable, but are not yet present in the library.
 
 ### Custom Slide Layouts
 - Create new slide layout parts and link to a slide master
 - Define placeholder positions and types on custom layouts
 
-### Slide Import / Cross-Presentation Operations
-- Import slides from another `.pptx` file
-- Merge presentations (clone parts, remap relationships, deduplicate masters/layouts/images)
+### Transitions & Animations (read-only target — see `dev_map/v0.4.0.md`)
+- Slide transition timing and effect parameters (`p:transition`)
+- Read access to the animation timing tree on a slide
+
+### Cross-run Text Operations (see `dev_map/v0.6.0.md`)
+- Find / replace across runs within a paragraph
+- Run-aware string manipulation (`InsertBefore`, `InsertAfter`, `Characters`, `Words`)
