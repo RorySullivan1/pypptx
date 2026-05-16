@@ -11,7 +11,7 @@ from pptx.chart.chartlines import DropLines, HiLowLines, SeriesLines, UpDownBars
 from pptx.chart.datalabel import DataLabels
 from pptx.exc import ChartError
 from pptx.chart.series import SeriesCollection
-from pptx.enum.chart import XL_CHART_TYPE as XL
+from pptx.enum.chart import XL_BAR_DIRECTION, XL_CHART_TYPE as XL, XL_GROUPING
 from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import ST_BarDir, ST_Grouping
 from pptx.util import lazyproperty
@@ -59,6 +59,18 @@ class _BasePlot:
         The |Chart| object containing this plot.
         """
         return self._chart
+
+    @property
+    def grouping(self) -> XL_GROUPING | None:
+        """|XL_GROUPING| member describing how this plot's series are grouped.
+
+        Returns |None| when grouping is not applicable to the chart type
+        (e.g. pie, scatter, doughnut).
+        """
+        grouping_val = getattr(self._element, "grouping_val", None)
+        if grouping_val is None:
+            return None
+        return XL_GROUPING.from_xml(grouping_val)
 
     @property
     def data_labels(self):
@@ -173,6 +185,15 @@ class BarPlot(_BasePlot):
     """
     A bar chart-style plot.
     """
+
+    @property
+    def bar_direction(self) -> XL_BAR_DIRECTION:
+        """|XL_BAR_DIRECTION| member describing this plot's bar orientation.
+
+        ``XL_BAR_DIRECTION.BAR`` for horizontal bars,
+        ``XL_BAR_DIRECTION.COLUMN`` for vertical columns.
+        """
+        return XL_BAR_DIRECTION.from_xml(self._element.barDir.val)
 
     @property
     def gap_width(self):

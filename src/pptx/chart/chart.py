@@ -14,6 +14,7 @@ from pptx.chart.plot import PlotFactory, PlotTypeInspector
 from pptx.chart.series import SeriesCollection
 from pptx.chart.xmlwriter import SeriesXmlRewriterFactory
 from pptx.dml.chtfmt import ChartFormat
+from pptx.enum.chart import XL_DISPLAY_BLANKS_AS
 from pptx.oxml.ns import qn
 from pptx.shared import ElementProxy, PartElementProxy
 from pptx.text.text import Font, TextFrame
@@ -170,28 +171,39 @@ class Chart(PartElementProxy):
         return PlotTypeInspector.chart_type(first_plot)
 
     @property
-    def display_blanks_as(self) -> str:
-        """Read/write string specifying how blank cells are plotted.
+    def display_blanks_as(self) -> XL_DISPLAY_BLANKS_AS:
+        """|XL_DISPLAY_BLANKS_AS| specifying how blank cells are plotted.
 
-        One of ``"gap"``, ``"zero"``, or ``"span"``. Default is ``"gap"``
-        when no ``c:dispBlanksAs`` element is present.
+        Defaults to ``XL_DISPLAY_BLANKS_AS.GAP`` when no ``c:dispBlanksAs``
+        element is present. Setter accepts either an |XL_DISPLAY_BLANKS_AS|
+        member or the legacy raw OOXML string (``"gap"``, ``"zero"``, ``"span"``).
         """
         chart = self._chartSpace.chart
         dispBlanksAs = chart.dispBlanksAs
         if dispBlanksAs is None:
-            return "gap"
-        return dispBlanksAs.val
+            return XL_DISPLAY_BLANKS_AS.GAP
+        return XL_DISPLAY_BLANKS_AS.from_xml(dispBlanksAs.val)
 
     @display_blanks_as.setter
-    def display_blanks_as(self, value: str) -> None:
-        if value not in ("gap", "zero", "span"):
+    def display_blanks_as(self, value: XL_DISPLAY_BLANKS_AS | str) -> None:
+        if isinstance(value, str) and not isinstance(value, XL_DISPLAY_BLANKS_AS):
+            try:
+                member = XL_DISPLAY_BLANKS_AS.from_xml(value)
+            except ValueError:
+                raise ChartError(
+                    f"display_blanks_as must be 'gap', 'zero', or 'span', got '{value}'"
+                )
+        elif isinstance(value, XL_DISPLAY_BLANKS_AS):
+            member = value
+        else:
             raise ChartError(
-                f"display_blanks_as must be 'gap', 'zero', or 'span', got '{value}'"
+                f"display_blanks_as must be an XL_DISPLAY_BLANKS_AS member or string, got "
+                f"{type(value).__name__}"
             )
         chart = self._chartSpace.chart
         chart._remove_dispBlanksAs()
-        if value != "gap":
-            chart._add_dispBlanksAs(val=value)
+        if member is not XL_DISPLAY_BLANKS_AS.GAP:
+            chart._add_dispBlanksAs(val=member.xml_value)
 
     @property
     def floor(self) -> ChartSurface:

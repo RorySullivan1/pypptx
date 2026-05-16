@@ -5,6 +5,7 @@ Demonstrates visual effects applied to autoshapes. Saves to shape_effects.pptx.
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
+from pptx.enum.dml import MSO_BEVEL_PRESET
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.util import Inches, Pt
 
@@ -50,7 +51,7 @@ box4.fill.solid()
 box4.fill.fore_color.rgb = RGBColor(0x7B, 0x2D, 0x8E)
 box4.text_frame.text = "3D Bevel"
 bevel = box4.three_d.get_or_add_bevel_top()
-bevel.preset = "circle"
+bevel.preset = MSO_BEVEL_PRESET.CIRCLE
 bevel.width = Pt(8)
 bevel.height = Pt(4)
 box4.three_d.extrusion_height = Pt(6)

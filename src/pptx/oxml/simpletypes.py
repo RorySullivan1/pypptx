@@ -265,6 +265,38 @@ class ST_BarDir(XsdStringEnumeration):
     _members = (BAR, COL)
 
 
+class ST_BevelPresetType(XsdStringEnumeration):
+    """Valid values for `a:bevelT/@prst` and `a:bevelB/@prst` attributes."""
+
+    RELAXED_INSET = "relaxedInset"
+    CIRCLE = "circle"
+    SLOPE = "slope"
+    CROSS = "cross"
+    ANGLE = "angle"
+    SOFT_ROUND = "softRound"
+    CONVEX = "convex"
+    COOL_SLANT = "coolSlant"
+    DIVOT = "divot"
+    RIBLET = "riblet"
+    HARD_EDGE = "hardEdge"
+    ART_DECO = "artDeco"
+
+    _members = (
+        RELAXED_INSET,
+        CIRCLE,
+        SLOPE,
+        CROSS,
+        ANGLE,
+        SOFT_ROUND,
+        CONVEX,
+        COOL_SLANT,
+        DIVOT,
+        RIBLET,
+        HARD_EDGE,
+        ART_DECO,
+    )
+
+
 class ST_BubbleScale(BaseIntType):
     """
     String value is an integer in range 0-300, representing a percent,
@@ -347,6 +379,16 @@ class ST_Direction(XsdTokenEnumeration):
     VERT = "vert"
 
     _members = (HORZ, VERT)
+
+
+class ST_DispBlanksAs(XsdStringEnumeration):
+    """Valid values for `<c:dispBlanksAs val="?">` attribute."""
+
+    GAP = "gap"
+    ZERO = "zero"
+    SPAN = "span"
+
+    _members = (GAP, ZERO, SPAN)
 
 
 class ST_DrawingElementId(XsdUnsignedInt):

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pptx.dml.color import ColorFormat
+from pptx.enum.dml import MSO_SHADOW_TYPE
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
@@ -157,15 +158,15 @@ class ShadowFormat:
         return ColorFormat.from_colorchoice_parent(self._get_or_add_outerShdw())
 
     @property
-    def shadow_type(self) -> str | None:
-        """Type of shadow effect: ``"outer"``, ``"inner"``, or |None|.
+    def shadow_type(self) -> MSO_SHADOW_TYPE | None:
+        """|MSO_SHADOW_TYPE| describing the active shadow, or |None|.
 
         Read-only. |None| when no shadow is explicitly defined.
         """
         if self._outerShdw is not None:
-            return "outer"
+            return MSO_SHADOW_TYPE.OUTER
         if self._innerShdw is not None:
-            return "inner"
+            return MSO_SHADOW_TYPE.INNER
         return None
 
     def _get_or_add_outerShdw(self) -> CT_OuterShadowEffect:

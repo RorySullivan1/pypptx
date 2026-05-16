@@ -576,3 +576,66 @@ class XL_TRENDLINE_TYPE(BaseXmlEnum):
 
     POWER = (4, "power", "Uses the power equation to calculate the least squares fit.")
     """Power trendline."""
+
+
+class XL_DISPLAY_BLANKS_AS(BaseXmlEnum):
+    """Specifies how blank cells are plotted on a chart.
+
+    Used with :attr:`.Chart.display_blanks_as`.
+
+    Example::
+
+        from pptx.enum.chart import XL_DISPLAY_BLANKS_AS
+
+        chart.display_blanks_as = XL_DISPLAY_BLANKS_AS.ZERO
+
+    Maps to the ``val`` attribute of the ``<c:dispBlanksAs>`` element.
+    """
+
+    GAP = (1, "gap", "Blank cells are plotted as a gap (default).")
+    """Blank cells are plotted as a gap."""
+
+    ZERO = (2, "zero", "Blank cells are plotted as zero.")
+    """Blank cells are plotted as zero."""
+
+    SPAN = (3, "span", "Blank cells are connected with a line.")
+    """Blank cells are connected with a line."""
+
+
+class XL_GROUPING(BaseXmlEnum):
+    """Specifies how a multi-series chart groups its series.
+
+    Used as the return type of :attr:`.Plot.grouping`. Maps to the ``val``
+    attribute of the ``<c:grouping>`` element (OOXML ``ST_Grouping`` /
+    ``ST_BarGrouping``).
+    """
+
+    STANDARD = (1, "standard", "Series are plotted on independent value axes.")
+    """Series are plotted as independent lines or areas (default for line/area)."""
+
+    CLUSTERED = (2, "clustered", "Series are placed side by side within each category.")
+    """Series are placed side by side within each category (default for bar)."""
+
+    STACKED = (3, "stacked", "Series are stacked on top of each other.")
+    """Series are stacked on top of each other."""
+
+    PERCENT_STACKED = (
+        4,
+        "percentStacked",
+        "Series are stacked and shown as a percentage of total per category.",
+    )
+    """Series are stacked and shown as a percentage of total per category."""
+
+
+class XL_BAR_DIRECTION(BaseXmlEnum):
+    """Specifies the orientation of bars in a bar/column chart.
+
+    Used as the return type of :attr:`.BarPlot.bar_direction`. Maps to the
+    ``val`` attribute of ``<c:barDir>`` (OOXML ``ST_BarDir``).
+    """
+
+    BAR = (1, "bar", "Bars are horizontal.")
+    """Bars are horizontal (bar chart)."""
+
+    COLUMN = (2, "col", "Bars are vertical.")
+    """Bars are vertical (column chart)."""

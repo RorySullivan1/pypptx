@@ -9,7 +9,7 @@ from lxml import etree
 from pptx.oxml import parse_xml
 from pptx.oxml.chart.shared import CT_Title
 from pptx.oxml.ns import nsdecls, nsmap, qn
-from pptx.oxml.simpletypes import ST_Style, XsdString
+from pptx.oxml.simpletypes import ST_DispBlanksAs, ST_Style, XsdString
 from pptx.oxml.text import CT_TextBody
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -177,7 +177,7 @@ class CT_ChartSpace(BaseOxmlElement):
 class CT_DispBlanksAs(BaseOxmlElement):
     """`c:dispBlanksAs` element, specifying how blank cells are plotted."""
 
-    val = RequiredAttribute("val", XsdString)
+    val = RequiredAttribute("val", ST_DispBlanksAs)
 
 
 class CT_ExternalData(BaseOxmlElement):

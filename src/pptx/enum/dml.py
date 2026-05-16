@@ -516,3 +516,77 @@ class MSO_LINE_END_SIZE(BaseXmlEnum):
 
     LARGE = (2, "lg", "Large.")
     """Large."""
+
+
+class MSO_BEVEL_PRESET(BaseXmlEnum):
+    """Specifies a preset bevel profile for a 3D shape edge.
+
+    Used with :attr:`.Bevel.preset` on top/bottom bevels.
+
+    Example::
+
+        from pptx.enum.dml import MSO_BEVEL_PRESET
+
+        bevel.preset = MSO_BEVEL_PRESET.CIRCLE
+
+    These values correspond to the ``prst`` attribute on the ``a:bevelT`` and
+    ``a:bevelB`` elements (OOXML ``ST_BevelPresetType``).
+    """
+
+    RELAXED_INSET = (1, "relaxedInset", "Relaxed inset bevel (PowerPoint default).")
+    """Relaxed inset bevel."""
+
+    CIRCLE = (2, "circle", "Circle bevel.")
+    """Circle bevel."""
+
+    SLOPE = (3, "slope", "Slope bevel.")
+    """Slope bevel."""
+
+    CROSS = (4, "cross", "Cross bevel.")
+    """Cross bevel."""
+
+    ANGLE = (5, "angle", "Angle bevel.")
+    """Angle bevel."""
+
+    SOFT_ROUND = (6, "softRound", "Soft round bevel.")
+    """Soft round bevel."""
+
+    CONVEX = (7, "convex", "Convex bevel.")
+    """Convex bevel."""
+
+    COOL_SLANT = (8, "coolSlant", "Cool slant bevel.")
+    """Cool slant bevel."""
+
+    DIVOT = (9, "divot", "Divot bevel.")
+    """Divot bevel."""
+
+    RIBLET = (10, "riblet", "Riblet bevel.")
+    """Riblet bevel."""
+
+    HARD_EDGE = (11, "hardEdge", "Hard edge bevel.")
+    """Hard edge bevel."""
+
+    ART_DECO = (12, "artDeco", "Art Deco bevel.")
+    """Art Deco bevel."""
+
+
+class MSO_SHADOW_TYPE(BaseXmlEnum):
+    """Specifies the type of shadow effect applied to a shape.
+
+    Used as the return type of :attr:`.ShadowFormat.shadow_type`. The value
+    reflects which child element is present under ``a:effectLst``
+    (``a:outerShdw`` vs ``a:innerShdw``); there is no single OOXML attribute
+    holding it.
+
+    Example::
+
+        from pptx.enum.dml import MSO_SHADOW_TYPE
+
+        assert shape.shadow.shadow_type == MSO_SHADOW_TYPE.OUTER
+    """
+
+    OUTER = (1, "outer", "Outer shadow (`a:outerShdw`).")
+    """Outer shadow."""
+
+    INNER = (2, "inner", "Inner shadow (`a:innerShdw`).")
+    """Inner shadow."""
