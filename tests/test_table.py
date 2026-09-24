@@ -85,7 +85,8 @@ class DescribeTable:
         ("tbl_cxml", "expected_value"),
         [
             ("a:tbl", None),
-            ("a:tbl/a:tblPr{tblStyle=abc-123}", "abc-123"),
+            ("a:tbl/a:tblPr", None),
+            ('a:tbl/a:tblPr/a:tableStyleId"abc-123"', "abc-123"),
         ],
     )
     def it_knows_its_table_style_id(self, tbl_cxml: str, expected_value: str | None):
@@ -95,9 +96,10 @@ class DescribeTable:
     @pytest.mark.parametrize(
         ("tbl_cxml", "new_value", "expected_cxml"),
         [
-            ("a:tbl", "abc-123", "a:tbl/a:tblPr{tblStyle=abc-123}"),
-            ("a:tbl/a:tblPr{tblStyle=abc}", "xyz", "a:tbl/a:tblPr{tblStyle=xyz}"),
-            ("a:tbl/a:tblPr{tblStyle=abc}", None, "a:tbl/a:tblPr"),
+            ("a:tbl", "abc-123", 'a:tbl/a:tblPr/a:tableStyleId"abc-123"'),
+            ('a:tbl/a:tblPr/a:tableStyleId"abc"', "xyz", 'a:tbl/a:tblPr/a:tableStyleId"xyz"'),
+            ('a:tbl/a:tblPr/a:tableStyleId"abc"', None, "a:tbl/a:tblPr"),
+            ("a:tbl/a:tblPr/a:extLst", "abc", 'a:tbl/a:tblPr/(a:tableStyleId"abc",a:extLst)'),
         ],
     )
     def it_can_change_its_table_style_id(
@@ -106,6 +108,10 @@ class DescribeTable:
         table = Table(element(tbl_cxml), None)
         table.table_style_id = new_value
         assert table._tbl.xml == xml(expected_cxml)
+
+    def it_reads_the_default_style_id_of_a_new_table(self):
+        tbl = CT_Table.new_tbl(2, 2, 100, 100)
+        assert Table(tbl, None).table_style_id == "{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"
 
     def it_updates_graphic_frame_width_on_width_change(self, dx_fixture):
         table, expected_width = dx_fixture

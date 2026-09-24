@@ -8,7 +8,7 @@ from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
-from pptx.oxml.simpletypes import ST_Coordinate, ST_Coordinate32, XsdBoolean, XsdInt, XsdString
+from pptx.oxml.simpletypes import ST_Coordinate, ST_Coordinate32, XsdBoolean, XsdInt
 from pptx.oxml.text import CT_TextBody
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -452,9 +452,28 @@ class CT_TableProperties(BaseOxmlElement):
     firstCol = OptionalAttribute("firstCol", XsdBoolean, default=False)
     lastRow = OptionalAttribute("lastRow", XsdBoolean, default=False)
     lastCol = OptionalAttribute("lastCol", XsdBoolean, default=False)
-    tblStyle: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "tblStyle", XsdString
+    get_or_add_tableStyleId: Callable[[], BaseOxmlElement]
+    _remove_tableStyleId: Callable[[], None]
+
+    # `a:tableStyleId` shares a choice with `a:tblStyle`; either is followed only by `a:extLst`.
+    tableStyleId: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:tableStyleId", successors=("a:extLst",)
     )
+
+    @property
+    def style_id(self) -> str | None:
+        """Text of the `a:tableStyleId` child, or |None| when it is absent."""
+        tableStyleId = self.tableStyleId
+        if tableStyleId is None:
+            return None
+        return tableStyleId.text
+
+    @style_id.setter
+    def style_id(self, value: str | None) -> None:
+        if value is None:
+            self._remove_tableStyleId()
+            return
+        self.get_or_add_tableStyleId().text = value
 
 
 class CT_TableRow(BaseOxmlElement):

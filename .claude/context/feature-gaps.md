@@ -139,7 +139,7 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 ### 4.3 Table Cell Border Elements — `oxml/table.py` (DONE)
 - [x] `CT_TableCellProperties` (`a:tcPr`) declares `a:lnL`, `a:lnR`, `a:lnT`, `a:lnB` as `ZeroOrOne` children
 - [x] Added `a:lnTlToBr`, `a:lnBlToTr` diagonal border children on `a:tcPr`
-- [x] Added `tblStyle` attribute on `CT_TableProperties` (`a:tblPr`)
+- [x] Added `a:tableStyleId` child accessor on `CT_TableProperties` (`a:tblPr`) (was a non-schema `tblStyle` attribute until #91)
 
 ### 4.4 Headers & Footers — `oxml/slide.py` (DONE)
 - [x] `CT_HeaderFooter` (`p:hf`) — boolean attributes: `sldNum`, `hdr`, `ftr`, `dt`
@@ -353,7 +353,7 @@ _Prerequisites: Section 4.3 (table cell border elements)_
 
 - [x] Cell borders — `_Cell.border_left/right/top/bottom` via `_CellBorderAdapter` + `LineFormat`
 - [x] Diagonal borders — `_Cell.border_diagonal_down` / `border_diagonal_up` via `a:lnTlToBr`, `a:lnBlToTr`
-- [x] Table style — `Table.table_style_id` via `tblStyle` attribute on `a:tblPr`
+- [x] Table style — `Table.table_style_id` via the `a:tableStyleId` child of `a:tblPr` (fixed in #91)
 
 ---
 
