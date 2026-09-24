@@ -665,6 +665,30 @@ register_element_cls("p:tag", CT_StringTag)
 register_element_cls("p:tagLst", CT_TagList)
 
 
+from pptx.oxml.presprops import (  # noqa: E402
+    CT_CustomShowId,
+    CT_IndexRange,
+    CT_PresentationProperties,
+    CT_ShowInfoBrowse,
+    CT_ShowInfoKiosk,
+    CT_ShowProperties,
+)
+
+register_element_cls("p:presentationPr", CT_PresentationProperties)
+register_element_cls("p:showPr", CT_ShowProperties)
+register_element_cls("p:browse", CT_ShowInfoBrowse)
+register_element_cls("p:kiosk", CT_ShowInfoKiosk)
+register_element_cls("p:sldRg", CT_IndexRange)
+register_element_cls("p:custShow", CT_CustomShowId)
+register_element_cls("p:penClr", CT_Color)
+
+
+from pptx.oxml.tablestyles import CT_TableStyle, CT_TableStyleList  # noqa: E402
+
+register_element_cls("a:tblStyle", CT_TableStyle)
+register_element_cls("a:tblStyleLst", CT_TableStyleList)
+
+
 from pptx.oxml.slide import (  # noqa: E402
     CT_Background,
     CT_BackgroundProperties,

@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.comments import AuthorsPart
     from pptx.parts.coreprops import CorePropertiesPart
+    from pptx.parts.presprops import PresPropsPart
+    from pptx.parts.tablestyles import TableStylesPart
     from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
 
@@ -289,6 +291,40 @@ class PresentationPart(XmlPart):
             authors_part = AuthorsPart.new(self.package)
             self.relate_to(authors_part, RT.AUTHORS)
         return authors_part
+
+    # -- #59: presProps.xml (slide-show settings) -------------------------------------------
+
+    @property
+    def pres_props_part(self) -> PresPropsPart | None:
+        """The |PresPropsPart| for this presentation, or None when not present.
+
+        Accessing this property never creates the part; use
+        `get_or_add_pres_props_part()` to write slide-show settings.
+        """
+        try:
+            return cast("PresPropsPart", self.part_related_by(RT.PRES_PROPS))
+        except KeyError:
+            return None
+
+    def get_or_add_pres_props_part(self) -> PresPropsPart:
+        """The |PresPropsPart| for this presentation, created and related when absent."""
+        pres_props_part = self.pres_props_part
+        if pres_props_part is None:
+            from pptx.parts.presprops import PresPropsPart
+
+            pres_props_part = PresPropsPart.new(self.package)
+            self.relate_to(pres_props_part, RT.PRES_PROPS)
+        return pres_props_part
+
+    # -- #60: tableStyles.xml (available table styles) --------------------------------------
+
+    @property
+    def table_styles_part(self) -> TableStylesPart | None:
+        """The |TableStylesPart| for this presentation, or None when not present."""
+        try:
+            return cast("TableStylesPart", self.part_related_by(RT.TABLE_STYLES))
+        except KeyError:
+            return None
 
     @property
     def core_properties(self) -> CorePropertiesPart:

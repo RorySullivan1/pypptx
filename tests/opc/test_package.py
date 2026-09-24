@@ -17,6 +17,7 @@ from pptx.opc.constants import RELATIONSHIP_TARGET_MODE as RTM
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.oxml import CT_Relationship, CT_Relationships
 from pptx.opc.package import (
+    LazyXmlPart,
     OpcPackage,
     Part,
     PartFactory,
@@ -506,6 +507,56 @@ class DescribeXmlPart:
     @pytest.fixture
     def relationships_(self, request):
         return instance_mock(request, _Relationships)
+
+
+class DescribeLazyXmlPart:
+    """Unit-test suite for `pptx.opc.package.LazyXmlPart` objects."""
+
+    def it_can_be_constructed_by_PartFactory_without_parsing_the_blob(self, request):
+        partname = PackURI("/ppt/presProps.xml")
+        package_ = instance_mock(request, OpcPackage)
+        parse_xml_ = function_mock(request, "pptx.opc.package.parse_xml")
+
+        part = LazyXmlPart.load(partname, CT.PML_PRES_PROPS, package_, b"blob")
+
+        parse_xml_.assert_not_called()
+        assert isinstance(part, LazyXmlPart)
+        assert part.partname == partname
+        assert part.content_type == CT.PML_PRES_PROPS
+
+    def it_returns_the_original_blob_when_never_parsed(self):
+        part = LazyXmlPart(None, None, None, blob=b"original-blob")
+        assert part.blob == b"original-blob"
+
+    def it_parses_the_blob_on_first_element_access(self, request):
+        element_ = element("p:sld")
+        parse_xml_ = function_mock(request, "pptx.opc.package.parse_xml", return_value=element_)
+        part = LazyXmlPart(None, None, None, blob=b"blob")
+
+        elm = part._element
+
+        parse_xml_.assert_called_once_with(b"blob")
+        assert elm is element_
+        # -- a second access does not re-parse --
+        assert part._element is element_
+        assert parse_xml_.call_count == 1
+
+    def it_reserializes_the_blob_once_the_element_has_been_accessed(self, request):
+        element_ = element("p:sld")
+        function_mock(request, "pptx.opc.package.parse_xml", return_value=element_)
+        serialize_part_xml_ = function_mock(request, "pptx.opc.package.serialize_part_xml")
+        part = LazyXmlPart(None, None, None, blob=b"original-blob")
+
+        part._element  # noqa: B018 -- touch it
+        blob = part.blob
+
+        serialize_part_xml_.assert_called_once_with(element_)
+        assert blob is serialize_part_xml_.return_value
+
+    def it_can_be_constructed_directly_from_an_element_without_a_blob(self):
+        element_ = element("p:sld")
+        part = LazyXmlPart(PackURI("/ppt/presProps.xml"), CT.PML_PRES_PROPS, None, element=element_)
+        assert part._element is element_
 
 
 class DescribePartFactory:

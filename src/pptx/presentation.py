@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
-from typing import IO, TYPE_CHECKING, Iterator, cast
+from typing import IO, TYPE_CHECKING, Iterator, Mapping, cast
 
+from pptx.enum.pres import PP_SLIDE_SHOW_TYPE
 from pptx.shared import PartElementProxy
 from pptx.slide import SlideMasters, Slides
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.dml.color import RGBColor
+    from pptx.oxml.dml.color import CT_SRgbColor
     from pptx.oxml.presentation import CT_Presentation, CT_SlideId
+    from pptx.oxml.presprops import CT_ShowProperties
     from pptx.oxml.section import CT_Section, CT_SectionList
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.coreprops import CorePropertiesPart
     from pptx.parts.custprops import CustomPropertiesPart
     from pptx.parts.presentation import PresentationPart
+    from pptx.parts.tablestyles import TableStylesPart
     from pptx.slide import NotesMaster, SlideLayouts, SlideMaster
     from pptx.text.styles import TextListStyle
     from pptx.theme import Theme
@@ -161,6 +167,25 @@ class Presentation(PartElementProxy):
         """|Sections| object providing access to named slide groups."""
         return Sections(self._element)
 
+    @property
+    def slide_show_settings(self) -> SlideShowSettings:
+        """|SlideShowSettings| object for this presentation's `ppt/presProps.xml` part.
+
+        Reading these settings never creates `presProps.xml` if it isn't already present
+        (defaults are returned instead); writing any setting creates the part (and its
+        relationship from the presentation part) on first use.
+        """
+        return SlideShowSettings(self.part)
+
+    @property
+    def table_styles(self) -> TableStyles:
+        """|TableStyles| read-only mapping of table-style id to display name.
+
+        Reflects the table styles defined in `ppt/tableStyles.xml`. Empty when the
+        presentation has no `tableStyles.xml` part.
+        """
+        return TableStyles(self.part.table_styles_part)
+
     @lazyproperty
     def slides(self) -> Slides:
         """|Slides| object containing the slides in this presentation."""
@@ -243,3 +268,241 @@ class Section:
     def remove(self) -> None:
         """Remove this section from the section list."""
         self._section_elm.getparent().remove(self._section_elm)
+
+
+class SlideShowSettings:
+    """Read/write access to slide-show settings, `p:showPr` in `ppt/presProps.xml`.
+
+    Obtained via `Presentation.slide_show_settings`. Not intended to be constructed
+    directly.
+
+    Reading a property never creates `presProps.xml` or `p:showPr`; absent settings
+    read back as their ECMA-376 default value. Writing any property creates
+    `presProps.xml` (and its relationship from the presentation part) and `p:showPr`
+    on first use, if not already present.
+
+    The slide range shown is exposed as two mutually-exclusive properties mirroring
+    the `p:sldRg` / `p:custShow` choice: `slide_range` (a 1-based `(start, end)`
+    tuple) and `custom_show_id`. Setting one clears the other (and `p:sldAll`).
+    Setting both to `None` reverts to showing all slides.
+    """
+
+    def __init__(self, presentation_part: PresentationPart) -> None:
+        self._presentation_part = presentation_part
+
+    @property
+    def loop(self) -> bool:
+        """`True` if the show restarts after the last slide instead of ending. Read/write."""
+        showPr = self._showPr
+        return showPr.loop if showPr is not None else False
+
+    @loop.setter
+    def loop(self, value: bool) -> None:
+        self._get_or_add_showPr().loop = bool(value)
+
+    @property
+    def show_narration(self) -> bool:
+        """`True` if slide narrations are played during the show. Read/write."""
+        showPr = self._showPr
+        return showPr.showNarration if showPr is not None else False
+
+    @show_narration.setter
+    def show_narration(self, value: bool) -> None:
+        self._get_or_add_showPr().showNarration = bool(value)
+
+    @property
+    def show_animation(self) -> bool:
+        """`True` if animations are played during the show. Read/write."""
+        showPr = self._showPr
+        return showPr.showAnimation if showPr is not None else True
+
+    @show_animation.setter
+    def show_animation(self, value: bool) -> None:
+        self._get_or_add_showPr().showAnimation = bool(value)
+
+    @property
+    def use_timings(self) -> bool:
+        """`True` if slide/animation timings are used to advance the show. Read/write."""
+        showPr = self._showPr
+        return showPr.useTimings if showPr is not None else True
+
+    @use_timings.setter
+    def use_timings(self, value: bool) -> None:
+        self._get_or_add_showPr().useTimings = bool(value)
+
+    @property
+    def show_type(self) -> PP_SLIDE_SHOW_TYPE:
+        """Member of :ref:`PpSlideShowType` specifying how the show is displayed. Read/write.
+
+        Defaults to `PP_SLIDE_SHOW_TYPE.SPEAKER` (`p:present`, PowerPoint's default) when
+        not explicitly set.
+        """
+        showPr = self._showPr
+        choice = showPr.showTypeChoice if showPr is not None else None
+        if choice is None:
+            return PP_SLIDE_SHOW_TYPE.SPEAKER
+        return _SHOW_TYPE_TAG_MAP[cast("BaseOxmlElement", choice).tag]
+
+    @show_type.setter
+    def show_type(self, value: PP_SLIDE_SHOW_TYPE) -> None:
+        showPr = self._get_or_add_showPr()
+        if value == PP_SLIDE_SHOW_TYPE.SPEAKER:
+            showPr.get_or_change_to_present()
+        elif value == PP_SLIDE_SHOW_TYPE.BROWSE:
+            showPr.get_or_change_to_browse()
+        elif value == PP_SLIDE_SHOW_TYPE.KIOSK:
+            showPr.get_or_change_to_kiosk()
+        else:  # pragma: no cover - defensive, PP_SLIDE_SHOW_TYPE has only 3 members
+            raise ValueError("unknown PP_SLIDE_SHOW_TYPE member: %r" % (value,))
+
+    @property
+    def pen_color(self) -> RGBColor | None:
+        """|RGBColor| of the presenter's pen/laser, or None if not set. Read/write.
+
+        Only the RGB (`a:srgbClr`) color form is supported for read and write; a
+        `p:penClr` set to a theme or system color reads back as `None`.
+        """
+        from pptx.dml.color import RGBColor
+        from pptx.oxml.ns import qn
+
+        showPr = self._showPr
+        penClr = showPr.penClr if showPr is not None else None
+        if penClr is None:
+            return None
+        xClr = cast("BaseOxmlElement | None", penClr.eg_colorChoice)
+        if xClr is None or xClr.tag != qn("a:srgbClr"):
+            return None
+        return RGBColor.from_string(cast("CT_SRgbColor", xClr).val)
+
+    @pen_color.setter
+    def pen_color(self, value: RGBColor | None) -> None:
+        from pptx.oxml.ns import qn
+
+        if value is None:
+            showPr = self._showPr
+            if showPr is not None:
+                showPr._remove_penClr()  # pyright: ignore[reportPrivateUsage]
+            return
+        penClr = self._get_or_add_showPr().get_or_add_penClr()
+        xClr = cast("BaseOxmlElement | None", penClr.eg_colorChoice)
+        srgbClr = (
+            cast("CT_SRgbColor", xClr)
+            if xClr is not None and xClr.tag == qn("a:srgbClr")
+            else penClr.get_or_change_to_srgbClr()
+        )
+        srgbClr.val = str(value)  # pyright: ignore[reportAttributeAccessIssue]
+
+    @property
+    def slide_range(self) -> tuple[int, int] | None:
+        """1-based `(start, end)` inclusive slide range shown, or None. Read/write.
+
+        None means either "all slides" (the default) or that a custom show is
+        selected instead -- see `custom_show_id`.
+        """
+        showPr = self._showPr
+        sldRg = showPr.sldRg if showPr is not None else None
+        if sldRg is None:
+            return None
+        return (sldRg.st, sldRg.end)
+
+    @slide_range.setter
+    def slide_range(self, value: tuple[int, int] | None) -> None:
+        if value is None:
+            showPr = self._showPr
+            if showPr is not None:
+                showPr._remove_slideRangeChoice()  # pyright: ignore[reportPrivateUsage]
+            return
+        start, end = value
+        sldRg = self._get_or_add_showPr().get_or_change_to_sldRg()
+        sldRg.st = start
+        sldRg.end = end
+
+    @property
+    def custom_show_id(self) -> int | None:
+        """Id of the `p:custShow` selected to be shown, or None. Read/write.
+
+        None means either "all slides" or that a `slide_range` is selected instead.
+        """
+        showPr = self._showPr
+        custShow = showPr.custShow if showPr is not None else None
+        return custShow.id if custShow is not None else None
+
+    @custom_show_id.setter
+    def custom_show_id(self, value: int | None) -> None:
+        if value is None:
+            showPr = self._showPr
+            if showPr is not None:
+                showPr._remove_slideRangeChoice()  # pyright: ignore[reportPrivateUsage]
+            return
+        custShow = self._get_or_add_showPr().get_or_change_to_custShow()
+        custShow.id = value
+
+    @property
+    def _showPr(self) -> CT_ShowProperties | None:
+        """The `p:showPr` element, or None if `presProps.xml` or `p:showPr` is absent."""
+        pres_props_part = self._presentation_part.pres_props_part
+        if pres_props_part is None:
+            return None
+        return pres_props_part._element.showPr  # pyright: ignore[reportPrivateUsage]
+
+    def _get_or_add_showPr(self) -> CT_ShowProperties:
+        """The `p:showPr` element, creating `presProps.xml` and/or `p:showPr` as needed."""
+        pres_props_part = self._presentation_part.get_or_add_pres_props_part()
+        return pres_props_part._element.get_or_add_showPr()  # pyright: ignore[reportPrivateUsage]
+
+
+class TableStyles(Mapping[str, str]):
+    """Read-only mapping of table-style id (a GUID) to display name.
+
+    Obtained via `Presentation.table_styles`. Reflects the styles defined in
+    `ppt/tableStyles.xml`; empty when the presentation has no such part. The id of
+    the style used by default for new tables is available as `default_id`.
+    """
+
+    def __init__(self, table_styles_part: TableStylesPart | None) -> None:
+        self._table_styles_part = table_styles_part
+
+    def __getitem__(self, key: str) -> str:
+        for styleId, styleName in self._items:
+            if styleId == key:
+                return styleName
+        raise KeyError(key)
+
+    def __iter__(self) -> Iterator[str]:
+        for styleId, _ in self._items:
+            yield styleId
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+    @property
+    def default_id(self) -> str | None:
+        """Id (GUID) of the table style PowerPoint applies to a new table by default.
+
+        None when the presentation has no `tableStyles.xml` part, or that part
+        defines no default.
+        """
+        part = self._table_styles_part
+        if part is None:
+            return None
+        return part._element.def_  # pyright: ignore[reportPrivateUsage]
+
+    @property
+    def _items(self) -> list[tuple[str, str]]:
+        part = self._table_styles_part
+        if part is None:
+            return []
+        return [(s.styleId, s.styleName) for s in part._element.tblStyle_lst]
+
+
+def _show_type_tag_map() -> dict[str, PP_SLIDE_SHOW_TYPE]:
+    from pptx.oxml.ns import qn
+
+    return {
+        qn("p:present"): PP_SLIDE_SHOW_TYPE.SPEAKER,
+        qn("p:browse"): PP_SLIDE_SHOW_TYPE.BROWSE,
+        qn("p:kiosk"): PP_SLIDE_SHOW_TYPE.KIOSK,
+    }
+
+
+_SHOW_TYPE_TAG_MAP: dict[str, PP_SLIDE_SHOW_TYPE] = _show_type_tag_map()
