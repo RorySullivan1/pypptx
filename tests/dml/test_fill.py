@@ -21,11 +21,12 @@ from pptx.dml.fill import (
     _PattFill,
     _SolidFill,
 )
-from pptx.enum.dml import MSO_FILL, MSO_PATTERN
+from pptx.enum.dml import MSO_FILL, MSO_GRADIENT_TYPE, MSO_PATTERN, MSO_RECT_ALIGNMENT
 from pptx.oxml.dml.fill import CT_GradientStopList
+from pptx.util import Emu
 
 from ..unitutil.cxml import element, xml
-from ..unitutil.mock import class_mock, instance_mock, method_mock, property_mock
+from ..unitutil.mock import Mock, class_mock, instance_mock, method_mock, property_mock
 
 
 class DescribeFillFormat:
@@ -125,6 +126,140 @@ class DescribeFillFormat:
         fill, pattern = pattern_set_fixture
         fill.pattern = pattern
         assert fill.pattern is pattern
+
+    def it_can_set_the_fill_type_to_picture(self, picture_fixture):
+        fill, image_file, part_, image_part_, rId = picture_fixture
+
+        fill.picture(image_file)
+
+        part_.get_or_add_image_part.assert_called_once_with(image_file)
+        assert isinstance(fill._fill, _BlipFill)
+        blipFill = fill._xPr.eg_fillProperties
+        assert blipFill.blip.rEmbed == rId
+        assert blipFill.stretch is not None
+        assert blipFill.stretch.fillRect is not None
+        assert blipFill.tile is None
+
+    def it_raises_on_picture_with_no_reachable_part(self):
+        fill = FillFormat.from_fill_parent(element("p:spPr"))
+        with pytest.raises(ShapeError):
+            fill.picture("image.png")
+
+    def it_can_tile_a_picture_fill(self, tile_fixture):
+        fill, kwargs, expected_xml = tile_fixture
+        fill.tile(**kwargs)
+        assert fill._xPr.xml == expected_xml
+
+    def it_raises_on_tile_when_not_a_picture_fill(self):
+        fill = FillFormat.from_fill_parent(element("p:spPr/a:solidFill"))
+        with pytest.raises(ShapeError):
+            fill.tile()
+
+    def it_knows_its_gradient_type(self, gradient_type_get_fixture):
+        fill, expected_value = gradient_type_get_fixture
+        assert fill.gradient_type == expected_value
+
+    def it_can_change_its_gradient_type(self, gradient_type_set_fixture):
+        fill, value, expected_xml = gradient_type_set_fixture
+        fill.gradient_type = value
+        assert fill._xPr.xml == expected_xml
+
+    def it_raises_on_gradient_type_for_non_gradient_fill(self, fill_, type_prop_):
+        type_prop_.return_value = None
+        fill = FillFormat(None, fill_)
+        with pytest.raises(ShapeError):
+            fill.gradient_type
+        with pytest.raises(ShapeError):
+            fill.gradient_type = MSO_GRADIENT_TYPE.RADIAL
+
+    def it_knows_its_gradient_fill_to_rect(self, fill_to_rect_get_fixture):
+        fill, expected_value = fill_to_rect_get_fixture
+        assert fill.gradient_fill_to_rect == expected_value
+
+    def it_can_change_its_gradient_fill_to_rect(self, fill_to_rect_set_fixture):
+        fill, value, expected_xml = fill_to_rect_set_fixture
+        fill.gradient_fill_to_rect = value
+        assert fill._xPr.xml == expected_xml
+
+    def it_raises_on_fill_to_rect_for_a_linear_gradient(self):
+        fill = FillFormat.from_fill_parent(element("p:spPr/a:gradFill/a:lin"))
+        with pytest.raises(ShapeError):
+            fill.gradient_fill_to_rect = (0.1, 0.1, 0.9, 0.9)
+
+    # fixtures -------------------------------------------------------
+
+    @pytest.fixture
+    def picture_fixture(self, request):
+        spPr = element("p:spPr")
+        image_file = "image.png"
+        image_part_ = Mock(name="image_part_")
+        rId = "rId42"
+        part_ = Mock(name="part_")
+        part_.get_or_add_image_part.return_value = (image_part_, rId)
+        part_provider_ = Mock(name="part_provider_", part=part_)
+        fill = FillFormat.from_fill_parent(spPr, part_provider_)
+        return fill, image_file, part_, image_part_, rId
+
+    @pytest.fixture
+    def tile_fixture(self):
+        spPr = element("p:spPr/a:blipFill/(a:blip{r:embed=rId1},a:stretch/a:fillRect)")
+        fill = FillFormat.from_fill_parent(spPr)
+        kwargs = dict(
+            tx=Emu(1000), ty=Emu(2000), sx=0.5, sy=0.75, flip="xy", algn=MSO_RECT_ALIGNMENT.CENTER
+        )
+        expected_xml = xml(
+            'p:spPr/a:blipFill/(a:blip{r:embed=rId1},a:tile{tx=1000,ty=2000,sx=50000,sy=75000'
+            ',flip=xy,algn=ctr})'
+        )
+        return fill, kwargs, expected_xml
+
+    @pytest.fixture(
+        params=[
+            ("p:spPr/a:gradFill", MSO_GRADIENT_TYPE.LINEAR),
+            ("p:spPr/a:gradFill/a:lin", MSO_GRADIENT_TYPE.LINEAR),
+            ("p:spPr/a:gradFill/a:path{path=circle}", MSO_GRADIENT_TYPE.RADIAL),
+            ("p:spPr/a:gradFill/a:path{path=rect}", MSO_GRADIENT_TYPE.RECTANGULAR),
+            ("p:spPr/a:gradFill/a:path{path=shape}", MSO_GRADIENT_TYPE.PATH),
+        ]
+    )
+    def gradient_type_get_fixture(self, request):
+        spPr_cxml, expected_value = request.param
+        fill = FillFormat.from_fill_parent(element(spPr_cxml))
+        return fill, expected_value
+
+    @pytest.fixture(
+        params=[
+            (MSO_GRADIENT_TYPE.LINEAR, "p:spPr/a:gradFill/a:lin"),
+            (MSO_GRADIENT_TYPE.RADIAL, 'p:spPr/a:gradFill/a:path{path=circle}'),
+            (MSO_GRADIENT_TYPE.RECTANGULAR, 'p:spPr/a:gradFill/a:path{path=rect}'),
+            (MSO_GRADIENT_TYPE.PATH, 'p:spPr/a:gradFill/a:path{path=shape}'),
+        ]
+    )
+    def gradient_type_set_fixture(self, request):
+        value, expected_cxml = request.param
+        fill = FillFormat.from_fill_parent(element("p:spPr/a:gradFill"))
+        expected_xml = xml(expected_cxml)
+        return fill, value, expected_xml
+
+    @pytest.fixture
+    def fill_to_rect_get_fixture(self):
+        cxml = (
+            'p:spPr/a:gradFill/a:path{path=circle}/a:fillToRect{l=10000,t=20000,r=30000,b=40000}'
+        )
+        fill = FillFormat.from_fill_parent(element(cxml))
+        expected_value = (0.1, 0.2, 0.3, 0.4)
+        return fill, expected_value
+
+    @pytest.fixture
+    def fill_to_rect_set_fixture(self):
+        fill = FillFormat.from_fill_parent(
+            element("p:spPr/a:gradFill/a:path{path=circle}")
+        )
+        value = (0.1, 0.2, 0.3, 0.4)
+        expected_xml = xml(
+            'p:spPr/a:gradFill/a:path{path=circle}/a:fillToRect{l=10000,t=20000,r=30000,b=40000}'
+        )
+        return fill, value, expected_xml
 
     # fixtures -------------------------------------------------------
 
