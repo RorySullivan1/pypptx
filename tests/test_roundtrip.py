@@ -236,6 +236,72 @@ shape2 = [s for s in prs2.slides[0].shapes if not s.is_placeholder][0]
 assert shape2.hidden is True
 """)
 
+    def it_loads_modern_comment_parts_typed_and_saves_them_untouched(self):
+        _run_roundtrip_test("""\
+import zipfile
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.parts.comments import AuthorsPart, ModernCommentsPart
+from tests.unitutil.modern_comments import AUTHORS_XML, COMMENTS_PARTNAME, COMMENTS_XML
+from tests.unitutil.modern_comments import modern_comments_pptx
+
+def canonical(xml):
+    from lxml import etree
+    return etree.tostring(etree.fromstring(xml.encode() if isinstance(xml, str) else xml),
+                          method="c14n")
+
+prs = Presentation(modern_comments_pptx())
+comments_part = prs.slides[0].part.part_related_by(RT.MODERN_COMMENTS)
+authors_part = prs.part.part_related_by(RT.AUTHORS)
+assert isinstance(comments_part, ModernCommentsPart)
+assert isinstance(authors_part, AuthorsPart)
+assert len(comments_part) == 2
+assert len(authors_part) == 2
+
+stream = BytesIO()
+prs.save(stream)
+zf = zipfile.ZipFile(stream)
+xml_decl, body = COMMENTS_XML.split("\\n", 1)
+assert canonical(zf.read(COMMENTS_PARTNAME)) == canonical(body)
+assert canonical(zf.read("ppt/authors.xml")) == canonical(AUTHORS_XML.split("\\n", 1)[1])
+slide_xml = zf.read("ppt/slides/slide1.xml").decode()
+assert "p188:commentRel" in slide_xml
+""")
+
+    def it_leaves_modern_comments_behind_when_duplicating_a_slide(self):
+        _run_roundtrip_test("""\
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from tests.unitutil.modern_comments import modern_comments_pptx
+
+prs = Presentation(modern_comments_pptx())
+dup = prs.slides.duplicate(prs.slides[0])
+assert RT.MODERN_COMMENTS not in [r.reltype for r in dup.part.rels.values()]
+assert dup.part._element.comment_rel_rId is None
+assert prs.slides[0].part._element.comment_rel_rId is not None
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+assert prs2.slides[1].part._element.comment_rel_rId is None
+""")
+
+    def it_leaves_modern_comments_behind_when_importing_a_slide(self):
+        _run_roundtrip_test("""\
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from tests.unitutil.modern_comments import modern_comments_pptx
+
+src = Presentation(modern_comments_pptx())
+dst = Presentation()
+imported = dst.slides.import_slide(src.slides[0])
+assert RT.MODERN_COMMENTS not in [r.reltype for r in imported.part.rels.values()]
+assert imported.part._element.comment_rel_rId is None
+
+stream = BytesIO()
+dst.save(stream)
+stream.seek(0)
+assert len(Presentation(stream).slides) == 1
+""")
+
     def it_round_trips_a_duplicated_shape(self):
         _run_roundtrip_test("""\
 prs = Presentation()

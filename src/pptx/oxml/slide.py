@@ -24,6 +24,9 @@ if TYPE_CHECKING:
     from pptx.oxml.text import CT_TextListStyle
 
 
+# -- `p:ext/@uri` of the slide extension holding `p188:commentRel`, [MS-PPTX] 2.3.53 --
+COMMENT_REL_EXT_URI = "{6950BFC3-D8DA-4A85-94F7-54DA5524770B}"
+
 class _BaseSlideElement(BaseOxmlElement):
     """Base class for the six slide types, providing common methods."""
 
@@ -201,6 +204,22 @@ class CT_Slide(_BaseSlideElement):
     def new(cls) -> CT_Slide:
         """Return new `p:sld` element configured as base slide shape."""
         return cast(CT_Slide, parse_xml(cls._sld_xml()))
+
+    @property
+    def comment_rel_rId(self) -> str | None:
+        """`r:id` of the `p188:commentRel` extension naming the modern comments part, or None."""
+        rIds = self.xpath(
+            "./p:extLst/p:ext[@uri='%s']/p188:commentRel/@r:id" % COMMENT_REL_EXT_URI
+        )
+        return str(rIds[0]) if rIds else None
+
+    def remove_comment_rel(self) -> None:
+        """Remove the `p188:commentRel` extension, and `p:extLst` if that leaves it empty."""
+        for ext in self.xpath("./p:extLst/p:ext[@uri='%s']" % COMMENT_REL_EXT_URI):
+            extLst = ext.getparent()
+            extLst.remove(ext)
+            if len(extLst) == 0:
+                self.remove(extLst)
 
     @property
     def bg(self):

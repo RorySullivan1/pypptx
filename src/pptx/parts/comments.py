@@ -1,4 +1,4 @@
-"""Comments parts for slide comments and comment authors."""
+"""Comments parts for slide comments and comment authors, legacy and modern."""
 
 from __future__ import annotations
 
@@ -7,7 +7,16 @@ from typing import TYPE_CHECKING, Callable, Iterator
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.package import XmlPart
 from pptx.opc.packuri import PackURI
-from pptx.oxml.comment import CT_Comment, CT_CommentAuthor, CT_CommentAuthorList, CT_CommentList
+from pptx.oxml.comment import (
+    CT_Comment,
+    CT_CommentAuthor,
+    CT_CommentAuthorList,
+    CT_CommentList,
+    CT_ModernAuthor,
+    CT_ModernAuthorList,
+    CT_ModernComment,
+    CT_ModernCommentList,
+)
 
 if TYPE_CHECKING:
     from pptx.package import Package
@@ -108,4 +117,49 @@ class CommentsPart(XmlPart):
         return len(self._element.cm_lst)
 
     def __iter__(self) -> Iterator[CT_Comment]:
+        return iter(self._element.cm_lst)
+
+
+class AuthorsPart(XmlPart):
+    """Corresponds to the ``/ppt/authors.xml`` part, the authors of modern comments.
+
+    The presentation part relates to it with the `RT.AUTHORS` relationship.
+    """
+
+    _element: CT_ModernAuthorList
+
+    def get_author(self, author_id: str) -> CT_ModernAuthor | None:
+        """Return the author element whose GUID is `author_id`, or None."""
+        return self._element.get_author(author_id)
+
+    @property
+    def authors(self) -> list[CT_ModernAuthor]:
+        """List of all author elements."""
+        return self._element.author_lst
+
+    def __len__(self) -> int:
+        return len(self._element.author_lst)
+
+    def __iter__(self) -> Iterator[CT_ModernAuthor]:
+        return iter(self._element.author_lst)
+
+
+class ModernCommentsPart(XmlPart):
+    """Corresponds to a ``/ppt/comments/modernComment_*.xml`` part, one slide's comment threads.
+
+    A slide relates to it with the `RT.MODERN_COMMENTS` relationship and also names that
+    relationship in a `p188:commentRel` extension of its `p:sld/p:extLst`.
+    """
+
+    _element: CT_ModernCommentList
+
+    @property
+    def comments(self) -> list[CT_ModernComment]:
+        """List of all thread-starting comment elements."""
+        return self._element.cm_lst
+
+    def __len__(self) -> int:
+        return len(self._element.cm_lst)
+
+    def __iter__(self) -> Iterator[CT_ModernComment]:
         return iter(self._element.cm_lst)

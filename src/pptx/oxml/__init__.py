@@ -598,6 +598,7 @@ register_element_cls("a:lnR", CT_LineProperties)
 register_element_cls("a:lnT", CT_LineProperties)
 register_element_cls("a:tailEnd", CT_LineEndProperties)
 register_element_cls("a:off", CT_Point2D)
+register_element_cls("p188:pos", CT_Point2D)
 register_element_cls("a:xfrm", CT_Transform2D)
 register_element_cls("c:spPr", CT_ShapeProperties)
 register_element_cls("a:cxnSpLocks", CT_Locking)
@@ -617,12 +618,28 @@ from pptx.oxml.comment import (  # noqa: E402
     CT_CommentAuthor,
     CT_CommentAuthorList,
     CT_CommentList,
+    CT_ModernAuthor,
+    CT_ModernAuthorList,
+    CT_ModernComment,
+    CT_ModernCommentList,
+    CT_ModernCommentReply,
+    CT_ModernCommentReplyList,
+    CT_SlideMoniker,
+    CT_SlideMonikerList,
 )
 
 register_element_cls("p:cm", CT_Comment)
 register_element_cls("p:cmAuthor", CT_CommentAuthor)
 register_element_cls("p:cmAuthorLst", CT_CommentAuthorList)
 register_element_cls("p:cmLst", CT_CommentList)
+register_element_cls("p188:author", CT_ModernAuthor)
+register_element_cls("p188:authorLst", CT_ModernAuthorList)
+register_element_cls("p188:cm", CT_ModernComment)
+register_element_cls("p188:cmLst", CT_ModernCommentList)
+register_element_cls("p188:reply", CT_ModernCommentReply)
+register_element_cls("p188:replyLst", CT_ModernCommentReplyList)
+register_element_cls("pc:sldMk", CT_SlideMoniker)
+register_element_cls("pc:sldMkLst", CT_SlideMonikerList)
 
 
 from pptx.oxml.section import (  # noqa: E402
@@ -757,6 +774,7 @@ register_element_cls("a:spcPts", CT_TextSpacingPoint)
 register_element_cls("a:txBody", CT_TextBody)
 register_element_cls("c:txPr", CT_TextBody)
 register_element_cls("p:txBody", CT_TextBody)
+register_element_cls("p188:txBody", CT_TextBody)
 
 
 from pptx.oxml.theme import (  # noqa: E402

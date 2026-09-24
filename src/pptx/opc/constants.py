@@ -52,6 +52,7 @@ class CONTENT_TYPE:
         "application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml"
     )
     OPC_RELATIONSHIPS = "application/vnd.openxmlformats-package.relationships+xml"
+    PML_AUTHORS = "application/vnd.ms-powerpoint.authors+xml"
     PML_COMMENTS = "application/vnd.openxmlformats-officedocument.presentationml.comments+xml"
     PML_COMMENT_AUTHORS = (
         "application/vnd.openxmlformats-officedocument.presentationml.commentAuthors+xml"
@@ -59,6 +60,7 @@ class CONTENT_TYPE:
     PML_HANDOUT_MASTER = (
         "application/vnd.openxmlformats-officedocument.presentationml.handoutMaster+xml"
     )
+    PML_MODERN_COMMENTS = "application/vnd.ms-powerpoint.comments+xml"
     PML_NOTES_MASTER = (
         "application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml"
     )
@@ -196,6 +198,7 @@ class RELATIONSHIP_TARGET_MODE:
 
 class RELATIONSHIP_TYPE:
     AUDIO = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio"
+    AUTHORS = "http://schemas.microsoft.com/office/2018/10/relationships/authors"
     A_F_CHUNK = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/aFChunk"
     CALC_CHAIN = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain"
     CERTIFICATE = (
@@ -260,6 +263,7 @@ class RELATIONSHIP_TYPE:
     HYPERLINK = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
     IMAGE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
     MEDIA = "http://schemas.microsoft.com/office/2007/relationships/media"
+    MODERN_COMMENTS = "http://schemas.microsoft.com/office/2018/10/relationships/comments"
     NOTES_MASTER = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster"
     NOTES_SLIDE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide"
     NUMBERING = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering"

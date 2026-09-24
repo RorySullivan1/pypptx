@@ -8,7 +8,7 @@ import pytest
 
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
-from pptx.parts.comments import CommentAuthorsPart, CommentsPart
+from pptx.parts.comments import AuthorsPart, CommentAuthorsPart, CommentsPart, ModernCommentsPart
 from pptx.slide import Comment, SlideComments
 
 
@@ -84,6 +84,51 @@ class DescribeCommentsPart:
         part = self._part(n_comments=2)
         comments = list(part)
         assert len(comments) == 2
+
+
+class DescribeAuthorsPart:
+    """Unit-test suite for `pptx.parts.comments.AuthorsPart`."""
+
+    def _part(self):
+        xml = (
+            "<p188:authorLst %s>"
+            '<p188:author id="{A1}" name="Alice" initials="AA" userId="alice" providerId="None"/>'
+            '<p188:author id="{B2}" name="Bob" userId="bob" providerId="AD"/>'
+            "</p188:authorLst>"
+        ) % nsdecls("p188")
+        return AuthorsPart("/ppt/authors.xml", "application/test", None, parse_xml(xml))
+
+    def it_provides_access_to_its_authors(self):
+        part = self._part()
+        assert len(part) == 2
+        assert [a.name for a in part] == ["Alice", "Bob"]
+        assert [a.name for a in part.authors] == ["Alice", "Bob"]
+
+    def it_can_find_an_author_by_id(self):
+        part = self._part()
+        author = part.get_author("{B2}")
+        assert author is not None
+        assert author.name == "Bob"
+        assert part.get_author("{ZZ}") is None
+
+
+class DescribeModernCommentsPart:
+    """Unit-test suite for `pptx.parts.comments.ModernCommentsPart`."""
+
+    def it_provides_access_to_its_threads(self):
+        xml = (
+            "<p188:cmLst %s>"
+            '<p188:cm id="{C1}" authorId="{A1}" created="2024-05-01T09:30:00.000"/>'
+            '<p188:cm id="{C2}" authorId="{A1}" created="2024-05-02T09:30:00.000"/>'
+            "</p188:cmLst>"
+        ) % nsdecls("p188")
+        part = ModernCommentsPart(
+            "/ppt/comments/modernComment_100_1.xml", "application/test", None, parse_xml(xml)
+        )
+
+        assert len(part) == 2
+        assert [cm.id for cm in part] == ["{C1}", "{C2}"]
+        assert [cm.id for cm in part.comments] == ["{C1}", "{C2}"]
 
 
 class DescribeComment:
