@@ -599,3 +599,45 @@ class MSO_SHADOW_TYPE(BaseXmlEnum):
 
     INNER = (2, "inner", "Inner shadow (`a:innerShdw`).")
     """Inner shadow."""
+
+
+class MSO_GRADIENT_TYPE(BaseEnum):
+    """Specifies the shading path used by a gradient fill.
+
+    Used with :attr:`.FillFormat.gradient_type`. Unlike most DrawingML enums, these members do
+    not correspond to the value of a single XML attribute; they instead reflect which of
+    `a:lin` or `a:path` (and the `path` attribute on `a:path`) is present on the `a:gradFill`
+    element.
+
+    Example::
+
+        from pptx.enum.dml import MSO_GRADIENT_TYPE
+
+        shape.fill.gradient()
+        shape.fill.gradient_type = MSO_GRADIENT_TYPE.RADIAL
+    """
+
+    LINEAR = (1, "Gradient shades along a straight line determined by an angle (`a:lin`).")
+    """Gradient shades along a straight line determined by an angle (`a:lin`)."""
+
+    RADIAL = (
+        2,
+        'Gradient shades outward from a central point in a circular path'
+        ' (`a:path path="circle"`).',
+    )
+    """Gradient shades outward from a central point in a circular path
+    (`a:path path="circle"`)."""
+
+    RECTANGULAR = (
+        3,
+        'Gradient shades outward from a central point in a rectangular path'
+        ' (`a:path path="rect"`).',
+    )
+    """Gradient shades outward from a central point in a rectangular path
+    (`a:path path="rect"`)."""
+
+    PATH = (
+        4,
+        'Gradient shades along the outline of the shape itself (`a:path path="shape"`).',
+    )
+    """Gradient shades along the outline of the shape itself (`a:path path="shape"`)."""

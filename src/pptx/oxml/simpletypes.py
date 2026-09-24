@@ -381,6 +381,17 @@ class ST_Direction(XsdTokenEnumeration):
     _members = (HORZ, VERT)
 
 
+class ST_TileFlipMode(XsdTokenEnumeration):
+    """Valid values for `<a:tile flip="...">` attribute."""
+
+    NONE = "none"
+    X = "x"
+    Y = "y"
+    XY = "xy"
+
+    _members = (NONE, X, Y, XY)
+
+
 class ST_DispBlanksAs(XsdStringEnumeration):
     """Valid values for `<c:dispBlanksAs val="?">` attribute."""
 

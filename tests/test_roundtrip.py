@@ -317,6 +317,70 @@ finally:
     os.unlink(img_path)
 """)
 
+    def it_round_trips_a_picture_filled_rectangle(self):
+        _run_roundtrip_test("""\
+import os, tempfile
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.dml import MSO_FILL, MSO_GRADIENT_TYPE, MSO_RECT_ALIGNMENT
+
+# tiny valid PNG (1x1 white pixel)
+png_bytes = (
+    b'\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x00\\x01'
+    b'\\x00\\x00\\x00\\x01\\x08\\x02\\x00\\x00\\x00\\x90wS\\xde\\x00'
+    b'\\x00\\x00\\x0cIDATx\\x9cc\\xf8\\x0f\\x00\\x00\\x01\\x01\\x00'
+    b'\\x05\\x18\\xd8N\\x00\\x00\\x00\\x00IEND\\xaeB`\\x82'
+)
+with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+    f.write(png_bytes)
+    img_path = f.name
+
+try:
+    prs = Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
+
+    stretched = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(1), Inches(1), Inches(2), Inches(2)
+    )
+    stretched.fill.picture(img_path)
+
+    tiled = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(4), Inches(1), Inches(2), Inches(2)
+    )
+    tiled.fill.picture(img_path)
+    tiled.fill.tile(sx=0.5, sy=0.5, algn=MSO_RECT_ALIGNMENT.CENTER)
+
+    radial = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(1), Inches(4), Inches(2), Inches(2)
+    )
+    radial.fill.gradient()
+    radial.fill.gradient_type = MSO_GRADIENT_TYPE.RADIAL
+    radial.fill.gradient_fill_to_rect = (0.2, 0.2, 0.8, 0.8)
+
+    stream = BytesIO()
+    prs.save(stream)
+    stream.seek(0)
+    prs2 = Presentation(stream)
+
+    shapes2 = [s for s in prs2.slides[0].shapes if not s.is_placeholder]
+    stretched2, tiled2, radial2 = shapes2
+
+    assert stretched2.fill.type == MSO_FILL.PICTURE
+    assert stretched2.fill._fill._blipFill.stretch is not None
+
+    assert tiled2.fill.type == MSO_FILL.PICTURE
+    tile_elm = tiled2.fill._fill._blipFill.tile
+    assert tile_elm is not None
+    assert tile_elm.sx == 0.5
+    assert tile_elm.sy == 0.5
+    assert tile_elm.algn == MSO_RECT_ALIGNMENT.CENTER
+
+    assert radial2.fill.type == MSO_FILL.GRADIENT
+    assert radial2.fill.gradient_type == MSO_GRADIENT_TYPE.RADIAL
+    assert radial2.fill.gradient_fill_to_rect == (0.2, 0.2, 0.8, 0.8)
+finally:
+    os.unlink(img_path)
+""")
+
     def it_round_trips_theme_effect_scheme(self):
         _run_roundtrip_test("""\
 from pptx.theme import EffectScheme
