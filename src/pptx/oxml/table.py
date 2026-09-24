@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Iterator, cast
 
-from pptx.enum.text import MSO_VERTICAL_ANCHOR
+from pptx.enum.text import MSO_TEXT_VERTICAL_TYPE, MSO_VERTICAL_ANCHOR
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
@@ -217,6 +217,21 @@ class CT_TableCell(BaseOxmlElement):
         tcPr = self.get_or_add_tcPr()
         tcPr.anchor = anchor_enum_idx
 
+    @property
+    def vert(self) -> MSO_TEXT_VERTICAL_TYPE | None:
+        """String held in `vert` attribute of `a:tcPr` child element of this `a:tc` element."""
+        if self.tcPr is None:
+            return None
+        return self.tcPr.vert
+
+    @vert.setter
+    def vert(self, value: MSO_TEXT_VERTICAL_TYPE | None):
+        """Set value of `vert` attribute on `a:tcPr` child element."""
+        if value is None and self.tcPr is None:
+            return
+        tcPr = self.get_or_add_tcPr()
+        tcPr.vert = value
+
     def append_ps_from(self, spanned_tc: CT_TableCell):
         """Append `a:p` elements taken from `spanned_tc`.
 
@@ -418,6 +433,9 @@ class CT_TableCellProperties(BaseOxmlElement):
     )
     marB: Length | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "marB", ST_Coordinate32
+    )
+    vert: MSO_TEXT_VERTICAL_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "vert", MSO_TEXT_VERTICAL_TYPE
     )
 
     def _new_gradFill(self):

@@ -13,7 +13,7 @@ from pptx.text.text import TextFrame
 from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
-    from pptx.enum.text import MSO_VERTICAL_ANCHOR
+    from pptx.enum.text import MSO_TEXT_VERTICAL_TYPE, MSO_VERTICAL_ANCHOR
     from pptx.oxml.shapes.shared import CT_LineProperties
     from pptx.oxml.table import CT_Table, CT_TableCell, CT_TableCol, CT_TableRow
     from pptx.parts.slide import BaseSlidePart
@@ -402,6 +402,23 @@ class _Cell(Subshape):
         """|TextFrame| containing the text that appears in the cell."""
         txBody = self._tc.get_or_add_txBody()
         return TextFrame(txBody, self)
+
+    @property
+    def text_direction(self) -> MSO_TEXT_VERTICAL_TYPE | None:
+        """Text direction (rotation) of text in this cell.
+
+        This value is a member of the :ref:`MsoTextOrientation` enumeration or |None|. A value
+        of |None| indicates the cell has no explicitly applied text direction setting and its
+        effective value is inherited from its style-hierarchy ancestors (horizontal text).
+
+        Assigning |None| to this property causes any explicitly applied text direction setting
+        to be cleared and inheritance of its effective value to be restored.
+        """
+        return self._tc.vert
+
+    @text_direction.setter
+    def text_direction(self, value: MSO_TEXT_VERTICAL_TYPE | None):
+        self._tc.vert = value
 
     @property
     def vertical_anchor(self) -> MSO_VERTICAL_ANCHOR | None:

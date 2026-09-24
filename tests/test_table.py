@@ -9,7 +9,7 @@ import pytest
 from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
 from pptx.exc import TableError
-from pptx.enum.text import MSO_ANCHOR
+from pptx.enum.text import MSO_ANCHOR, MSO_TEXT_VERTICAL_TYPE
 from pptx.oxml.ns import qn
 from pptx.oxml.table import CT_Table, CT_TableCell, TcRange
 from pptx.shapes.graphfrm import GraphicFrame
@@ -387,6 +387,15 @@ class Describe_Cell:
 
         assert text_frame_.text == "føøbår"
 
+    def it_knows_its_text_direction_setting(self, text_direction_get_fixture):
+        cell, expected_value = text_direction_get_fixture
+        assert cell.text_direction == expected_value
+
+    def it_can_change_its_text_direction(self, text_direction_set_fixture):
+        cell, new_value, expected_xml = text_direction_set_fixture
+        cell.text_direction = new_value
+        assert cell._tc.xml == expected_xml
+
     def it_knows_its_vertical_anchor_setting(self, anchor_get_fixture):
         cell, expected_value = anchor_get_fixture
         assert cell.vertical_anchor == expected_value
@@ -423,6 +432,32 @@ class Describe_Cell:
         ]
     )
     def anchor_set_fixture(self, request):
+        tc_cxml, new_value, expected_tc_cxml = request.param
+        cell = _Cell(element(tc_cxml), None)
+        expected_xml = xml(expected_tc_cxml)
+        return cell, new_value, expected_xml
+
+    @pytest.fixture(
+        params=[
+            ("a:tc", None),
+            ("a:tc/a:tcPr", None),
+            ("a:tc/a:tcPr{vert=vert270}", MSO_TEXT_VERTICAL_TYPE.VERTICAL_270),
+            ("a:tc/a:tcPr{vert=vert}", MSO_TEXT_VERTICAL_TYPE.VERTICAL),
+        ]
+    )
+    def text_direction_get_fixture(self, request):
+        tc_cxml, expected_value = request.param
+        cell = _Cell(element(tc_cxml), None)
+        return cell, expected_value
+
+    @pytest.fixture(
+        params=[
+            ("a:tc", None, "a:tc"),
+            ("a:tc", MSO_TEXT_VERTICAL_TYPE.VERTICAL_270, "a:tc/a:tcPr{vert=vert270}"),
+            ("a:tc/a:tcPr{vert=vert270}", None, "a:tc/a:tcPr"),
+        ]
+    )
+    def text_direction_set_fixture(self, request):
         tc_cxml, new_value, expected_tc_cxml = request.param
         cell = _Cell(element(tc_cxml), None)
         expected_xml = xml(expected_tc_cxml)
