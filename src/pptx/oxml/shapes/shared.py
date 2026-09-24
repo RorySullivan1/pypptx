@@ -5,7 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from pptx.dml.fill import CT_GradientFillProperties
-from pptx.enum.dml import MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE, MSO_RECT_ALIGNMENT
+from pptx.enum.dml import (
+    MSO_LINE_CAP_STYLE,
+    MSO_LINE_COMPOUND_TYPE,
+    MSO_LINE_END_SIZE,
+    MSO_LINE_END_TYPE,
+    MSO_RECT_ALIGNMENT,
+)
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import (
@@ -14,6 +20,7 @@ from pptx.oxml.simpletypes import (
     ST_Direction,
     ST_DrawingElementId,
     ST_LineWidth,
+    ST_Percentage,
     ST_PlaceholderSize,
     ST_PositiveCoordinate,
     XsdBoolean,
@@ -305,8 +312,21 @@ class CT_LineEndProperties(BaseOxmlElement):
     )
 
 
+class CT_LineJoinMiterProperties(BaseOxmlElement):
+    """`a:miter` element, specifying a mitered line join and its miter limit."""
+
+    lim: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "lim", ST_Percentage
+    )
+
+
 class CT_LineProperties(BaseOxmlElement):
     """Custom element class for <a:ln> element"""
+
+    round: BaseOxmlElement | None
+    bevel: BaseOxmlElement | None
+    miter: CT_LineJoinMiterProperties | None
+    _remove_eg_lineJoinProperties: Callable[[], None]
 
     _tag_seq = (
         "a:noFill",
@@ -333,6 +353,14 @@ class CT_LineProperties(BaseOxmlElement):
     )
     prstDash = ZeroOrOne("a:prstDash", successors=_tag_seq[5:])
     custDash = ZeroOrOne("a:custDash", successors=_tag_seq[6:])
+    eg_lineJoinProperties = ZeroOrOneChoice(
+        (
+            Choice("a:round"),
+            Choice("a:bevel"),
+            Choice("a:miter"),
+        ),
+        successors=_tag_seq[9:],
+    )
     headEnd: CT_LineEndProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:headEnd", successors=_tag_seq[10:]
     )
@@ -341,6 +369,9 @@ class CT_LineProperties(BaseOxmlElement):
     )
     del _tag_seq
     w = OptionalAttribute("w", ST_LineWidth, default=Emu(0))
+    cap: MSO_LINE_CAP_STYLE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "cap", MSO_LINE_CAP_STYLE
+    )
     cmpd: MSO_LINE_COMPOUND_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "cmpd", MSO_LINE_COMPOUND_TYPE
     )

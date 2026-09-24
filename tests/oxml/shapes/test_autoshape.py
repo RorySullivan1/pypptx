@@ -9,7 +9,7 @@ from pptx.oxml.ns import nsdecls
 from pptx.oxml.shapes.autoshape import CT_Shape
 from pptx.oxml.shapes.shared import ST_Direction, ST_PlaceholderSize
 
-from ...unitutil.cxml import element
+from ...unitutil.cxml import element, xml
 from ..unitdata.shape import a_gd, a_prstGeom, an_avLst
 
 
@@ -75,6 +75,34 @@ class DescribeCT_PresetGeometry2D:
             avLst_bldr.with_child(gd_bldr)
         prstGeom_bldr = a_prstGeom().with_nsdecls().with_prst(prst).with_child(avLst_bldr)
         return prstGeom_bldr
+
+
+class DescribeCT_Path2D:
+    def it_can_add_an_arcTo_element(self):
+        path = element("a:path")
+
+        arcTo = path.add_arcTo(111, 222, 30, 145)
+
+        assert path.xml == xml("a:path/a:arcTo{wR=111,hR=222,stAng=1800000,swAng=8700000}")
+        assert arcTo is path.xpath("a:arcTo")[-1]
+
+    def it_can_add_a_cubicBezTo_element(self):
+        path = element("a:path")
+
+        cubicBezTo = path.add_cubicBezTo(11, 12, 21, 22, 31, 32)
+
+        assert path.xml == xml(
+            "a:path/a:cubicBezTo/(a:pt{x=11,y=12},a:pt{x=21,y=22},a:pt{x=31,y=32})"
+        )
+        assert cubicBezTo is path.xpath("a:cubicBezTo")[-1]
+
+    def it_can_add_a_quadBezTo_element(self):
+        path = element("a:path")
+
+        quadBezTo = path.add_quadBezTo(11, 12, 21, 22)
+
+        assert path.xml == xml("a:path/a:quadBezTo/(a:pt{x=11,y=12},a:pt{x=21,y=22})")
+        assert quadBezTo is path.xpath("a:quadBezTo")[-1]
 
 
 class DescribeCT_Shape:

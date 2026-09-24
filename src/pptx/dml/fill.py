@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, cast
 
 from pptx.dml.color import ColorFormat
-from pptx.enum.dml import MSO_FILL
+from pptx.enum.dml import MSO_FILL, MSO_GRADIENT_TYPE, MSO_RECT_ALIGNMENT
 from pptx.exc import ShapeError
 from pptx.oxml.dml.fill import (
     CT_BlipFillProperties,
@@ -16,13 +16,17 @@ from pptx.oxml.dml.fill import (
     CT_PatternFillProperties,
     CT_SolidColorFillProperties,
 )
+from pptx.oxml.simpletypes import ST_TileFlipMode
 from pptx.oxml.xmlchemy import BaseOxmlElement
 from pptx.shared import ElementProxy
-from pptx.util import lazyproperty
+from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
     from pptx.enum.dml import MSO_FILL_TYPE, MSO_PATTERN_TYPE
     from pptx.oxml.xmlchemy import BaseOxmlElement
+    from pptx.parts.slide import BaseSlidePart
+    from pptx.types import ProvidesPart
+    from pptx.util import Length
 
 
 class FillFormat:
@@ -31,21 +35,37 @@ class FillFormat:
     Also provides methods to change the fill type.
     """
 
-    def __init__(self, eg_fill_properties_parent: BaseOxmlElement, fill_obj: _Fill):
+    def __init__(
+        self,
+        eg_fill_properties_parent: BaseOxmlElement,
+        fill_obj: _Fill,
+        part_provider: ProvidesPart | None = None,
+    ):
         super(FillFormat, self).__init__()
         self._xPr = eg_fill_properties_parent
         self._fill = fill_obj
+        self._part_provider = part_provider
 
     @classmethod
-    def from_fill_parent(cls, eg_fillProperties_parent: BaseOxmlElement) -> FillFormat:
+    def from_fill_parent(
+        cls,
+        eg_fillProperties_parent: BaseOxmlElement,
+        part_provider: ProvidesPart | None = None,
+    ) -> FillFormat:
         """
         Return a |FillFormat| instance initialized to the settings contained
         in *eg_fillProperties_parent*, which must be an element having
         EG_FillProperties in its child element sequence in the XML schema.
+
+        *part_provider*, when supplied, is an object having a `.part` property (such as a
+        shape proxy) used to reach the containing part when a fill method needs package-level
+        access, e.g. `.picture()` needs it to add or reuse an image part. It is accessed lazily,
+        only when such a method is called, so it need not be resolvable at the time this method
+        is called.
         """
         fill_elm = eg_fillProperties_parent.eg_fillProperties
         fill = _Fill(fill_elm)
-        fill_format = cls(eg_fillProperties_parent, fill)
+        fill_format = cls(eg_fillProperties_parent, fill, part_provider)
         return fill_format
 
     @property
@@ -107,6 +127,31 @@ class FillFormat:
         self._fill.gradient_angle = value
 
     @property
+    def gradient_fill_to_rect(self) -> tuple[float, float, float, float] | None:
+        """(left, top, right, bottom) focus-rectangle for a non-linear gradient.
+
+        Each value is a float fraction of the shape extents, e.g. 0.5 represents the midline.
+        This is the `a:fillToRect` element nested inside `a:path`; it determines the inner
+        rectangle from which a radial, rectangular, or path gradient (see `.gradient_type`)
+        expands outward.
+
+        Read/Write. |None| indicates no focus-rectangle is specified, which PowerPoint
+        interprets as the full shape extents (each value defaulting to 0.0). Assigning |None|
+        removes the `a:fillToRect` element. Raises |ShapeError| when the fill type is not
+        MSO_FILL_TYPE.GRADIENT or when `.gradient_type` is `MSO_GRADIENT_TYPE.LINEAR` (a linear
+        gradient has no focus rectangle).
+        """
+        if self.type != MSO_FILL.GRADIENT:
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        return self._fill.fill_to_rect
+
+    @gradient_fill_to_rect.setter
+    def gradient_fill_to_rect(self, value: tuple[float, float, float, float] | None) -> None:
+        if self.type != MSO_FILL.GRADIENT:
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        self._fill.fill_to_rect = value
+
+    @property
     def gradient_stops(self) -> _GradientStops:
         """|GradientStops| object providing access to stops of this gradient.
 
@@ -117,6 +162,26 @@ class FillFormat:
         if self.type != MSO_FILL.GRADIENT:
             raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         return self._fill.gradient_stops
+
+    @property
+    def gradient_type(self) -> MSO_GRADIENT_TYPE:
+        """Member of :ref:`MsoGradientType` specifying the shading path of this gradient.
+
+        Read/write. One of `MSO_GRADIENT_TYPE.LINEAR`, `.RADIAL`, `.RECTANGULAR`, or `.PATH`.
+        Assigning `.LINEAR` writes an `a:lin` child (removing `a:path` if present); assigning
+        any of the other three writes an `a:path` child with the corresponding `path` attribute
+        value (`circle`, `rect`, or `shape` respectively), removing `a:lin` if present. Raises
+        |ShapeError| when the fill type is not MSO_FILL_TYPE.GRADIENT.
+        """
+        if self.type != MSO_FILL.GRADIENT:
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        return self._fill.gradient_type
+
+    @gradient_type.setter
+    def gradient_type(self, value: MSO_GRADIENT_TYPE) -> None:
+        if self.type != MSO_FILL.GRADIENT:
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        self._fill.gradient_type = value
 
     @property
     def pattern(self) -> MSO_PATTERN_TYPE | None:
@@ -145,6 +210,64 @@ class FillFormat:
         """
         pattFill = self._xPr.get_or_change_to_pattFill()
         self._fill = _PattFill(pattFill)
+
+    def picture(self, image_file: str | IO[bytes]) -> None:
+        """Sets the fill type to picture, i.e. an image.
+
+        `image_file` can be either a path (string) to an image file on the filesystem, or a
+        file-like object containing the bytes of an image. The image is embedded in (or reused
+        from) the part that owns the shape this fill belongs to -- the slide, slide layout, or
+        slide master -- and a relationship is added from that part to the image part.
+
+        The picture fills the shape's bounding box, stretched by default (`a:stretch` with an
+        `a:fillRect` covering the whole image). Call `.tile()` afterward to tile the image
+        instead.
+
+        Raises |ShapeError| if this fill was not created from a shape having an accessible
+        part (such as an autoshape on a slide, layout, or master); a fill on a shape or object
+        without part access, such as a table cell or a theme fill style, cannot resolve or add
+        an image part.
+        """
+        part_provider = self._part_provider
+        if part_provider is None:
+            raise ShapeError(
+                "fill.picture() requires a shape with a reachable part (e.g. an autoshape on a"
+                " slide, layout, or master); this fill has no such part available"
+            )
+        part = cast("BaseSlidePart", part_provider.part)
+        image_part, rId = part.get_or_add_image_part(image_file)
+        blipFill = self._xPr.get_or_change_to_blipFill()
+        blipFill.get_or_add_blip().rEmbed = rId
+        blipFill.get_or_change_to_stretch().get_or_add_fillRect()
+        self._fill = _BlipFill(blipFill)
+
+    def tile(
+        self,
+        tx: Length = Emu(0),
+        ty: Length = Emu(0),
+        sx: float = 1.0,
+        sy: float = 1.0,
+        flip: str = ST_TileFlipMode.NONE,
+        algn: MSO_RECT_ALIGNMENT = MSO_RECT_ALIGNMENT.TOP_LEFT,
+    ) -> None:
+        """Switches an existing picture fill from stretched to tiled.
+
+        `tx`, `ty` are the offset (as a |Length| value such as |Emu| or |Pt|) of the first tile
+        from the top-left of the shape. `sx`, `sy` are the horizontal and vertical scale of each
+        tile, as a float fraction, e.g. 1.0 for 100% (native image size). `flip` is one of
+        `"none"`, `"x"`, `"y"`, or `"xy"`, specifying whether alternating tiles are flipped
+        horizontally, vertically, both, or not at all. `algn` is a member of
+        :ref:`MsoRectAlignment` (e.g. `MSO_RECT_ALIGNMENT.TOP_LEFT`) specifying the alignment of
+        the first tile.
+
+        Raises |ShapeError| when the fill type is not MSO_FILL_TYPE.PICTURE (call `.picture()`
+        first).
+        """
+        if self.type != MSO_FILL.PICTURE:
+            raise ShapeError("Fill is not of type MSO_FILL_TYPE.PICTURE")
+        blipFill = self._xPr.eg_fillProperties
+        tile = blipFill.get_or_change_to_tile()
+        tile.tx, tile.ty, tile.sx, tile.sy, tile.flip, tile.algn = tx, ty, sx, sy, flip, algn
 
     def solid(self) -> None:
         """
@@ -214,6 +337,11 @@ class _Fill:
 
 
 class _BlipFill(_Fill):
+    """Provides access to a picture (image) fill's underlying `a:blipFill` element."""
+
+    def __init__(self, blipFill: CT_BlipFillProperties) -> None:
+        self._element = self._blipFill = blipFill
+
     @property
     def type(self) -> MSO_FILL_TYPE:
         return MSO_FILL.PICTURE
@@ -261,6 +389,55 @@ class _GradFill(_Fill):
         if lin is None:
             raise ShapeError("not a linear gradient")
         lin.ang = 360.0 - value
+
+    @property
+    def fill_to_rect(self) -> tuple[float, float, float, float] | None:
+        """(left, top, right, bottom) focus-rectangle for a non-linear gradient.
+
+        |None| when no `a:fillToRect` is present.
+        """
+        fillToRect = self._gradFill.fillToRect
+        if fillToRect is None:
+            return None
+        return (fillToRect.l, fillToRect.t, fillToRect.r, fillToRect.b)
+
+    @fill_to_rect.setter
+    def fill_to_rect(self, value: tuple[float, float, float, float] | None) -> None:
+        if self.gradient_type == MSO_GRADIENT_TYPE.LINEAR:
+            raise ShapeError("gradient_fill_to_rect does not apply to a linear gradient")
+        if value is None:
+            self._gradFill._remove_fillToRect()  # pyright: ignore[reportPrivateUsage]
+            return
+        left, top, right, bottom = value
+        fillToRect = self._gradFill.get_or_add_fillToRect()
+        fillToRect.l, fillToRect.t, fillToRect.r, fillToRect.b = left, top, right, bottom
+
+    @property
+    def gradient_type(self) -> MSO_GRADIENT_TYPE:
+        """Member of :ref:`MsoGradientType` indicating the shading path of this gradient."""
+        path = self._gradFill.path
+        if path is None:
+            return MSO_GRADIENT_TYPE.LINEAR
+        path_val = self._gradFill.path_val or ""
+        return {
+            "circle": MSO_GRADIENT_TYPE.RADIAL,
+            "rect": MSO_GRADIENT_TYPE.RECTANGULAR,
+            "shape": MSO_GRADIENT_TYPE.PATH,
+        }.get(path_val, MSO_GRADIENT_TYPE.PATH)
+
+    @gradient_type.setter
+    def gradient_type(self, value: MSO_GRADIENT_TYPE) -> None:
+        if value == MSO_GRADIENT_TYPE.LINEAR:
+            self._gradFill._remove_path()  # pyright: ignore[reportPrivateUsage]
+            self._gradFill.get_or_add_lin()
+            return
+        self._gradFill._remove_lin()  # pyright: ignore[reportPrivateUsage]
+        path_val = {
+            MSO_GRADIENT_TYPE.RADIAL: "circle",
+            MSO_GRADIENT_TYPE.RECTANGULAR: "rect",
+            MSO_GRADIENT_TYPE.PATH: "shape",
+        }[value]
+        self._gradFill.path_val = path_val
 
     @lazyproperty
     def gradient_stops(self) -> _GradientStops:

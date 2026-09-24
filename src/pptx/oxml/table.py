@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Iterator, cast
 
-from pptx.enum.text import MSO_VERTICAL_ANCHOR
+from pptx.enum.text import MSO_TEXT_VERTICAL_TYPE, MSO_VERTICAL_ANCHOR
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
@@ -33,6 +34,7 @@ class CT_Table(BaseOxmlElement):
     get_or_add_tblPr: Callable[[], CT_TableProperties]
     tr_lst: list[CT_TableRow]
     _add_tr: Callable[..., CT_TableRow]
+    _insert_tr: Callable[[CT_TableRow], CT_TableRow]
 
     _tag_seq = ("a:tblPr", "a:tblGrid", "a:tr")
     tblPr: CT_TableProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
@@ -45,6 +47,170 @@ class CT_Table(BaseOxmlElement):
     def add_tr(self, height: Length) -> CT_TableRow:
         """Return a newly created `a:tr` child element having its `h` attribute set to `height`."""
         return self._add_tr(h=height)
+
+    def insert_tr(self, idx: int) -> CT_TableRow:
+        """Insert a new `a:tr` element at zero-based row index `idx` and return it.
+
+        `idx` may equal the current row count to append a row at the end. The new row's height
+        and each of its cells' formatting are copied from an adjacent existing row -- the row
+        above the insertion point, or the first row when inserting at index 0. When the
+        insertion point falls inside a vertical (`rowSpan`/`vMerge`) merge, that merge is
+        extended to include the new row rather than being split.
+        """
+        tr_lst = self.tr_lst
+        n_rows = len(tr_lst)
+
+        if n_rows == 0:
+            # -- degenerate case; a table should always have at least one row, but build a
+            # -- bare row matching the grid width if it somehow doesn't.
+            new_tr = self.add_tr(height=Emu(370840))
+            for _ in range(len(self.tblGrid.gridCol_lst)):
+                new_tr.add_tc()
+            return new_tr
+
+        template_idx = idx - 1 if idx > 0 else 0
+        new_tr = tr_lst[template_idx].new_copy_for_insert()
+
+        if idx >= n_rows:
+            self._insert_tr(new_tr)
+        else:
+            tr_lst[idx].addprevious(new_tr)
+
+        # -- extend any vertical merge whose range crosses the insertion point --
+        if 0 < idx < n_rows:
+            for col_idx, tc_below in enumerate(tr_lst[idx].tc_lst):
+                if not tc_below.vMerge:
+                    continue
+                origin_row_idx = idx - 1
+                while tr_lst[origin_row_idx].tc_lst[col_idx].vMerge:
+                    origin_row_idx -= 1
+                origin_tc = tr_lst[origin_row_idx].tc_lst[col_idx]
+                origin_tc.rowSpan += 1
+                new_tc = new_tr.tc_lst[col_idx]
+                new_tc.vMerge = True
+                new_tc.hMerge = tc_below.hMerge
+                new_tc.gridSpan = tc_below.gridSpan
+
+        return new_tr
+
+    def remove_tr(self, idx: int) -> None:
+        """Remove the `a:tr` element at zero-based row index `idx`.
+
+        Any vertical merge that includes the removed row is kept consistent: when the removed
+        row is the top row of the merge, the merge's origin (its remaining span and any text)
+        moves down to the next row; otherwise the span of the owning merge is simply reduced by
+        one. The caller is responsible for ensuring `idx` does not refer to the table's last
+        remaining row.
+        """
+        tr_lst = self.tr_lst
+        tr = tr_lst[idx]
+
+        for col_idx, tc in enumerate(tr.tc_lst):
+            below = tr_lst[idx + 1].tc_lst[col_idx] if idx + 1 < len(tr_lst) else None
+            if not tc.vMerge and below is not None and below.vMerge:
+                # -- removed row is the top row of a vertical merge; move its origin down --
+                new_span = max(tc.rowSpan - 1, 1)
+                target_tc = below
+                target_tc.append_ps_from(tc)
+                target_tc.rowSpan = new_span
+                target_tc.gridSpan = tc.gridSpan
+                target_tc.vMerge = False
+            elif tc.vMerge:
+                # -- removed row is a mid/bottom row of a vertical merge; shrink its span --
+                origin_row_idx = idx - 1
+                while tr_lst[origin_row_idx].tc_lst[col_idx].vMerge:
+                    origin_row_idx -= 1
+                origin_tc = tr_lst[origin_row_idx].tc_lst[col_idx]
+                origin_tc.rowSpan = max(origin_tc.rowSpan - 1, 1)
+
+        self.remove(tr)
+
+    def insert_gridCol(self, idx: int) -> CT_TableCol:
+        """Insert a new `a:gridCol` at zero-based column index `idx` and return it.
+
+        A matching `a:tc` is also inserted at column `idx` in every row. `idx` may equal the
+        current column count to append a column at the end. The new column's width and each
+        row's new cell formatting are copied from an adjacent existing column -- the column to
+        the left of the insertion point, or the first column when inserting at index 0. When
+        the insertion point falls inside a horizontal (`gridSpan`/`hMerge`) merge, that merge is
+        extended to include the new column rather than being split.
+        """
+        gridCol_lst = self.tblGrid.gridCol_lst
+        n_cols = len(gridCol_lst)
+        tr_lst = self.tr_lst
+
+        if n_cols == 0:
+            new_gridCol = self.tblGrid.add_gridCol(width=Emu(914400))
+            for tr in tr_lst:
+                tr.add_tc()
+            return new_gridCol
+
+        template_idx = idx - 1 if idx > 0 else 0
+        new_gridCol = gridCol_lst[template_idx].new_copy_for_insert()
+
+        if idx >= n_cols:
+            self.tblGrid._insert_gridCol(new_gridCol)
+        else:
+            gridCol_lst[idx].addprevious(new_gridCol)
+
+        for tr in tr_lst:
+            tc_lst = tr.tc_lst
+            new_tc = tc_lst[template_idx].new_copy_for_insert()
+
+            if idx >= n_cols:
+                tr._insert_tc(new_tc)
+            else:
+                tc_lst[idx].addprevious(new_tc)
+
+            # -- extend any horizontal merge whose range crosses the insertion point --
+            if 0 < idx < n_cols:
+                tc_after = tc_lst[idx]
+                if tc_after.hMerge:
+                    origin_col_idx = idx - 1
+                    while tc_lst[origin_col_idx].hMerge:
+                        origin_col_idx -= 1
+                    origin_tc = tc_lst[origin_col_idx]
+                    origin_tc.gridSpan += 1
+                    new_tc.hMerge = True
+                    new_tc.vMerge = tc_after.vMerge
+                    new_tc.rowSpan = tc_after.rowSpan
+
+        return new_gridCol
+
+    def remove_gridCol(self, idx: int) -> None:
+        """Remove the `a:gridCol` element at zero-based column index `idx`.
+
+        The matching `a:tc` is also removed from every row. Any horizontal merge that includes
+        the removed column is kept consistent: when the removed column is the left column of the
+        merge, the merge's origin (its remaining span and any text) moves right to the next
+        column; otherwise the span of the owning merge is simply reduced by one. The caller is
+        responsible for ensuring `idx` does not refer to the table's last remaining column.
+        """
+        for tr in self.tr_lst:
+            tc_lst = tr.tc_lst
+            tc = tc_lst[idx]
+
+            right = tc_lst[idx + 1] if idx + 1 < len(tc_lst) else None
+            if not tc.hMerge and right is not None and right.hMerge:
+                # -- removed column is the left column of a horizontal merge; move origin right --
+                new_span = max(tc.gridSpan - 1, 1)
+                target_tc = right
+                target_tc.append_ps_from(tc)
+                target_tc.gridSpan = new_span
+                target_tc.rowSpan = tc.rowSpan
+                target_tc.hMerge = False
+            elif tc.hMerge:
+                # -- removed column is a mid/right column of a horizontal merge; shrink span --
+                origin_col_idx = idx - 1
+                while tc_lst[origin_col_idx].hMerge:
+                    origin_col_idx -= 1
+                origin_tc = tc_lst[origin_col_idx]
+                origin_tc.gridSpan = max(origin_tc.gridSpan - 1, 1)
+
+            tr.remove(tc)
+
+        gridCol = self.tblGrid.gridCol_lst[idx]
+        self.tblGrid.remove(gridCol)
 
     @property
     def bandCol(self) -> bool:
@@ -217,6 +383,21 @@ class CT_TableCell(BaseOxmlElement):
         tcPr = self.get_or_add_tcPr()
         tcPr.anchor = anchor_enum_idx
 
+    @property
+    def vert(self) -> MSO_TEXT_VERTICAL_TYPE | None:
+        """String held in `vert` attribute of `a:tcPr` child element of this `a:tc` element."""
+        if self.tcPr is None:
+            return None
+        return self.tcPr.vert
+
+    @vert.setter
+    def vert(self, value: MSO_TEXT_VERTICAL_TYPE | None):
+        """Set value of `vert` attribute on `a:tcPr` child element."""
+        if value is None and self.tcPr is None:
+            return
+        tcPr = self.get_or_add_tcPr()
+        tcPr.vert = value
+
     def append_ps_from(self, spanned_tc: CT_TableCell):
         """Append `a:p` elements taken from `spanned_tc`.
 
@@ -321,6 +502,20 @@ class CT_TableCell(BaseOxmlElement):
             ),
         )
 
+    def new_copy_for_insert(self) -> CT_TableCell:
+        """Return a deep copy of this `a:tc` suitable for use as a newly inserted cell.
+
+        The copy retains this cell's `tcPr` formatting and the paragraph/run properties of its
+        first paragraph (via a preserved `a:endParaRPr`), but its text content is cleared and
+        its merge attributes (`gridSpan`, `rowSpan`, `hMerge`, `vMerge`) and any `a:extLst`
+        child (which can carry PowerPoint's unique `a16:colId`/`a16:rowId` ids) are reset so the
+        copy does not duplicate them. The caller is responsible for positioning the returned
+        element in the tree and for re-applying any merge attributes that should carry over.
+        """
+        new_tc = cast("CT_TableCell", deepcopy(self))
+        new_tc._reset_for_insert()
+        return new_tc
+
     @property
     def row_idx(self) -> int:
         """Offset of this cell's row in its table."""
@@ -340,6 +535,24 @@ class CT_TableCell(BaseOxmlElement):
             return ""
         return "\n".join([p.text for p in txBody.p_lst])
 
+    def _clear_text_content(self) -> None:
+        """Replace this cell's text content with a single empty paragraph.
+
+        The `a:bodyPr` and `a:lstStyle` elements of `a:txBody` are preserved unchanged, along
+        with the `a:endParaRPr` of the first paragraph, if present, so run formatting typed into
+        the now-empty cell matches what was there before.
+        """
+        txBody = self.txBody
+        if txBody is None:
+            return
+        p_lst = txBody.p_lst
+        endParaRPr = p_lst[0].endParaRPr if p_lst else None
+        endParaRPr_copy = deepcopy(endParaRPr) if endParaRPr is not None else None
+        txBody.clear_content()
+        new_p = txBody.add_p()
+        if endParaRPr_copy is not None:
+            new_p.append(endParaRPr_copy)
+
     def _get_marX(self, attr_name: str, default: Length) -> Length:
         """Generalized method to get margin values."""
         if self.tcPr is None:
@@ -348,6 +561,20 @@ class CT_TableCell(BaseOxmlElement):
 
     def _new_txBody(self) -> CT_TextBody:
         return CT_TextBody.new_a_txBody()
+
+    def _reset_for_insert(self) -> None:
+        """Reset this cell in-place so it is suitable for use as a newly inserted cell.
+
+        Drops any `a:extLst` child, resets merge attributes to their unmerged defaults, and
+        clears text content (see `._clear_text_content()`).
+        """
+        for extLst in self.xpath("./a:extLst"):
+            self.remove(extLst)
+        self.gridSpan = 1
+        self.rowSpan = 1
+        self.hMerge = False
+        self.vMerge = False
+        self._clear_text_content()
 
     def _set_marX(self, marX: str, value: Length | None) -> None:
         """Set value of marX attribute on `a:tcPr` child element.
@@ -419,6 +646,9 @@ class CT_TableCellProperties(BaseOxmlElement):
     marB: Length | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "marB", ST_Coordinate32
     )
+    vert: MSO_TEXT_VERTICAL_TYPE | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "vert", MSO_TEXT_VERTICAL_TYPE
+    )
 
     def _new_gradFill(self):
         return CT_GradientFillProperties.new_gradFill()
@@ -429,12 +659,24 @@ class CT_TableCol(BaseOxmlElement):
 
     w: Length = RequiredAttribute("w", ST_Coordinate)  # pyright: ignore[reportAssignmentType]
 
+    def new_copy_for_insert(self) -> CT_TableCol:
+        """Return a deep copy of this `a:gridCol` suitable for use as a newly inserted column.
+
+        The copy retains this column's width. Any `a:extLst` child (which can carry
+        PowerPoint's unique `a16:colId` id) is dropped so the copy does not duplicate it.
+        """
+        new_gridCol = cast("CT_TableCol", deepcopy(self))
+        for extLst in new_gridCol.xpath("./a:extLst"):
+            new_gridCol.remove(extLst)
+        return new_gridCol
+
 
 class CT_TableGrid(BaseOxmlElement):
     """`a:tblGrid` custom element class."""
 
     gridCol_lst: list[CT_TableCol]
     _add_gridCol: Callable[..., CT_TableCol]
+    _insert_gridCol: Callable[[CT_TableCol], CT_TableCol]
 
     gridCol = ZeroOrMore("a:gridCol")
 
@@ -481,6 +723,7 @@ class CT_TableRow(BaseOxmlElement):
 
     tc_lst: list[CT_TableCell]
     _add_tc: Callable[[], CT_TableCell]
+    _insert_tc: Callable[[CT_TableCell], CT_TableCell]
 
     tc = ZeroOrMore("a:tc", successors=("a:extLst",))
     h: Length = RequiredAttribute("h", ST_Coordinate)  # pyright: ignore[reportAssignmentType]
@@ -488,6 +731,22 @@ class CT_TableRow(BaseOxmlElement):
     def add_tc(self) -> CT_TableCell:
         """A newly added minimal valid `a:tc` child element."""
         return self._add_tc()
+
+    def new_copy_for_insert(self) -> CT_TableRow:
+        """Return a deep copy of this `a:tr` suitable for use as a newly inserted row.
+
+        The copy retains this row's height and each of its cells' formatting (see
+        `CT_TableCell.new_copy_for_insert()`), but with each cell's text content cleared and
+        merge attributes reset. Any `a:extLst` child (which can carry PowerPoint's unique
+        `a16:rowId` id) is dropped from the row and from each cell so the copy does not
+        duplicate it.
+        """
+        new_tr = cast("CT_TableRow", deepcopy(self))
+        for extLst in new_tr.xpath("./a:extLst"):
+            new_tr.remove(extLst)
+        for tc in new_tr.tc_lst:
+            tc._reset_for_insert()
+        return new_tr
 
     @property
     def row_idx(self) -> int:

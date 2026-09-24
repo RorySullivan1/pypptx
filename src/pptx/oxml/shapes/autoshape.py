@@ -11,6 +11,7 @@ from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.shapes.shared import BaseShapeElement
 from pptx.oxml.simpletypes import (
+    ST_Angle,
     ST_Coordinate,
     ST_PositiveCoordinate,
     XsdBoolean,
@@ -85,13 +86,19 @@ class CT_NonVisualDrawingShapeProps(BaseShapeElement):
 class CT_Path2D(BaseOxmlElement):
     """`a:path` custom element class."""
 
+    _add_arcTo: Callable[[], CT_Path2DArcTo]
     _add_close: Callable[[], CT_Path2DClose]
+    _add_cubicBezTo: Callable[[], CT_Path2DCubicBezierTo]
     _add_lnTo: Callable[[], CT_Path2DLineTo]
     _add_moveTo: Callable[[], CT_Path2DMoveTo]
+    _add_quadBezTo: Callable[[], CT_Path2DQuadBezierTo]
 
+    arcTo = ZeroOrMore("a:arcTo", successors=())
     close = ZeroOrMore("a:close", successors=())
+    cubicBezTo = ZeroOrMore("a:cubicBezTo", successors=())
     lnTo = ZeroOrMore("a:lnTo", successors=())
     moveTo = ZeroOrMore("a:moveTo", successors=())
+    quadBezTo = ZeroOrMore("a:quadBezTo", successors=())
     w: Length | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "w", ST_PositiveCoordinate
     )
@@ -99,12 +106,40 @@ class CT_Path2D(BaseOxmlElement):
         "h", ST_PositiveCoordinate
     )
 
+    def add_arcTo(self, wR: Length, hR: Length, stAng: float, swAng: float) -> CT_Path2DArcTo:
+        """Return a newly created `a:arcTo` element for an elliptical arc segment.
+
+        `wR` and `hR` are the horizontal and vertical radii of the arc's ellipse, in the
+        path's local coordinates. `stAng` and `swAng` are the start angle and swing (sweep)
+        angle of the arc, in degrees; they are written to XML in 60000ths of a degree per the
+        `ST_Angle` schema type. The new `a:arcTo` element is appended to this `a:path`
+        element.
+        """
+        arcTo = self._add_arcTo()
+        arcTo.wR, arcTo.hR, arcTo.stAng, arcTo.swAng = wR, hR, stAng, swAng
+        return arcTo
+
     def add_close(self) -> CT_Path2DClose:
         """Return a newly created `a:close` element.
 
         The new `a:close` element is appended to this `a:path` element.
         """
         return self._add_close()
+
+    def add_cubicBezTo(
+        self, x1: Length, y1: Length, x2: Length, y2: Length, x3: Length, y3: Length
+    ) -> CT_Path2DCubicBezierTo:
+        """Return a newly created `a:cubicBezTo` subtree for a cubic Bezier curve segment.
+
+        `(x1, y1)` and `(x2, y2)` are the curve's first and second control points and
+        `(x3, y3)` is its end point. The new `a:cubicBezTo` element is appended to this
+        `a:path` element.
+        """
+        cubicBezTo = self._add_cubicBezTo()
+        for x, y in ((x1, y1), (x2, y2), (x3, y3)):
+            pt = cubicBezTo._add_pt()
+            pt.x, pt.y = x, y
+        return cubicBezTo
 
     def add_lnTo(self, x: Length, y: Length) -> CT_Path2DLineTo:
         """Return a newly created `a:lnTo` subtree with end point *(x, y)*.
@@ -126,9 +161,42 @@ class CT_Path2D(BaseOxmlElement):
         pt.x, pt.y = x, y
         return moveTo
 
+    def add_quadBezTo(self, x1: Length, y1: Length, x2: Length, y2: Length) -> CT_Path2DQuadBezierTo:
+        """Return a newly created `a:quadBezTo` subtree for a quadratic Bezier curve segment.
+
+        `(x1, y1)` is the curve's control point and `(x2, y2)` is its end point. The new
+        `a:quadBezTo` element is appended to this `a:path` element.
+        """
+        quadBezTo = self._add_quadBezTo()
+        for x, y in ((x1, y1), (x2, y2)):
+            pt = quadBezTo._add_pt()
+            pt.x, pt.y = x, y
+        return quadBezTo
+
+
+class CT_Path2DArcTo(BaseOxmlElement):
+    """`a:arcTo` custom element class."""
+
+    wR: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
+        "wR", ST_PositiveCoordinate
+    )
+    hR: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
+        "hR", ST_PositiveCoordinate
+    )
+    stAng: float = RequiredAttribute("stAng", ST_Angle)  # pyright: ignore[reportAssignmentType]
+    swAng: float = RequiredAttribute("swAng", ST_Angle)  # pyright: ignore[reportAssignmentType]
+
 
 class CT_Path2DClose(BaseOxmlElement):
     """`a:close` custom element class."""
+
+
+class CT_Path2DCubicBezierTo(BaseOxmlElement):
+    """`a:cubicBezTo` custom element class."""
+
+    _add_pt: Callable[[], CT_AdjPoint2D]
+
+    pt = ZeroOrMore("a:pt", successors=())
 
 
 class CT_Path2DLineTo(BaseOxmlElement):
@@ -159,6 +227,14 @@ class CT_Path2DMoveTo(BaseOxmlElement):
     _add_pt: Callable[[], CT_AdjPoint2D]
 
     pt = ZeroOrOne("a:pt", successors=())
+
+
+class CT_Path2DQuadBezierTo(BaseOxmlElement):
+    """`a:quadBezTo` custom element class."""
+
+    _add_pt: Callable[[], CT_AdjPoint2D]
+
+    pt = ZeroOrMore("a:pt", successors=())
 
 
 class CT_PresetGeometry2D(BaseOxmlElement):

@@ -7,7 +7,15 @@ import pytest
 from pptx.dml.color import ColorFormat, RGBColor
 from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
-from pptx.enum.dml import MSO_FILL, MSO_LINE, MSO_LINE_COMPOUND_TYPE, MSO_LINE_END_SIZE, MSO_LINE_END_TYPE
+from pptx.enum.dml import (
+    MSO_FILL,
+    MSO_LINE,
+    MSO_LINE_CAP_STYLE,
+    MSO_LINE_COMPOUND_TYPE,
+    MSO_LINE_END_SIZE,
+    MSO_LINE_END_TYPE,
+    MSO_LINE_JOIN_STYLE,
+)
 from pptx.oxml.shapes.shared import CT_LineProperties
 from pptx.shapes.autoshape import Shape
 
@@ -106,6 +114,115 @@ class DescribeLineFormat:
         spPr = element(spPr_cxml)
         line = LineFormat(spPr)
         line.compound_type = new_value
+        assert spPr.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", None),
+            ("p:spPr/a:ln", None),
+            ("p:spPr/a:ln{cap=rnd}", MSO_LINE_CAP_STYLE.ROUND),
+            ("p:spPr/a:ln{cap=sq}", MSO_LINE_CAP_STYLE.SQUARE),
+            ("p:spPr/a:ln{cap=flat}", MSO_LINE_CAP_STYLE.FLAT),
+        ],
+    )
+    def it_knows_its_cap_style(self, spPr_cxml: str, expected_value):
+        line = LineFormat(element(spPr_cxml))
+        assert line.cap_style == expected_value
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:spPr{a:b=c}", MSO_LINE_CAP_STYLE.ROUND, "p:spPr{a:b=c}/a:ln{cap=rnd}"),
+            ("p:spPr/a:ln{cap=rnd}", None, "p:spPr/a:ln"),
+        ],
+    )
+    def it_can_change_its_cap_style(
+        self, spPr_cxml: str, new_value, expected_cxml: str
+    ):
+        spPr = element(spPr_cxml)
+        line = LineFormat(spPr)
+        line.cap_style = new_value
+        assert spPr.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", None),
+            ("p:spPr/a:ln", None),
+            ("p:spPr/a:ln/a:round", MSO_LINE_JOIN_STYLE.ROUND),
+            ("p:spPr/a:ln/a:bevel", MSO_LINE_JOIN_STYLE.BEVEL),
+            ("p:spPr/a:ln/a:miter", MSO_LINE_JOIN_STYLE.MITER),
+            ("p:spPr/a:ln/a:miter{lim=400000}", MSO_LINE_JOIN_STYLE.MITER),
+        ],
+    )
+    def it_knows_its_join_style(self, spPr_cxml: str, expected_value):
+        line = LineFormat(element(spPr_cxml))
+        assert line.join_style == expected_value
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "new_value", "expected_cxml"),
+        [
+            ("p:spPr{a:b=c}", MSO_LINE_JOIN_STYLE.ROUND, "p:spPr{a:b=c}/a:ln/a:round"),
+            ("p:spPr{a:b=c}", MSO_LINE_JOIN_STYLE.BEVEL, "p:spPr{a:b=c}/a:ln/a:bevel"),
+            ("p:spPr{a:b=c}", MSO_LINE_JOIN_STYLE.MITER, "p:spPr{a:b=c}/a:ln/a:miter"),
+            ("p:spPr/a:ln/a:round", MSO_LINE_JOIN_STYLE.MITER, "p:spPr/a:ln/a:miter"),
+            ("p:spPr/a:ln/a:round", None, "p:spPr/a:ln"),
+        ],
+    )
+    def it_can_change_its_join_style(
+        self, spPr_cxml: str, new_value, expected_cxml: str
+    ):
+        spPr = element(spPr_cxml)
+        line = LineFormat(spPr)
+        line.join_style = new_value
+        assert spPr.xml == xml(expected_cxml)
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "expected_value"),
+        [
+            ("p:spPr", None),
+            ("p:spPr/a:ln", None),
+            ("p:spPr/a:ln/a:round", None),
+            ("p:spPr/a:ln/a:miter", None),
+            ("p:spPr/a:ln/a:miter{lim=400000}", 4.0),
+        ],
+    )
+    def it_knows_its_miter_limit(self, spPr_cxml: str, expected_value):
+        line = LineFormat(element(spPr_cxml))
+        assert line.miter_limit == expected_value
+
+    @pytest.mark.parametrize(
+        ("spPr_cxml", "new_value", "expected_cxml"),
+        [
+            (
+                "p:spPr{a:b=c}",
+                4.0,
+                "p:spPr{a:b=c}/a:ln/a:miter{lim=400000}",
+            ),
+            (
+                "p:spPr/a:ln/a:round",
+                4.0,
+                "p:spPr/a:ln/a:miter{lim=400000}",
+            ),
+            (
+                "p:spPr/a:ln/a:miter{lim=400000}",
+                None,
+                "p:spPr/a:ln/a:miter",
+            ),
+            (
+                "p:spPr",
+                None,
+                "p:spPr",
+            ),
+        ],
+    )
+    def it_can_change_its_miter_limit(
+        self, spPr_cxml: str, new_value, expected_cxml: str
+    ):
+        spPr = element(spPr_cxml)
+        line = LineFormat(spPr)
+        line.miter_limit = new_value
         assert spPr.xml == xml(expected_cxml)
 
     @pytest.mark.parametrize(

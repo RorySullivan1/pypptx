@@ -399,11 +399,15 @@ from pptx.oxml.dml.fill import (  # noqa: E402
     CT_PatternFillProperties,
     CT_RelativeRect,
     CT_SolidColorFillProperties,
+    CT_StretchInfoProperties,
+    CT_TileInfoProperties,
 )
 
 register_element_cls("a:blip", CT_Blip)
 register_element_cls("a:blipFill", CT_BlipFillProperties)
 register_element_cls("a:clrChange", CT_ColorChangeEffect)
+register_element_cls("a:fillRect", CT_RelativeRect)
+register_element_cls("a:fillToRect", CT_RelativeRect)
 register_element_cls("a:gradFill", CT_GradientFillProperties)
 register_element_cls("a:grpFill", CT_GroupFillProperties)
 register_element_cls("a:gs", CT_GradientStop)
@@ -413,6 +417,8 @@ register_element_cls("a:noFill", CT_NoFillProperties)
 register_element_cls("a:pattFill", CT_PatternFillProperties)
 register_element_cls("a:solidFill", CT_SolidColorFillProperties)
 register_element_cls("a:srcRect", CT_RelativeRect)
+register_element_cls("a:stretch", CT_StretchInfoProperties)
+register_element_cls("a:tile", CT_TileInfoProperties)
 
 
 from pptx.oxml.dml.effect import (  # noqa: E402
@@ -488,10 +494,13 @@ from pptx.oxml.shapes.autoshape import (  # noqa: E402
     CT_GeomGuideList,
     CT_NonVisualDrawingShapeProps,
     CT_Path2D,
+    CT_Path2DArcTo,
     CT_Path2DClose,
+    CT_Path2DCubicBezierTo,
     CT_Path2DLineTo,
     CT_Path2DList,
     CT_Path2DMoveTo,
+    CT_Path2DQuadBezierTo,
     CT_PresetGeometry2D,
     CT_Shape,
     CT_ShapeNonVisual,
@@ -500,11 +509,14 @@ from pptx.oxml.shapes.autoshape import (  # noqa: E402
 register_element_cls("a:avLst", CT_GeomGuideList)
 register_element_cls("a:custGeom", CT_CustomGeometry2D)
 register_element_cls("a:gd", CT_GeomGuide)
+register_element_cls("a:arcTo", CT_Path2DArcTo)
 register_element_cls("a:close", CT_Path2DClose)
+register_element_cls("a:cubicBezTo", CT_Path2DCubicBezierTo)
 register_element_cls("a:lnTo", CT_Path2DLineTo)
 register_element_cls("a:moveTo", CT_Path2DMoveTo)
 register_element_cls("a:path", CT_Path2D)
 register_element_cls("a:pathLst", CT_Path2DList)
+register_element_cls("a:quadBezTo", CT_Path2DQuadBezierTo)
 register_element_cls("a:prstGeom", CT_PresetGeometry2D)
 register_element_cls("a:pt", CT_AdjPoint2D)
 register_element_cls("p:cNvSpPr", CT_NonVisualDrawingShapeProps)
@@ -563,6 +575,7 @@ register_element_cls("p:pic", CT_Picture)
 from pptx.oxml.shapes.shared import (  # noqa: E402
     CT_ApplicationNonVisualDrawingProps,
     CT_LineEndProperties,
+    CT_LineJoinMiterProperties,
     CT_LineProperties,
     CT_Locking,
     CT_NonVisualDrawingProps,
@@ -577,6 +590,7 @@ register_element_cls("a:chExt", CT_PositiveSize2D)
 register_element_cls("a:chOff", CT_Point2D)
 register_element_cls("a:ext", CT_PositiveSize2D)
 register_element_cls("a:headEnd", CT_LineEndProperties)
+register_element_cls("a:miter", CT_LineJoinMiterProperties)
 register_element_cls("a:ln", CT_LineProperties)
 register_element_cls("a:lnB", CT_LineProperties)
 register_element_cls("a:lnL", CT_LineProperties)

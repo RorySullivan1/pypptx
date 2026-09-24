@@ -599,3 +599,89 @@ class MSO_SHADOW_TYPE(BaseXmlEnum):
 
     INNER = (2, "inner", "Inner shadow (`a:innerShdw`).")
     """Inner shadow."""
+
+
+class MSO_LINE_CAP_STYLE(BaseXmlEnum):
+    """Specifies how the end of a line segment (that has no arrowhead) is drawn.
+
+    Used with the `cap` attribute on `a:ln` to control the line's end-cap style.
+    :attr:`.LineFormat.cap_style` provides read/write access to this setting.
+
+    MS API Name: `MsoLineCapStyle` (approximate mapping)
+    """
+
+    FLAT = (1, "flat", "Line ends at the end point with no projection (flat cap).")
+    """Line ends at the end point with no projection (flat cap)."""
+
+    ROUND = (2, "rnd", "Line end is rounded, projecting a half-circle beyond the end point.")
+    """Line end is rounded, projecting a half-circle beyond the end point."""
+
+    SQUARE = (
+        3,
+        "sq",
+        "Line end is squared off, projecting a half-square beyond the end point.",
+    )
+    """Line end is squared off, projecting a half-square beyond the end point."""
+
+
+class MSO_LINE_JOIN_STYLE(BaseXmlEnum):
+    """Specifies how two line segments are joined at a vertex.
+
+    Reflects which of `a:round`, `a:bevel`, or `a:miter` is present as a child of
+    `a:ln`. :attr:`.LineFormat.join_style` provides read/write access to this
+    setting; the miter limit ratio, applicable only to `MITER`, is available
+    separately via :attr:`.LineFormat.miter_limit`.
+
+    MS API Name: `MsoLineJoinStyle` (approximate mapping)
+    """
+
+    ROUND = (1, "round", "Line segments are joined with a rounded corner.")
+    """Line segments are joined with a rounded corner."""
+
+    BEVEL = (2, "bevel", "Line segments are joined with a flattened (beveled) corner.")
+    """Line segments are joined with a flattened (beveled) corner."""
+
+    MITER = (3, "miter", "Line segments are joined with a sharp (mitered) corner.")
+    """Line segments are joined with a sharp (mitered) corner."""
+
+
+class MSO_GRADIENT_TYPE(BaseEnum):
+    """Specifies the shading path used by a gradient fill.
+
+    Used with :attr:`.FillFormat.gradient_type`. Unlike most DrawingML enums, these members do
+    not correspond to the value of a single XML attribute; they instead reflect which of
+    `a:lin` or `a:path` (and the `path` attribute on `a:path`) is present on the `a:gradFill`
+    element.
+
+    Example::
+
+        from pptx.enum.dml import MSO_GRADIENT_TYPE
+
+        shape.fill.gradient()
+        shape.fill.gradient_type = MSO_GRADIENT_TYPE.RADIAL
+    """
+
+    LINEAR = (1, "Gradient shades along a straight line determined by an angle (`a:lin`).")
+    """Gradient shades along a straight line determined by an angle (`a:lin`)."""
+
+    RADIAL = (
+        2,
+        'Gradient shades outward from a central point in a circular path'
+        ' (`a:path path="circle"`).',
+    )
+    """Gradient shades outward from a central point in a circular path
+    (`a:path path="circle"`)."""
+
+    RECTANGULAR = (
+        3,
+        'Gradient shades outward from a central point in a rectangular path'
+        ' (`a:path path="rect"`).',
+    )
+    """Gradient shades outward from a central point in a rectangular path
+    (`a:path path="rect"`)."""
+
+    PATH = (
+        4,
+        'Gradient shades along the outline of the shape itself (`a:path path="shape"`).',
+    )
+    """Gradient shades along the outline of the shape itself (`a:path path="shape"`)."""

@@ -49,6 +49,209 @@ class DescribeCT_Table:
         assert tbl.tc(1, 0) is tcs[2]
         assert tbl.tc(1, 1) is tcs[3]
 
+    def it_can_insert_a_row(self):
+        tbl = CT_Table.new_tbl(2, 3, 900, 900)
+
+        new_tr = tbl.insert_tr(1)
+
+        assert len(tbl.tr_lst) == 3
+        assert tbl.tr_lst[1] is new_tr
+        # -- every row has one tc per grid column --
+        assert all(len(tr.tc_lst) == 3 for tr in tbl.tr_lst)
+
+    def it_can_append_a_row_when_idx_equals_the_row_count(self):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+
+        new_tr = tbl.insert_tr(2)
+
+        assert len(tbl.tr_lst) == 3
+        assert tbl.tr_lst[2] is new_tr
+
+    def it_extends_a_vertical_merge_when_a_row_is_inserted_inside_it(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+            'a:tr{h=10}/(a:tc{rowSpan=2}/a:txBody/a:p/a:r/a:t"origin",a:tc),'
+            "a:tr{h=10}/(a:tc{vMerge=1},a:tc),"
+            "a:tr{h=10}/(a:tc,a:tc))"
+        )
+        tbl = element(tbl_cxml)
+
+        new_tr = tbl.insert_tr(1)
+
+        # -- origin's span grows to include the new row --
+        assert tbl.tc(0, 0).rowSpan == 3
+        assert tbl.tc(0, 0).vMerge is False
+        # -- the new row's cell becomes a merge continuation --
+        assert new_tr.tc_lst[0].vMerge is True
+        assert new_tr.tc_lst[0].hMerge is False
+        # -- unrelated column is unaffected --
+        assert new_tr.tc_lst[1].vMerge is False
+        assert new_tr.tc_lst[1].rowSpan == 1
+        # -- row/cell counts stay consistent --
+        assert len(tbl.tr_lst) == 4
+        assert all(len(tr.tc_lst) == 2 for tr in tbl.tr_lst)
+
+    def it_does_not_extend_a_merge_when_inserting_outside_its_range(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+            "a:tr{h=10}/(a:tc{rowSpan=2},a:tc),"
+            "a:tr{h=10}/(a:tc{vMerge=1},a:tc),"
+            "a:tr{h=10}/(a:tc,a:tc))"
+        )
+        tbl = element(tbl_cxml)
+
+        new_tr = tbl.insert_tr(0)
+
+        assert tbl.tc(1, 0).rowSpan == 2  # -- unchanged --
+        assert new_tr.tc_lst[0].vMerge is False
+        assert new_tr.tc_lst[0].rowSpan == 1
+
+    def it_can_remove_a_row(self):
+        tbl = CT_Table.new_tbl(3, 2, 900, 900)
+
+        tbl.remove_tr(1)
+
+        assert len(tbl.tr_lst) == 2
+        assert all(len(tr.tc_lst) == 2 for tr in tbl.tr_lst)
+
+    def it_moves_the_merge_origin_down_when_its_row_is_removed(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/a:gridCol{w=100},"
+            'a:tr{h=10}/a:tc{rowSpan=3}/a:txBody/a:p/a:r/a:t"origin text",'
+            "a:tr{h=10}/a:tc{vMerge=1},"
+            "a:tr{h=10}/a:tc{vMerge=1})"
+        )
+        tbl = element(tbl_cxml)
+
+        tbl.remove_tr(0)
+
+        assert len(tbl.tr_lst) == 2
+        new_origin = tbl.tc(0, 0)
+        assert new_origin.rowSpan == 2
+        assert new_origin.vMerge is False
+        assert new_origin.text == "origin text"
+
+    def it_unmerges_when_removing_a_row_leaves_a_span_of_one(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/a:gridCol{w=100},"
+            "a:tr{h=10}/a:tc{rowSpan=2},"
+            "a:tr{h=10}/a:tc{vMerge=1})"
+        )
+        tbl = element(tbl_cxml)
+
+        tbl.remove_tr(0)
+
+        assert len(tbl.tr_lst) == 1
+        cell = tbl.tc(0, 0)
+        assert cell.rowSpan == 1
+        assert cell.vMerge is False
+
+    def it_shrinks_the_span_when_a_mid_row_of_a_merge_is_removed(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/a:gridCol{w=100},"
+            "a:tr{h=10}/a:tc{rowSpan=3},"
+            "a:tr{h=10}/a:tc{vMerge=1},"
+            "a:tr{h=10}/a:tc{vMerge=1})"
+        )
+        tbl = element(tbl_cxml)
+
+        tbl.remove_tr(1)
+
+        assert len(tbl.tr_lst) == 2
+        origin = tbl.tc(0, 0)
+        assert origin.rowSpan == 2
+        assert origin.vMerge is False
+        assert tbl.tc(1, 0).vMerge is True
+
+    def it_can_insert_a_column(self):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+
+        new_gridCol = tbl.insert_gridCol(1)
+
+        assert len(tbl.tblGrid.gridCol_lst) == 3
+        assert tbl.tblGrid.gridCol_lst[1] is new_gridCol
+        assert all(len(tr.tc_lst) == 3 for tr in tbl.tr_lst)
+
+    def it_extends_a_horizontal_merge_when_a_column_is_inserted_inside_it(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+            'a:tr{h=10}/(a:tc{gridSpan=2}/a:txBody/a:p/a:r/a:t"origin",a:tc{hMerge=1}),'
+            "a:tr{h=10}/(a:tc,a:tc))"
+        )
+        tbl = element(tbl_cxml)
+
+        tbl.insert_gridCol(1)
+
+        assert tbl.tc(0, 0).gridSpan == 3
+        assert tbl.tc(0, 1).hMerge is True
+        assert tbl.tc(0, 1).vMerge is False
+        # -- the second (unmerged) row is unaffected by the merge extension --
+        assert tbl.tc(1, 1).hMerge is False
+        assert len(tbl.tblGrid.gridCol_lst) == 3
+        assert all(len(tr.tc_lst) == 3 for tr in tbl.tr_lst)
+
+    def it_can_remove_a_column(self):
+        tbl = CT_Table.new_tbl(2, 3, 900, 900)
+
+        tbl.remove_gridCol(1)
+
+        assert len(tbl.tblGrid.gridCol_lst) == 2
+        assert all(len(tr.tc_lst) == 2 for tr in tbl.tr_lst)
+
+    def it_moves_the_merge_origin_right_when_its_column_is_removed(self):
+        tbl_cxml = (
+            "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100},a:gridCol{w=100}),"
+            'a:tr{h=10}/(a:tc{gridSpan=3}/a:txBody/a:p/a:r/a:t"origin text",'
+            "a:tc{hMerge=1},a:tc{hMerge=1}))"
+        )
+        tbl = element(tbl_cxml)
+
+        tbl.remove_gridCol(0)
+
+        assert len(tbl.tblGrid.gridCol_lst) == 2
+        new_origin = tbl.tc(0, 0)
+        assert new_origin.gridSpan == 2
+        assert new_origin.hMerge is False
+        assert new_origin.text == "origin text"
+
+    # -- a 2x2 merge, written the way `_Cell.merge()` writes it --
+    _merge_2x2 = (
+        "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+        "a:tr{h=10}/(a:tc{gridSpan=2,rowSpan=2},a:tc{rowSpan=2,hMerge=1}),"
+        "a:tr{h=10}/(a:tc{gridSpan=2,vMerge=1},a:tc{hMerge=1,vMerge=1}))"
+    )
+    # -- the same merge with spans on the origin only, as some other writers produce --
+    _merge_2x2_bare = (
+        "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+        "a:tr{h=10}/(a:tc{gridSpan=2,rowSpan=2},a:tc{hMerge=1}),"
+        "a:tr{h=10}/(a:tc{vMerge=1},a:tc{hMerge=1,vMerge=1}))"
+    )
+
+    def it_keeps_the_row_span_when_a_2d_merge_origin_column_is_removed(self):
+        tbl = element(self._merge_2x2_bare)
+
+        tbl.remove_gridCol(0)
+
+        assert (tbl.tc(0, 0).gridSpan, tbl.tc(0, 0).rowSpan) == (1, 2)
+        assert (tbl.tc(1, 0).hMerge, tbl.tc(1, 0).vMerge) == (False, True)
+
+    def it_keeps_the_grid_span_when_a_2d_merge_origin_row_is_removed(self):
+        tbl = element(self._merge_2x2_bare)
+
+        tbl.remove_tr(0)
+
+        assert (tbl.tc(0, 0).gridSpan, tbl.tc(0, 0).rowSpan) == (2, 1)
+        assert (tbl.tc(0, 1).hMerge, tbl.tc(0, 1).vMerge) == (True, False)
+
+    def it_gives_cells_inserted_into_a_2d_merge_the_orthogonal_span(self):
+        tbl = element(self._merge_2x2)
+
+        tbl.insert_gridCol(1)
+        tbl.insert_tr(1)
+
+        assert [tc.rowSpan for tc in tbl.tr_lst[0].tc_lst] == [3, 3, 3]
+        assert [tc.gridSpan for tc in tbl.tr_lst[1].tc_lst] == [3, 1, 1]
+
 
 class DescribeTcRange:
     def it_knows_when_the_range_contains_a_merged_cell(self, contains_merge_fixture):
