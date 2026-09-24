@@ -89,6 +89,7 @@ class CT_Table(BaseOxmlElement):
                 new_tc = new_tr.tc_lst[col_idx]
                 new_tc.vMerge = True
                 new_tc.hMerge = tc_below.hMerge
+                new_tc.gridSpan = tc_below.gridSpan
 
         return new_tr
 
@@ -105,12 +106,14 @@ class CT_Table(BaseOxmlElement):
         tr = tr_lst[idx]
 
         for col_idx, tc in enumerate(tr.tc_lst):
-            if tc.rowSpan > 1 and not tc.vMerge:
+            below = tr_lst[idx + 1].tc_lst[col_idx] if idx + 1 < len(tr_lst) else None
+            if not tc.vMerge and below is not None and below.vMerge:
                 # -- removed row is the top row of a vertical merge; move its origin down --
-                new_span = tc.rowSpan - 1
-                target_tc = tr_lst[idx + 1].tc_lst[col_idx]
+                new_span = max(tc.rowSpan - 1, 1)
+                target_tc = below
                 target_tc.append_ps_from(tc)
                 target_tc.rowSpan = new_span
+                target_tc.gridSpan = tc.gridSpan
                 target_tc.vMerge = False
             elif tc.vMerge:
                 # -- removed row is a mid/bottom row of a vertical merge; shrink its span --
@@ -118,7 +121,7 @@ class CT_Table(BaseOxmlElement):
                 while tr_lst[origin_row_idx].tc_lst[col_idx].vMerge:
                     origin_row_idx -= 1
                 origin_tc = tr_lst[origin_row_idx].tc_lst[col_idx]
-                origin_tc.rowSpan -= 1
+                origin_tc.rowSpan = max(origin_tc.rowSpan - 1, 1)
 
         self.remove(tr)
 
@@ -170,6 +173,7 @@ class CT_Table(BaseOxmlElement):
                     origin_tc.gridSpan += 1
                     new_tc.hMerge = True
                     new_tc.vMerge = tc_after.vMerge
+                    new_tc.rowSpan = tc_after.rowSpan
 
         return new_gridCol
 
@@ -186,12 +190,14 @@ class CT_Table(BaseOxmlElement):
             tc_lst = tr.tc_lst
             tc = tc_lst[idx]
 
-            if tc.gridSpan > 1 and not tc.hMerge:
+            right = tc_lst[idx + 1] if idx + 1 < len(tc_lst) else None
+            if not tc.hMerge and right is not None and right.hMerge:
                 # -- removed column is the left column of a horizontal merge; move origin right --
-                new_span = tc.gridSpan - 1
-                target_tc = tc_lst[idx + 1]
+                new_span = max(tc.gridSpan - 1, 1)
+                target_tc = right
                 target_tc.append_ps_from(tc)
                 target_tc.gridSpan = new_span
+                target_tc.rowSpan = tc.rowSpan
                 target_tc.hMerge = False
             elif tc.hMerge:
                 # -- removed column is a mid/right column of a horizontal merge; shrink span --
@@ -199,7 +205,7 @@ class CT_Table(BaseOxmlElement):
                 while tc_lst[origin_col_idx].hMerge:
                     origin_col_idx -= 1
                 origin_tc = tc_lst[origin_col_idx]
-                origin_tc.gridSpan -= 1
+                origin_tc.gridSpan = max(origin_tc.gridSpan - 1, 1)
 
             tr.remove(tc)
 

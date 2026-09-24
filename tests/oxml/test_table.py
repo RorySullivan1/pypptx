@@ -214,6 +214,44 @@ class DescribeCT_Table:
         assert new_origin.hMerge is False
         assert new_origin.text == "origin text"
 
+    # -- a 2x2 merge, written the way `_Cell.merge()` writes it --
+    _merge_2x2 = (
+        "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+        "a:tr{h=10}/(a:tc{gridSpan=2,rowSpan=2},a:tc{rowSpan=2,hMerge=1}),"
+        "a:tr{h=10}/(a:tc{gridSpan=2,vMerge=1},a:tc{hMerge=1,vMerge=1}))"
+    )
+    # -- the same merge with spans on the origin only, as some other writers produce --
+    _merge_2x2_bare = (
+        "a:tbl/(a:tblGrid/(a:gridCol{w=100},a:gridCol{w=100}),"
+        "a:tr{h=10}/(a:tc{gridSpan=2,rowSpan=2},a:tc{hMerge=1}),"
+        "a:tr{h=10}/(a:tc{vMerge=1},a:tc{hMerge=1,vMerge=1}))"
+    )
+
+    def it_keeps_the_row_span_when_a_2d_merge_origin_column_is_removed(self):
+        tbl = element(self._merge_2x2_bare)
+
+        tbl.remove_gridCol(0)
+
+        assert (tbl.tc(0, 0).gridSpan, tbl.tc(0, 0).rowSpan) == (1, 2)
+        assert (tbl.tc(1, 0).hMerge, tbl.tc(1, 0).vMerge) == (False, True)
+
+    def it_keeps_the_grid_span_when_a_2d_merge_origin_row_is_removed(self):
+        tbl = element(self._merge_2x2_bare)
+
+        tbl.remove_tr(0)
+
+        assert (tbl.tc(0, 0).gridSpan, tbl.tc(0, 0).rowSpan) == (2, 1)
+        assert (tbl.tc(0, 1).hMerge, tbl.tc(0, 1).vMerge) == (True, False)
+
+    def it_gives_cells_inserted_into_a_2d_merge_the_orthogonal_span(self):
+        tbl = element(self._merge_2x2)
+
+        tbl.insert_gridCol(1)
+        tbl.insert_tr(1)
+
+        assert [tc.rowSpan for tc in tbl.tr_lst[0].tc_lst] == [3, 3, 3]
+        assert [tc.gridSpan for tc in tbl.tr_lst[1].tc_lst] == [3, 1, 1]
+
 
 class DescribeTcRange:
     def it_knows_when_the_range_contains_a_merged_cell(self, contains_merge_fixture):
