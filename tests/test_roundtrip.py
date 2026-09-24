@@ -976,3 +976,45 @@ prs2 = Presentation(stream)
 assert prs2.slide_master.theme.color_scheme.accent_2 == "00B050"
 assert len(prs2.slides) == 1
 """)
+
+    def it_round_trips_custom_shows_and_notes_size(self):
+        _run_roundtrip_test("""\
+prs = Presentation()
+layout = prs.slide_layouts[5]
+slide1 = prs.slides.add_slide(layout)
+slide2 = prs.slides.add_slide(layout)
+slide3 = prs.slides.add_slide(layout)
+
+prs.notes_height = Inches(11)
+prs.notes_width = Inches(8.5)
+
+show = prs.custom_shows.add("Intro Only", [slide1, slide3])
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+assert prs2.notes_height == Inches(11)
+assert prs2.notes_width == Inches(8.5)
+
+assert len(prs2.custom_shows) == 1
+custom_show = prs2.custom_shows[0]
+assert custom_show.name == "Intro Only"
+assert [s.slide_id for s in custom_show.slides] == [
+    prs2.slides[0].slide_id,
+    prs2.slides[2].slide_id,
+]
+
+# -- deleting a referenced slide prunes it from the custom show --
+prs2.slides.delete(prs2.slides[2])
+stream2 = BytesIO()
+prs2.save(stream2)
+stream2.seek(0)
+prs3 = Presentation(stream2)
+
+assert len(prs3.slides) == 2
+custom_show3 = prs3.custom_shows[0]
+assert len(custom_show3.slides) == 1
+assert custom_show3.slides[0].slide_id == prs3.slides[0].slide_id
+""")

@@ -410,6 +410,7 @@ class Slides(ParentedElementProxy):
         sldId = self._sldIdLst.sldId_lst[idx]
         rId = sldId.rId
         self._sldIdLst.remove(sldId)
+        self.part.drop_custom_show_refs(rId)
         self.part.drop_rel(rId)
 
     def move(self, old_idx: int, new_idx: int) -> None:

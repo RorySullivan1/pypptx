@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.custom_show import CustomShows
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.parts.coreprops import CorePropertiesPart
@@ -65,6 +66,29 @@ class DescribePresentation:
         prs, slide_width, expected_xml = sld_width_set_fixture
         prs.slide_width = slide_width
         assert prs._element.xml == expected_xml
+
+    def it_knows_the_height_of_its_notes_pages(self, notes_height_get_fixture):
+        prs, expected_value = notes_height_get_fixture
+        assert prs.notes_height == expected_value
+
+    def it_can_change_the_height_of_its_notes_pages(self, notes_height_set_fixture):
+        prs, notes_height, expected_xml = notes_height_set_fixture
+        prs.notes_height = notes_height
+        assert prs._element.xml == expected_xml
+
+    def it_knows_the_width_of_its_notes_pages(self, notes_width_get_fixture):
+        prs, expected_value = notes_width_get_fixture
+        assert prs.notes_width == expected_value
+
+    def it_can_change_the_width_of_its_notes_pages(self, notes_width_set_fixture):
+        prs, notes_width, expected_xml = notes_width_set_fixture
+        prs.notes_width = notes_width
+        assert prs._element.xml == expected_xml
+
+    def it_provides_access_to_its_custom_shows(self, custom_shows_fixture):
+        prs = custom_shows_fixture
+        custom_shows = prs.custom_shows
+        assert isinstance(custom_shows, CustomShows)
 
     def it_knows_its_part(self, part_fixture):
         prs, prs_part_ = part_fixture
@@ -136,6 +160,46 @@ class DescribePresentation:
         assert prs._element.xml == xml(expected_cxml)
 
     # fixtures -------------------------------------------------------
+
+    @pytest.fixture
+    def custom_shows_fixture(self):
+        return Presentation(element("p:presentation"), None)
+
+    @pytest.fixture(params=[("p:presentation", None), ("p:presentation/p:notesSz{cy=42}", 42)])
+    def notes_height_get_fixture(self, request):
+        prs_cxml, expected_value = request.param
+        prs = Presentation(element(prs_cxml), None)
+        return prs, expected_value
+
+    @pytest.fixture(
+        params=[
+            ("p:presentation", "p:presentation/p:notesSz{cy=914400}"),
+            ("p:presentation/p:notesSz{cy=424242}", "p:presentation/p:notesSz{cy=914400}"),
+        ]
+    )
+    def notes_height_set_fixture(self, request):
+        prs_cxml, expected_cxml = request.param
+        prs = Presentation(element(prs_cxml), None)
+        expected_xml = xml(expected_cxml)
+        return prs, 914400, expected_xml
+
+    @pytest.fixture(params=[("p:presentation", None), ("p:presentation/p:notesSz{cx=42}", 42)])
+    def notes_width_get_fixture(self, request):
+        prs_cxml, expected_value = request.param
+        prs = Presentation(element(prs_cxml), None)
+        return prs, expected_value
+
+    @pytest.fixture(
+        params=[
+            ("p:presentation", "p:presentation/p:notesSz{cx=914400}"),
+            ("p:presentation/p:notesSz{cx=424242}", "p:presentation/p:notesSz{cx=914400}"),
+        ]
+    )
+    def notes_width_set_fixture(self, request):
+        prs_cxml, expected_cxml = request.param
+        prs = Presentation(element(prs_cxml), None)
+        expected_xml = xml(expected_cxml)
+        return prs, 914400, expected_xml
 
     @pytest.fixture
     def core_props_fixture(self, prs_part_, core_properties_):

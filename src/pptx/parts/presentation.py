@@ -344,6 +344,36 @@ class PresentationPart(XmlPart):
         """Return |Slide| object for related |SlidePart| related by `rId`."""
         return self.related_part(rId).slide
 
+    def rId_for_slide(self, slide_part: SlidePart) -> str | None:
+        """Return the `r:id` by which `slide_part` is related to this presentation part.
+
+        Returns |None| if `slide_part` is not related to this presentation, e.g. it belongs
+        to a different presentation.
+        """
+        sldIdLst = self._element.sldIdLst
+        if sldIdLst is None:
+            return None
+        for sldId in sldIdLst.sldId_lst:
+            if self.related_part(sldId.rId) is slide_part:
+                return sldId.rId
+        return None
+
+    def drop_custom_show_refs(self, rId: str) -> None:
+        """Remove any `p:custShow/p:sldLst/p:sld` entries in this part referencing `rId`.
+
+        Called when the slide related by `rId` is being removed from the presentation, so
+        custom shows are not left pointing at a dangling relationship. A custom show that
+        ends up empty is left in place rather than being deleted.
+        """
+        custShowLst = self._element.custShowLst
+        if custShowLst is None:
+            return
+        for custShow in custShowLst.custShow_lst:
+            sldLst = custShow.sldLst
+            if sldLst is None:
+                continue
+            sldLst.remove_sld_with_rId(rId)
+
     def related_slide_master(self, rId: str) -> SlideMaster:
         """Return |SlideMaster| object for |SlideMasterPart| related by `rId`."""
         return self.related_part(rId).slide_master

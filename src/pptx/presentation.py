@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import IO, TYPE_CHECKING, Iterator, cast
 
+from pptx.custom_show import CustomShows
 from pptx.shared import PartElementProxy
 from pptx.slide import SlideMasters, Slides
 from pptx.util import lazyproperty
@@ -94,6 +95,38 @@ class Presentation(PartElementProxy):
         sldSz.cy = height
 
     @property
+    def notes_height(self) -> Length | None:
+        """Height of notes pages in this presentation, in English Metric Units (EMU).
+
+        Returns |None| if no notes size is defined. Read/write.
+        """
+        notesSz = self._element.notesSz
+        if notesSz is None:
+            return None
+        return notesSz.cy
+
+    @notes_height.setter
+    def notes_height(self, height: Length) -> None:
+        notesSz = self._element.get_or_add_notesSz()
+        notesSz.cy = height
+
+    @property
+    def notes_width(self) -> Length | None:
+        """Width of notes pages in this presentation, in English Metric Units (EMU).
+
+        Returns |None| if no notes size is defined. Read/write.
+        """
+        notesSz = self._element.notesSz
+        if notesSz is None:
+            return None
+        return notesSz.cx
+
+    @notes_width.setter
+    def notes_width(self, width: Length) -> None:
+        notesSz = self._element.get_or_add_notesSz()
+        notesSz.cx = width
+
+    @property
     def slide_layouts(self) -> SlideLayouts:
         """|SlideLayouts| collection belonging to the first |SlideMaster| of this presentation.
 
@@ -160,6 +193,11 @@ class Presentation(PartElementProxy):
     def sections(self) -> Sections:
         """|Sections| object providing access to named slide groups."""
         return Sections(self._element)
+
+    @property
+    def custom_shows(self) -> CustomShows:
+        """|CustomShows| collection of named, ordered slide subsets in this presentation."""
+        return CustomShows(self._element, self)
 
     @lazyproperty
     def slides(self) -> Slides:
