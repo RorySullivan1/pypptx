@@ -494,6 +494,9 @@ class CT_TextNormalAutofit(BaseOxmlElement):
     fontScale = OptionalAttribute(
         "fontScale", ST_TextFontScalePercentOrPercentString, default=100.0
     )
+    lnSpcReduction = OptionalAttribute(
+        "lnSpcReduction", ST_TextSpacingPercentOrPercentString, default=0.0
+    )
 
 
 class CT_TextParagraph(BaseOxmlElement):

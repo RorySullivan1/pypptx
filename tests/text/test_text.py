@@ -81,6 +81,37 @@ class DescribeTextFrame:
         ("txBody_cxml", "expected_value"),
         [
             ("p:txBody/a:bodyPr", None),
+            ("p:txBody/a:bodyPr/a:noAutofit", None),
+            ("p:txBody/a:bodyPr/a:normAutofit", 1.0),
+            ("p:txBody/a:bodyPr/a:normAutofit{fontScale=62500}", 0.625),
+        ],
+    )
+    def it_knows_its_font_scale(self, txBody_cxml: str, expected_value: float | None):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.font_scale == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:bodyPr", None),
+            ("p:txBody/a:bodyPr/a:noAutofit", None),
+            ("p:txBody/a:bodyPr/a:normAutofit", 0.0),
+            (
+                "p:txBody/a:bodyPr/a:normAutofit{fontScale=62500,lnSpcReduction=20000}",
+                0.2,
+            ),
+        ],
+    )
+    def it_knows_its_line_spacing_reduction(
+        self, txBody_cxml: str, expected_value: float | None
+    ):
+        text_frame = TextFrame(element(txBody_cxml), None)
+        assert text_frame.line_spacing_reduction == expected_value
+
+    @pytest.mark.parametrize(
+        ("txBody_cxml", "expected_value"),
+        [
+            ("p:txBody/a:bodyPr", None),
             ("p:txBody/a:bodyPr{numCol=2}", 2),
         ],
     )

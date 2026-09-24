@@ -111,6 +111,45 @@ class TextFrame(Subshape):
         self._apply_fit(font_family, font_size, bold, italic)
 
     @property
+    def font_scale(self) -> float | None:
+        """Font-scale factor applied by PowerPoint's "shrink text on overflow" autofit.
+
+        Read-only float, e.g. `0.625` for a 62.5% font scale. This value is only
+        present when PowerPoint has actually computed and recorded a normal-autofit
+        adjustment for this text frame (`a:normAutofit` is present); |None| is
+        returned when it is not, including when :attr:`auto_size` is
+        `MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE` but no scaling has been computed yet.
+        When `a:normAutofit` is present without an explicit `fontScale` value, the
+        OOXML default of `1.0` (no scaling) is returned.
+
+        pypptx does not itself compute text autofit; this property only exposes a
+        value already present in the XML (e.g. one written by PowerPoint).
+        """
+        normAutofit = self._bodyPr.normAutofit
+        if normAutofit is None:
+            return None
+        return normAutofit.fontScale / 100.0
+
+    @property
+    def line_spacing_reduction(self) -> float | None:
+        """Line-spacing reduction applied by PowerPoint's "shrink text on overflow" autofit.
+
+        Read-only float fraction, e.g. `0.2` for a 20% line-spacing reduction.
+        This value is only present when PowerPoint has actually computed and
+        recorded a normal-autofit adjustment for this text frame (`a:normAutofit`
+        is present); |None| is returned when it is not. When `a:normAutofit` is
+        present without an explicit `lnSpcReduction` value, the OOXML default of
+        `0.0` (no reduction) is returned.
+
+        pypptx does not itself compute text autofit; this property only exposes a
+        value already present in the XML (e.g. one written by PowerPoint).
+        """
+        normAutofit = self._bodyPr.normAutofit
+        if normAutofit is None:
+            return None
+        return normAutofit.lnSpcReduction
+
+    @property
     def margin_bottom(self) -> Length:
         """|Length| value representing the inset of text from the bottom text frame border.
 
