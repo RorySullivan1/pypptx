@@ -8,9 +8,53 @@ from typing import cast
 
 import pytest
 
-from pptx.oxml.presentation import CT_SlideIdList
+from pptx.oxml.presentation import CT_Presentation, CT_SlideIdList
 
 from ..unitutil.cxml import element, xml
+
+
+class DescribeCT_Presentation:
+    """Unit-test suite for `pptx.oxml.presentation.CT_Presentation` objects."""
+
+    def it_provides_access_to_its_embeddedFontLst(self):
+        presentation = cast(
+            CT_Presentation,
+            element("p:presentation/p:embeddedFontLst/p:embeddedFont/p:font{typeface=Calibri}"),
+        )
+        assert presentation.embeddedFontLst is not None
+        assert presentation.embeddedFontLst.embeddedFont_lst[0].font.typeface == "Calibri"
+
+    def it_returns_None_for_embeddedFontLst_when_not_present(self):
+        presentation = cast(CT_Presentation, element("p:presentation"))
+        assert presentation.embeddedFontLst is None
+
+    def it_adds_embeddedFontLst_between_notesSz_and_kinsoku(self):
+        presentation = cast(CT_Presentation, element("p:presentation/(p:notesSz,p:kinsoku)"))
+
+        presentation.get_or_add_embeddedFontLst()
+
+        assert [child.tag.split("}")[1] for child in presentation] == [
+            "notesSz",
+            "embeddedFontLst",
+            "kinsoku",
+        ]
+
+    @pytest.mark.parametrize(
+        ("prs_cxml", "expected_value"),
+        [
+            ("p:presentation", None),
+            ("p:presentation{embedTrueTypeFonts=1}", True),
+            ("p:presentation{embedTrueTypeFonts=0}", False),
+        ],
+    )
+    def it_knows_whether_it_embeds_truetype_fonts(self, prs_cxml: str, expected_value):
+        presentation = cast(CT_Presentation, element(prs_cxml))
+        assert presentation.embedTrueTypeFonts is expected_value
+
+    def it_can_change_whether_it_embeds_truetype_fonts(self):
+        presentation = cast(CT_Presentation, element("p:presentation"))
+        presentation.embedTrueTypeFonts = False
+        assert presentation.xml == xml("p:presentation{embedTrueTypeFonts=0}")
 
 
 class DescribeCT_SlideIdList:

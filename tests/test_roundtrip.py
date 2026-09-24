@@ -976,3 +976,40 @@ prs2 = Presentation(stream)
 assert prs2.slide_master.theme.color_scheme.accent_2 == "00B050"
 assert len(prs2.slides) == 1
 """)
+
+    def it_round_trips_embedded_fonts(self):
+        _run_roundtrip_test("""\
+from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.opc.package import Part
+from pptx.opc.packuri import PackURI
+
+prs = Presentation()
+prs_part = prs.part
+
+font_part = Part(
+    PackURI("/ppt/fonts/font1.fntdata"), CT.X_FONTDATA, prs_part.package, b"dummy-font-bytes"
+)
+rId = prs_part.relate_to(font_part, RT.FONT)
+entry = prs._element.get_or_add_embeddedFontLst().add_embeddedFont("Calibri")
+entry.add_style("regular", rId)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+embedded_fonts = prs2.embedded_fonts
+assert len(embedded_fonts) == 1
+assert embedded_fonts[0].typeface == "Calibri"
+assert embedded_fonts[0].styles == ("regular",)
+
+embedded_fonts[0].remove()
+assert len(prs2.embedded_fonts) == 0
+
+stream2 = BytesIO()
+prs2.save(stream2)
+stream2.seek(0)
+prs3 = Presentation(stream2)
+assert len(prs3.embedded_fonts) == 0
+""")

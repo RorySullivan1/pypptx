@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
 
-from pptx.oxml.simpletypes import ST_SlideId, ST_SlideSizeCoordinate, XsdInt, XsdString
+from pptx.oxml.simpletypes import ST_SlideId, ST_SlideSizeCoordinate, XsdBoolean, XsdInt, XsdString
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     OptionalAttribute,
@@ -16,6 +16,7 @@ from pptx.oxml.xmlchemy import (
 from pptx.oxml.ns import qn
 
 if TYPE_CHECKING:
+    from pptx.oxml.embeddedfont import CT_EmbeddedFontList
     from pptx.oxml.text import CT_TextListStyle
     from pptx.util import Length
 
@@ -27,6 +28,7 @@ class CT_Presentation(BaseOxmlElement):
     get_or_add_sldIdLst: Callable[[], CT_SlideIdList]
     get_or_add_sldMasterIdLst: Callable[[], CT_SlideMasterIdList]
     get_or_add_defaultTextStyle: Callable[[], CT_TextListStyle]
+    get_or_add_embeddedFontLst: Callable[[], CT_EmbeddedFontList]
 
     _tag_seq = (
         "p:sldMasterIdLst",
@@ -35,6 +37,7 @@ class CT_Presentation(BaseOxmlElement):
         "p:sldIdLst",
         "p:sldSz",
         "p:notesSz",
+        "p:embeddedFontLst",
         "p:kinsoku",
         "p:defaultTextStyle",
         "p:extLst",
@@ -50,13 +53,24 @@ class CT_Presentation(BaseOxmlElement):
     sldSz: CT_SlideSize | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:sldSz", successors=_tag_seq[5:]
     )
+    # -- embeddedFontLst (#61) sits between notesSz and kinsoku per the CT_Presentation
+    # -- child sequence in pml.xsd; grouped here to keep the diff self-contained --
+    embeddedFontLst: CT_EmbeddedFontList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:embeddedFontLst", successors=_tag_seq[7:]
+    )
     defaultTextStyle: CT_TextListStyle | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "p:defaultTextStyle", successors=_tag_seq[8:]
+        "p:defaultTextStyle", successors=_tag_seq[9:]
     )
     del _tag_seq
 
     firstSlideNum: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "firstSlideNum", XsdInt
+    )
+    # -- (#61) toggled off by EmbeddedFonts.remove() when the last embedded font is
+    # -- removed, so PowerPoint doesn't re-embed fonts on next save; left untouched
+    # -- otherwise, since fonts may still be embedded --
+    embedTrueTypeFonts: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "embedTrueTypeFonts", XsdBoolean
     )
 
     _SECTION_EXT_URI = "{521415D9-36F7-43E2-AB2F-B2CE04A55DE4}"
