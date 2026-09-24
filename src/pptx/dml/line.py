@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pptx.dml.fill import FillFormat
-from pptx.enum.dml import MSO_FILL
+from pptx.enum.dml import MSO_FILL, MSO_LINE_JOIN_STYLE
 from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
     from pptx.dml.color import ColorFormat
     from pptx.enum.dml import (
+        MSO_LINE_CAP_STYLE,
         MSO_LINE_COMPOUND_TYPE,
         MSO_LINE_DASH_STYLE,
         MSO_LINE_END_SIZE,
@@ -93,6 +94,30 @@ class LineFormat:
             return
         headEnd = self._get_or_add_ln().get_or_add_headEnd()
         headEnd.w = value
+
+    @property
+    def cap_style(self) -> MSO_LINE_CAP_STYLE | None:
+        """Style of the line's end caps (flat, round, or square).
+
+        Read/write. A member of :ref:`MsoLineCapStyle` or |None|. |None| indicates
+        no explicit setting is present and the effective value is inherited from
+        the style hierarchy. Assigning |None| removes any existing explicit
+        setting. Reflects the `a:ln/@cap` attribute.
+        """
+        ln = self._ln
+        if ln is None:
+            return None
+        return ln.cap
+
+    @cap_style.setter
+    def cap_style(self, value: MSO_LINE_CAP_STYLE | None) -> None:
+        if value is None:
+            ln = self._ln
+            if ln is not None:
+                ln.cap = None
+            return
+        ln = self._get_or_add_ln()
+        ln.cap = value
 
     @lazyproperty
     def color(self) -> ColorFormat:
@@ -223,6 +248,78 @@ class LineFormat:
         """
         ln = self._get_or_add_ln()
         return FillFormat.from_fill_parent(ln)
+
+    @property
+    def join_style(self) -> MSO_LINE_JOIN_STYLE | None:
+        """Style used to join two line segments (round, bevel, or miter).
+
+        Read/write. A member of :ref:`MsoLineJoinStyle` or |None|. |None|
+        indicates no explicit join is present, in which case the effective
+        value is inherited from the style hierarchy. Assigning |None| removes
+        any existing explicit join (`a:round`, `a:bevel`, or `a:miter`).
+
+        Use :attr:`miter_limit` to set the miter-limit ratio when this is
+        `MSO_LINE_JOIN_STYLE.MITER`.
+        """
+        ln = self._ln
+        if ln is None:
+            return None
+        if ln.round is not None:
+            return MSO_LINE_JOIN_STYLE.ROUND
+        if ln.bevel is not None:
+            return MSO_LINE_JOIN_STYLE.BEVEL
+        if ln.miter is not None:
+            return MSO_LINE_JOIN_STYLE.MITER
+        return None
+
+    @join_style.setter
+    def join_style(self, value: MSO_LINE_JOIN_STYLE | None) -> None:
+        if value is None:
+            ln = self._ln
+            if ln is not None:
+                ln._remove_eg_lineJoinProperties()
+            return
+        ln = self._get_or_add_ln()
+        if value == MSO_LINE_JOIN_STYLE.ROUND:
+            ln.get_or_change_to_round()
+        elif value == MSO_LINE_JOIN_STYLE.BEVEL:
+            ln.get_or_change_to_bevel()
+        elif value == MSO_LINE_JOIN_STYLE.MITER:
+            ln.get_or_change_to_miter()
+        else:
+            raise ValueError(f"only a member of MSO_LINE_JOIN_STYLE or None can be assigned, got {value!r}")
+
+    @property
+    def miter_limit(self) -> float | None:
+        """Miter-limit ratio for a mitered line join, as a float.
+
+        Read/write. Applicable only when :attr:`join_style` is
+        `MSO_LINE_JOIN_STYLE.MITER`. Reflects the `a:miter/@lim` attribute,
+        which stores the value in 1000ths of a percent (e.g. `400000` for a
+        4.0 ratio); this property exposes it as a plain float, e.g. `4.0`.
+        Returns |None| when no `a:miter` element is present, or when it is
+        present but `lim` is not explicitly set (in which case the OOXML
+        default miter-limit ratio applies).
+
+        Setting this value has no effect unless :attr:`join_style` is (or is
+        also set to) `MSO_LINE_JOIN_STYLE.MITER`; assigning a value implicitly
+        changes the join to miter. Assigning |None| removes the `lim`
+        attribute but leaves the miter join in place.
+        """
+        ln = self._ln
+        if ln is None or ln.miter is None:
+            return None
+        return ln.miter.lim
+
+    @miter_limit.setter
+    def miter_limit(self, value: float | None) -> None:
+        if value is None:
+            ln = self._ln
+            if ln is not None and ln.miter is not None:
+                ln.miter.lim = None
+            return
+        miter = self._get_or_add_ln().get_or_change_to_miter()
+        miter.lim = value
 
     @property
     def no_fill(self) -> bool:

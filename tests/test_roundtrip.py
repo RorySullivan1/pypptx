@@ -317,6 +317,29 @@ finally:
     os.unlink(img_path)
 """)
 
+    def it_round_trips_line_cap_and_join_style(self):
+        _run_roundtrip_test("""\
+from pptx.enum.dml import MSO_LINE_CAP_STYLE, MSO_LINE_JOIN_STYLE
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
+shape = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(2), Inches(1))
+
+shape.line.cap_style = MSO_LINE_CAP_STYLE.ROUND
+shape.line.join_style = MSO_LINE_JOIN_STYLE.MITER
+shape.line.miter_limit = 4.0
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+shape2 = prs2.slides[0].shapes[0]
+assert shape2.line.cap_style == MSO_LINE_CAP_STYLE.ROUND
+assert shape2.line.join_style == MSO_LINE_JOIN_STYLE.MITER
+assert shape2.line.miter_limit == 4.0
+""")
+
     def it_round_trips_theme_effect_scheme(self):
         _run_roundtrip_test("""\
 from pptx.theme import EffectScheme
