@@ -415,13 +415,11 @@ class _Arc(_BaseDrawingOperation):
         x_radius_emu, y_radius_emu = Emu(int(round(x_radius))), Emu(int(round(y_radius)))
         start_x, start_y = freeform_builder._current_point  # pyright: ignore[reportPrivateUsage]
 
-        start_theta = math.radians(start_angle)
-        center_x = start_x - x_radius_emu * math.cos(start_theta)
-        center_y = start_y - y_radius_emu * math.sin(start_theta)
+        start_dx, start_dy = _ellipse_offset(x_radius_emu, y_radius_emu, start_angle)
+        center_x, center_y = start_x - start_dx, start_y - start_dy
 
-        end_theta = math.radians(start_angle + swing_angle)
-        end_x = center_x + x_radius_emu * math.cos(end_theta)
-        end_y = center_y + y_radius_emu * math.sin(end_theta)
+        end_dx, end_dy = _ellipse_offset(x_radius_emu, y_radius_emu, start_angle + swing_angle)
+        end_x, end_y = center_x + end_dx, center_y + end_dy
 
         return cls(
             freeform_builder,
@@ -464,9 +462,8 @@ class _Arc(_BaseDrawingOperation):
 
     def _point_on_ellipse(self, angle_degrees: float) -> tuple[Length, Length]:
         """(x, y) point, in local coordinates, at `angle_degrees` on this arc's ellipse."""
-        theta = math.radians(angle_degrees)
-        x = self._center_x + self._x_radius * math.cos(theta)
-        y = self._center_y + self._y_radius * math.sin(theta)
+        dx, dy = _ellipse_offset(self._x_radius, self._y_radius, angle_degrees)
+        x, y = self._center_x + dx, self._center_y + dy
         return Emu(int(round(x))), Emu(int(round(y)))
 
     def _sweeps_through(self, angle_degrees: float) -> bool:
@@ -477,6 +474,18 @@ class _Arc(_BaseDrawingOperation):
             return True
         offset = (angle_degrees - lo) % 360
         return lo + offset <= hi
+
+
+def _ellipse_offset(x_radius: float, y_radius: float, angle_degrees: float) -> tuple[float, float]:
+    """(dx, dy) from an ellipse's center to the point on it in direction `angle_degrees`.
+
+    DrawingML arc angles are visual: the angle of the ray from the center to the point, not
+    the ellipse's parametric angle. The two differ whenever the radii differ, so the visual
+    angle is converted to its parametric equivalent before evaluating the ellipse.
+    """
+    theta = math.radians(angle_degrees)
+    t = math.atan2(x_radius * math.sin(theta), y_radius * math.cos(theta))
+    return x_radius * math.cos(t), y_radius * math.sin(t)
 
 
 class _Close:

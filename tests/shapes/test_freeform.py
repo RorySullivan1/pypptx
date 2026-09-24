@@ -663,6 +663,14 @@ class Describe_Arc:
         assert arc.x == Emu(50)
         assert arc.y == Emu(30)
 
+    def it_treats_angles_as_visual_on_an_ellipse(self, builder_):
+        # -- 45 deg is the ray's direction, not the parametric angle (which would give -6, 7) --
+        builder_._current_point = (Emu(0), Emu(0))
+
+        arc = _Arc.new(builder_, 20, 10, 0.0, 45.0)
+
+        assert (arc.x, arc.y) == (Emu(-11), Emu(9))
+
     def it_can_add_its_arc_to_a_path(self):
         path = element("a:path")
         arc = _Arc(None, Emu(50), Emu(30), 0.0, 90.0, 50.0, 0.0, Emu(50), Emu(30))
