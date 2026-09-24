@@ -604,6 +604,38 @@ for elm in elements:
 assert prs2.slides[0].shapes[-1].fill.fore_color.theme_color == MSO_THEME_COLOR.ACCENT_1
 """)
 
+    def it_round_trips_a_table_after_row_and_column_edits(self):
+        _run_roundtrip_test("""\
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+gf = slide.shapes.add_table(3, 3, Inches(1), Inches(1), Inches(6), Inches(3))
+table = gf.table
+
+for r in range(3):
+    for c in range(3):
+        table.cell(r, c).text = f"{r},{c}"
+
+# -- merge a 2x1 vertical range, then insert a row inside it --
+table.cell(0, 0).merge(table.cell(1, 0))
+table.rows.add(1)
+
+# -- append a column, then remove the second row --
+table.columns.add()
+table.rows.remove(table.rows[1])
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+table2 = prs2.slides[0].shapes[0].table
+assert len(table2.rows) == 3
+assert len(table2.columns) == 4
+# -- every row has one cell per grid column --
+for row in table2.rows:
+    assert len(row.cells) == 4
+""")
+
     def it_round_trips_a_theme_applied_from_a_thmx_file(self):
         _run_roundtrip_test("""\
 import os

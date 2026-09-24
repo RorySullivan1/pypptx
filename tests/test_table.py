@@ -763,6 +763,67 @@ class Describe_ColumnCollection:
         expected_column_lst = tbl.xpath("//a:gridCol")
         return columns, expected_column_lst
 
+    def it_can_add_a_column(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        column = table.columns.add()
+
+        assert len(table.columns) == 3
+        assert isinstance(column, _Column)
+        assert column._gridCol is tbl.tblGrid.gridCol_lst[2]
+        assert all(len(tr.tc_lst) == 3 for tr in tbl.tr_lst)
+
+    def it_can_insert_a_column_at_an_index(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 3, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        column = table.columns.add(1)
+
+        assert column._gridCol is tbl.tblGrid.gridCol_lst[1]
+        assert len(table.columns) == 4
+
+    def it_raises_on_add_column_index_out_of_range(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        with pytest.raises(IndexError):
+            table.columns.add(3)
+        with pytest.raises(IndexError):
+            table.columns.add(-1)
+
+    def it_can_remove_a_column(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 3, 900, 900)
+        table = Table(tbl, graphic_frame_)
+        col = table.columns[1]
+
+        table.columns.remove(col)
+
+        assert len(table.columns) == 2
+        assert all(len(tr.tc_lst) == 2 for tr in tbl.tr_lst)
+
+    def it_raises_removing_a_column_not_in_the_table(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+        other_tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        other_col = Table(other_tbl, graphic_frame_).columns[0]
+
+        with pytest.raises(TableError):
+            table.columns.remove(other_col)
+
+    def it_raises_removing_the_last_column(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 1, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        with pytest.raises(TableError):
+            table.columns.remove(table.columns[0])
+
+    # fixture components ---------------------------------------------
+
+    @pytest.fixture
+    def graphic_frame_(self, request):
+        return instance_mock(request, GraphicFrame)
+
     @pytest.fixture(
         params=[
             ("a:tbl/a:tblGrid", 0),
@@ -886,3 +947,64 @@ class Describe_RowCollection:
         tbl_cxml, expected_len = request.param
         rows = _RowCollection(element(tbl_cxml), None)
         return rows, expected_len
+
+    def it_can_add_a_row(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        row = table.rows.add()
+
+        assert len(table.rows) == 3
+        assert isinstance(row, _Row)
+        assert row._tr is tbl.tr_lst[2]
+        assert all(len(tr.tc_lst) == 2 for tr in tbl.tr_lst)
+
+    def it_can_insert_a_row_at_an_index(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(3, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        row = table.rows.add(1)
+
+        assert row._tr is tbl.tr_lst[1]
+        assert len(table.rows) == 4
+
+    def it_raises_on_add_row_index_out_of_range(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        with pytest.raises(IndexError):
+            table.rows.add(3)
+        with pytest.raises(IndexError):
+            table.rows.add(-1)
+
+    def it_can_remove_a_row(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(3, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+        row = table.rows[1]
+
+        table.rows.remove(row)
+
+        assert len(table.rows) == 2
+        assert all(len(tr.tc_lst) == 2 for tr in tbl.tr_lst)
+
+    def it_raises_removing_a_row_not_in_the_table(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+        other_tbl = CT_Table.new_tbl(2, 2, 900, 900)
+        other_row = Table(other_tbl, graphic_frame_).rows[0]
+
+        with pytest.raises(TableError):
+            table.rows.remove(other_row)
+
+    def it_raises_removing_the_last_row(self, graphic_frame_):
+        tbl = CT_Table.new_tbl(1, 2, 900, 900)
+        table = Table(tbl, graphic_frame_)
+
+        with pytest.raises(TableError):
+            table.rows.remove(table.rows[0])
+
+    # fixture components ---------------------------------------------
+
+    @pytest.fixture
+    def graphic_frame_(self, request):
+        return instance_mock(request, GraphicFrame)

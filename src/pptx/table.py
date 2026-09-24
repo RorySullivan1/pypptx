@@ -534,6 +534,48 @@ class _ColumnCollection(Subshape):
         """Supports len() function (e.g. 'len(columns) == 1')."""
         return len(self._tbl.tblGrid.gridCol_lst)
 
+    def add(self, index: int | None = None) -> _Column:
+        """Insert a new column into the table and return it.
+
+        The new column is inserted before `index`, a zero-based column index. When `index` is
+        `None` (the default), or equal to the current column count, the column is appended at
+        the right of the table. The new column's width and each row's new cell formatting are
+        copied from an adjacent column. Any horizontal merge crossing the insertion point is
+        extended to include the new column rather than being split.
+
+        Raises `IndexError` if `index` is out of range.
+        """
+        n_cols = len(self)
+        insert_idx = n_cols if index is None else index
+        if insert_idx < 0 or insert_idx > n_cols:
+            raise IndexError("column index [%d] out of range" % insert_idx)
+
+        new_gridCol = self._tbl.insert_gridCol(insert_idx)
+        column = _Column(new_gridCol, self)
+        self.notify_width_changed()
+        return column
+
+    def remove(self, col: _Column) -> None:
+        """Remove `col` from the table.
+
+        Any horizontal merge that included `col` is kept consistent -- its span is reduced by
+        one, and if `col` held the merge's origin, the origin (and its text) moves to the next
+        surviving column.
+
+        Raises |TableError| if `col` is not a column of this table or is the table's last
+        remaining column.
+        """
+        gridCol_lst = self._tbl.tblGrid.gridCol_lst
+        if len(gridCol_lst) <= 1:
+            raise TableError("cannot remove the last remaining column of a table")
+        try:
+            idx = gridCol_lst.index(col._gridCol)
+        except ValueError:
+            raise TableError("col is not a column in this table")
+
+        self._tbl.remove_gridCol(idx)
+        self.notify_width_changed()
+
     def notify_width_changed(self) -> None:
         """Called by a column when its width changes. Pass along to parent."""
         self._parent.notify_width_changed()
@@ -557,6 +599,48 @@ class _RowCollection(Subshape):
     def __len__(self) -> int:
         """Supports len() function (e.g. 'len(rows) == 1')."""
         return len(self._tbl.tr_lst)
+
+    def add(self, index: int | None = None) -> _Row:
+        """Insert a new row into the table and return it.
+
+        The new row is inserted before `index`, a zero-based row index. When `index` is `None`
+        (the default), or equal to the current row count, the row is appended at the bottom of
+        the table. The new row's height and cell formatting are copied from an adjacent row.
+        Any vertical merge crossing the insertion point is extended to include the new row
+        rather than being split.
+
+        Raises `IndexError` if `index` is out of range.
+        """
+        n_rows = len(self)
+        insert_idx = n_rows if index is None else index
+        if insert_idx < 0 or insert_idx > n_rows:
+            raise IndexError("row index [%d] out of range" % insert_idx)
+
+        new_tr = self._tbl.insert_tr(insert_idx)
+        row = _Row(new_tr, self)
+        self.notify_height_changed()
+        return row
+
+    def remove(self, row: _Row) -> None:
+        """Remove `row` from the table.
+
+        Any vertical merge that included `row` is kept consistent -- its span is reduced by
+        one, and if `row` held the merge's origin, the origin (and its text) moves to the next
+        surviving row.
+
+        Raises |TableError| if `row` is not a row of this table or is the table's last
+        remaining row.
+        """
+        tr_lst = self._tbl.tr_lst
+        if len(tr_lst) <= 1:
+            raise TableError("cannot remove the last remaining row of a table")
+        try:
+            idx = tr_lst.index(row._tr)
+        except ValueError:
+            raise TableError("row is not a row in this table")
+
+        self._tbl.remove_tr(idx)
+        self.notify_height_changed()
 
     def notify_height_changed(self) -> None:
         """Called by a row when its height changes. Pass along to parent."""
