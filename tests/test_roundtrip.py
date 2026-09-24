@@ -627,6 +627,41 @@ for elm in elements:
 assert prs2.slides[0].shapes[-1].fill.fore_color.theme_color == MSO_THEME_COLOR.ACCENT_1
 """)
 
+    def it_round_trips_a_freeform_shape_with_curve_and_arc_segments(self):
+        _run_roundtrip_test("""\
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
+
+builder = slide.shapes.build_freeform(start_x=0, start_y=0, scale=1.0)
+builder.add_line_segments([(100, 0)], close=False)
+builder.add_cubic_bezier((120, 20), (140, 40), (150, 50))
+builder.add_quadratic_bezier((170, 30), (190, 50))
+builder.add_arc(x_radius=20, y_radius=10, start_angle=0, swing_angle=90)
+builder.add_line_segments([(0, 0)], close=True)
+shape = builder.convert_to_shape(origin_x=Inches(1), origin_y=Inches(1))
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+shape2 = [s for s in prs2.slides[0].shapes if not s.is_placeholder][0]
+path = shape2._element.spPr.custGeom.pathLst.path_lst[0]
+
+assert len(path.xpath("a:lnTo")) == 2
+assert len(path.xpath("a:cubicBezTo")) == 1
+assert len(path.xpath("a:cubicBezTo/a:pt")) == 3
+assert len(path.xpath("a:quadBezTo")) == 1
+assert len(path.xpath("a:quadBezTo/a:pt")) == 2
+assert len(path.xpath("a:arcTo")) == 1
+arcTo = path.xpath("a:arcTo")[0]
+assert arcTo.get("wR") == "20"
+assert arcTo.get("hR") == "10"
+assert arcTo.get("stAng") == "0"
+assert arcTo.get("swAng") == "5400000"
+assert len(path.xpath("a:close")) == 1
+""")
+
     def it_round_trips_a_theme_applied_from_a_thmx_file(self):
         _run_roundtrip_test("""\
 import os

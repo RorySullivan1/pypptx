@@ -9,10 +9,13 @@ import pytest
 from pptx.shapes.autoshape import Shape
 from pptx.shapes.freeform import (
     FreeformBuilder,
+    _Arc,
     _BaseDrawingOperation,
     _Close,
+    _CubicBezier,
     _LineSegment,
     _MoveTo,
+    _QuadraticBezier,
 )
 from pptx.shapes.shapetree import SlideShapes
 from pptx.util import Emu, Mm
@@ -68,6 +71,51 @@ class DescribeFreeformBuilder:
         _MoveTo_new_.assert_called_once_with(builder, x, y)
         assert builder._drawing_operations[-1] is move_to_
         assert return_value is builder
+
+    def it_can_add_a_cubic_bezier_curve(
+        self, request: FixtureRequest, cubic_bezier_: Mock
+    ):
+        control_pt_1, control_pt_2, end_pt = (1, 2), (3, 4), (5, 6)
+        _CubicBezier_new_ = method_mock(
+            request, _CubicBezier, "new", autospec=False, return_value=cubic_bezier_
+        )
+        builder = FreeformBuilder(None, None, None, None, None)  # type: ignore
+
+        return_value = builder.add_cubic_bezier(control_pt_1, control_pt_2, end_pt)
+
+        _CubicBezier_new_.assert_called_once_with(builder, control_pt_1, control_pt_2, end_pt)
+        assert builder._drawing_operations[-1] is cubic_bezier_
+        assert return_value is builder
+
+    def it_can_add_a_quadratic_bezier_curve(
+        self, request: FixtureRequest, quadratic_bezier_: Mock
+    ):
+        control_pt, end_pt = (1, 2), (3, 4)
+        _QuadraticBezier_new_ = method_mock(
+            request, _QuadraticBezier, "new", autospec=False, return_value=quadratic_bezier_
+        )
+        builder = FreeformBuilder(None, None, None, None, None)  # type: ignore
+
+        return_value = builder.add_quadratic_bezier(control_pt, end_pt)
+
+        _QuadraticBezier_new_.assert_called_once_with(builder, control_pt, end_pt)
+        assert builder._drawing_operations[-1] is quadratic_bezier_
+        assert return_value is builder
+
+    def it_can_add_an_arc(self, request: FixtureRequest, arc_: Mock):
+        x_radius, y_radius, start_angle, swing_angle = 100, 200, 30.0, 145.0
+        _Arc_new_ = method_mock(request, _Arc, "new", autospec=False, return_value=arc_)
+        builder = FreeformBuilder(None, None, None, None, None)  # type: ignore
+
+        return_value = builder.add_arc(x_radius, y_radius, start_angle, swing_angle)
+
+        _Arc_new_.assert_called_once_with(builder, x_radius, y_radius, start_angle, swing_angle)
+        assert builder._drawing_operations[-1] is arc_
+        assert return_value is builder
+
+    def it_knows_the_current_pen_point_to_help(self, current_point_fixture):
+        builder, expected_value = current_point_fixture
+        assert builder._current_point == expected_value
 
     def it_can_build_the_specified_freeform_shape(
         self,
@@ -271,6 +319,31 @@ class DescribeFreeformBuilder:
         builder._drawing_operations.extend(drawing_ops)
         return builder, expected_value
 
+    @pytest.fixture(
+        params=[
+            # no drawing operations yet -> starting point
+            ((), (Emu(10), Emu(20)), (Emu(10), Emu(20))),
+            # last operation is a line segment -> its endpoint
+            (
+                (_LineSegment(None, Emu(30), Emu(40)),),
+                (Emu(10), Emu(20)),
+                (Emu(30), Emu(40)),
+            ),
+            # trailing close operations are skipped
+            (
+                (_LineSegment(None, Emu(30), Emu(40)), _Close()),
+                (Emu(10), Emu(20)),
+                (Emu(30), Emu(40)),
+            ),
+        ]
+    )
+    def current_point_fixture(self, request: FixtureRequest):
+        drawing_ops, start_point, expected_value = request.param
+        start_x, start_y = start_point
+        builder = FreeformBuilder(None, start_x, start_y, None, None)  # type: ignore
+        builder._drawing_operations.extend(drawing_ops)
+        return builder, expected_value
+
     @pytest.fixture(params=[(0, 1.0, 0), (4, 10.0, 40), (914400, 914.3, 836035920)])
     def left_fixture(self, request: FixtureRequest, shape_offset_x_prop_: Mock):
         offset_x, x_scale, expected_value = request.param
@@ -330,8 +403,20 @@ class DescribeFreeformBuilder:
         return method_mock(request, _LineSegment, "apply_operation_to", autospec=True)
 
     @pytest.fixture
+    def arc_(self, request: FixtureRequest):
+        return instance_mock(request, _Arc)
+
+    @pytest.fixture
     def close_(self, request: FixtureRequest):
         return instance_mock(request, _Close)
+
+    @pytest.fixture
+    def cubic_bezier_(self, request: FixtureRequest):
+        return instance_mock(request, _CubicBezier)
+
+    @pytest.fixture
+    def quadratic_bezier_(self, request: FixtureRequest):
+        return instance_mock(request, _QuadraticBezier)
 
     @pytest.fixture
     def _Close_new_(self, request: FixtureRequest):
@@ -563,3 +648,162 @@ class Describe_MoveTo:
     @pytest.fixture
     def _init_(self, request: FixtureRequest):
         return initializer_mock(request, _MoveTo, autospec=True)
+
+
+class Describe_Arc:
+    """Unit-test suite for `pptx.shapes.freeform._Arc` objects."""
+
+    def it_provides_a_constructor(self, builder_):
+        builder_._current_point = (Emu(100), Emu(0))
+        x_radius, y_radius, start_angle, swing_angle = 50.4, 30.4, 0.0, 90.0
+
+        arc = _Arc.new(builder_, x_radius, y_radius, start_angle, swing_angle)
+
+        assert isinstance(arc, _Arc)
+        assert arc.x == Emu(50)
+        assert arc.y == Emu(30)
+
+    def it_can_add_its_arc_to_a_path(self):
+        path = element("a:path")
+        arc = _Arc(None, Emu(50), Emu(30), 0.0, 90.0, 50.0, 0.0, Emu(50), Emu(30))
+
+        arcTo = arc.apply_operation_to(path)
+
+        assert path.xml == xml("a:path/a:arcTo{wR=50,hR=30,stAng=0,swAng=5400000}")
+        assert arcTo is path.xpath("a:arcTo")[-1]
+
+    def it_computes_its_bounding_points(self):
+        arc = _Arc(None, Emu(50), Emu(30), 0.0, 90.0, 50.0, 0.0, Emu(50), Emu(30))
+
+        assert arc.points == ((Emu(100), Emu(0)), (Emu(50), Emu(30)), (Emu(50), Emu(30)))
+
+    @pytest.mark.parametrize(
+        ("start_angle", "swing_angle", "swept_angles"),
+        [
+            (0.0, 90.0, (0.0, 90.0)),
+            (350.0, 20.0, (0.0,)),
+            (0.0, 400.0, (0.0, 90.0, 180.0, 270.0)),
+            (90.0, -90.0, (0.0, 90.0)),
+        ],
+    )
+    def it_knows_which_extrema_angles_it_sweeps_through(
+        self, start_angle: float, swing_angle: float, swept_angles: tuple[float, ...]
+    ):
+        arc = _Arc(None, Emu(1), Emu(1), start_angle, swing_angle, 0.0, 0.0, Emu(0), Emu(0))
+
+        actual = {a for a in (0.0, 90.0, 180.0, 270.0) if arc._sweeps_through(a)}
+
+        assert actual == set(swept_angles)
+
+    # fixture components -----------------------------------
+
+    @pytest.fixture
+    def builder_(self, request: FixtureRequest):
+        return instance_mock(request, FreeformBuilder)
+
+
+class Describe_CubicBezier:
+    """Unit-test suite for `pptx.shapes.freeform._CubicBezier` objects."""
+
+    def it_provides_a_constructor(self, builder_, _init_):
+        control_pt_1, control_pt_2, end_pt = (10.51, 20.49), (30.51, 40.49), (50.51, 60.49)
+
+        cubic_bezier = _CubicBezier.new(builder_, control_pt_1, control_pt_2, end_pt)
+
+        _init_.assert_called_once_with(
+            cubic_bezier,
+            builder_,
+            (Emu(11), Emu(20)),
+            (Emu(31), Emu(40)),
+            Emu(51),
+            Emu(60),
+        )
+        assert isinstance(cubic_bezier, _CubicBezier)
+
+    def it_can_add_its_curve_to_a_path(self, apply_fixture):
+        cubic_bezier, path, expected_xml = apply_fixture
+
+        cubicBezTo = cubic_bezier.apply_operation_to(path)
+
+        assert path.xml == expected_xml
+        assert cubicBezTo is path.xpath("a:cubicBezTo")[-1]
+
+    def it_knows_its_points(self):
+        control_pt_1, control_pt_2 = (Emu(11), Emu(21)), (Emu(31), Emu(41))
+        cubic_bezier = _CubicBezier(None, control_pt_1, control_pt_2, Emu(51), Emu(61))
+
+        assert cubic_bezier.points == (control_pt_1, control_pt_2, (Emu(51), Emu(61)))
+
+    # fixtures -------------------------------------------------------
+
+    @pytest.fixture
+    def apply_fixture(self, builder_):
+        control_pt_1, control_pt_2, end_pt = (120, 220), (140, 240), (160, 260)
+        path = element("a:path")
+        builder_.shape_offset_x, builder_.shape_offset_y = 100, 200
+
+        cubic_bezier = _CubicBezier(builder_, control_pt_1, control_pt_2, *end_pt)
+        expected_xml = xml(
+            "a:path/a:cubicBezTo/(a:pt{x=20,y=20},a:pt{x=40,y=40},a:pt{x=60,y=60})"
+        )
+        return cubic_bezier, path, expected_xml
+
+    # fixture components -----------------------------------
+
+    @pytest.fixture
+    def builder_(self, request: FixtureRequest):
+        return instance_mock(request, FreeformBuilder)
+
+    @pytest.fixture
+    def _init_(self, request: FixtureRequest):
+        return initializer_mock(request, _CubicBezier, autospec=True)
+
+
+class Describe_QuadraticBezier:
+    """Unit-test suite for `pptx.shapes.freeform._QuadraticBezier` objects."""
+
+    def it_provides_a_constructor(self, builder_, _init_):
+        control_pt, end_pt = (10.51, 20.49), (30.51, 40.49)
+
+        quadratic_bezier = _QuadraticBezier.new(builder_, control_pt, end_pt)
+
+        _init_.assert_called_once_with(
+            quadratic_bezier, builder_, (Emu(11), Emu(20)), Emu(31), Emu(40)
+        )
+        assert isinstance(quadratic_bezier, _QuadraticBezier)
+
+    def it_can_add_its_curve_to_a_path(self, apply_fixture):
+        quadratic_bezier, path, expected_xml = apply_fixture
+
+        quadBezTo = quadratic_bezier.apply_operation_to(path)
+
+        assert path.xml == expected_xml
+        assert quadBezTo is path.xpath("a:quadBezTo")[-1]
+
+    def it_knows_its_points(self):
+        control_pt = (Emu(11), Emu(21))
+        quadratic_bezier = _QuadraticBezier(None, control_pt, Emu(31), Emu(41))
+
+        assert quadratic_bezier.points == (control_pt, (Emu(31), Emu(41)))
+
+    # fixtures -------------------------------------------------------
+
+    @pytest.fixture
+    def apply_fixture(self, builder_):
+        control_pt, end_pt = (120, 220), (140, 240)
+        path = element("a:path")
+        builder_.shape_offset_x, builder_.shape_offset_y = 100, 200
+
+        quadratic_bezier = _QuadraticBezier(builder_, control_pt, *end_pt)
+        expected_xml = xml("a:path/a:quadBezTo/(a:pt{x=20,y=20},a:pt{x=40,y=40})")
+        return quadratic_bezier, path, expected_xml
+
+    # fixture components -----------------------------------
+
+    @pytest.fixture
+    def builder_(self, request: FixtureRequest):
+        return instance_mock(request, FreeformBuilder)
+
+    @pytest.fixture
+    def _init_(self, request: FixtureRequest):
+        return initializer_mock(request, _QuadraticBezier, autospec=True)
