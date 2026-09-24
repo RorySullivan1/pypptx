@@ -77,9 +77,49 @@ Most API objects subclass one of these. Keep them as value objects — no mutabl
 - The exception hierarchy in `pptx/exc.py` (`ShapeError`, `SlideError`, `ChartError`, `TableError`, `PackageError`, etc.) is the preferred raise target inside the API layer. Avoid bare `ValueError`/`TypeError` in user-facing code paths.
 - `*.pptx` is gitignored — example scripts write to the working directory and outputs are not checked in.
 
-## Internal Docs
+## Capabilities (`.claude/`)
 
-- `internal_docs/MANIFEST.md` — authoritative scope/feature inventory and explicit out-of-scope items. Consult before proposing a feature that "PowerPoint can do" — many such features (rendering, slideshow, print, macro execution) are deliberately excluded.
-- `internal_docs/TODO.md` — granular roadmap of feature gaps with their OOXML schema location. Strategy stated there: **bottom-up, types-first** — complete the OXML layer (element classes, simple types, enums) before building API wrappers on top.
-- `dev_map/` — versioned development roadmap. One `vMAJOR.MINOR.PATCH.md` file per planned milestone between the current release and `v1.0.0`. Each file follows the template in `dev_map/_TEMPLATE.md` (Objective / Enhancements / Dependencies / Out of Scope / Test Plan). Work for a given version happens on a branch of the same name (`vX.Y.Z`); the milestone file is expanded with implementation detail at the time that branch is opened. See `dev_map/README.md` for status and conventions.
-- `examples/` — runnable scripts demonstrating each feature area; useful as informal smoke tests when changing public APIs.
+Task-scoped **skills** (`.claude/skills/`) and isolated **agents** (`.claude/agents/`) auto-load
+by their `description:` — the Python family (`python-development` / `-review` / `-maintenance` /
+`-deployment`), the GitHub family, roadmap planning, and the memory / knowledge / token-economy
+helpers. `@agent-python-developer` is the executor for `src/pptx/` work. For the full inventory
+of skills, agents, commands, and workflows read **`.claude/CATALOG.md`** (regenerate with
+`/reindex`) — don't enumerate assets here. These assets were adopted from the claudeBrain
+factory; `.claude/README.md` explains the layers.
+
+## Reference Docs (`.claude/context/`)
+
+- **`feature-manifest.md`** — authoritative scope/feature inventory and explicit out-of-scope
+  items. Consult before proposing a feature that "PowerPoint can do" — many such features
+  (rendering, slideshow, print, macro execution) are deliberately excluded.
+- **`feature-gaps.md`** — granular feature-gap log with each item's OOXML schema location.
+  Strategy: **bottom-up, types-first** — complete the OXML layer (element classes, simple
+  types, enums) before building API wrappers on top.
+- **`verification-surface.md`** — what the agent can verify itself (`pytest`, examples) vs.
+  what needs a human (opening output in PowerPoint). Read before claiming work is confirmed.
+- `examples/` — runnable scripts demonstrating each feature area; useful as informal smoke
+  tests when changing public APIs.
+
+## Roadmap & versioning (`.meta/`)
+
+- **Roadmap** (`.meta/roadmap/`) — `INDEX.md` dashboard (auto-surfaced at session start)
+  plus `stages/NN-<theme>/` with one card per version (Objective / Goals / Dependencies /
+  Out of scope / Objectives-acceptance). Re-plan with `/roadmap-set`, reconcile with
+  `/roadmap-status`. Shipped cards are history — don't edit them.
+- **Version** (`.meta/version`) — the single unit of work in flight (the cursor). Start a
+  version with `/version-set`, ship it with `/version-ship`; `advance-roadmap-step` drives a
+  card end to end.
+- **Branch per version, named `vX.Y.Z`** (this overrides the `claude/<label>-<slug>` default
+  in `/version-set`). Expand a card with implementation detail when its branch opens; don't
+  implement a version whose card is still an overview.
+
+## Memory
+
+Decisions and state carry across sessions via the `session-memory` skill:
+`.claude/memory/INDEX.md` (auto-loaded) plus append-only `.claude/memory/sessions/*.md` logs.
+
+## Compact Instructions
+
+On compaction, preserve: the `pypptx` (dist) vs `pptx` (import) naming, the four-layer
+architecture and bottom-up/types-first rule, the `Describe*`/`it_*` test naming, the current
+`.meta/version` cursor, and that features must be pure XML edits (no rendering engine).
