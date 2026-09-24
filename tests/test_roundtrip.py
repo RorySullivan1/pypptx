@@ -267,6 +267,29 @@ slide_xml = zf.read("ppt/slides/slide1.xml").decode()
 assert "p188:commentRel" in slide_xml
 """)
 
+    def it_reads_modern_comment_threads_with_their_replies(self):
+        _run_roundtrip_test("""\
+from tests.unitutil.modern_comments import modern_comments_pptx
+
+slide = Presentation(modern_comments_pptx()).slides[0]
+threads = slide.threaded_comments
+
+assert len(threads) == 2
+first, second = threads
+assert (first.author, first.text, first.anchor, first.resolved) == (
+    "Alice Adams", "Tighten this title", "slide", False
+)
+assert [(r.author, r.text) for r in first.replies] == [
+    ("Bob Brown", "First reply"), ("Alice Adams", "Second reply")
+]
+assert (second.author, second.anchor, second.resolved, second.replies) == (
+    "Bob Brown", "shape", True, []
+)
+assert threads[1].id == second.id
+# -- legacy comments are a separate collection and stay empty --
+assert len(slide.comments) == 0
+""")
+
     def it_leaves_modern_comments_behind_when_duplicating_a_slide(self):
         _run_roundtrip_test("""\
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT

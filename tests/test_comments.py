@@ -4,12 +4,21 @@
 
 from __future__ import annotations
 
+import datetime as dt
+
 import pytest
 
+from pptx import Presentation
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
-from pptx.parts.comments import AuthorsPart, CommentAuthorsPart, CommentsPart, ModernCommentsPart
-from pptx.slide import Comment, SlideComments
+from pptx.parts.comments import (
+    AuthorsPart,
+    CommentAuthorsPart,
+    CommentsPart,
+    ModernCommentsPart,
+)
+from pptx.slide import Comment, CommentReply, SlideComments, ThreadedComment
+
 
 
 class DescribeCommentAuthorsPart:
@@ -191,3 +200,131 @@ class DescribeComment:
         comment = Comment(cm, authors_part)
         comment.delete()
         assert len(cmLst) == 0
+
+
+def _authors_part() -> AuthorsPart:
+    xml = (
+        "<p188:authorLst %s>"
+        '<p188:author id="{A1}" name="Alice" initials="AA" userId="alice" providerId="None"/>'
+        '<p188:author id="{B2}" name="Bob" userId="bob" providerId="AD"/>'
+        "</p188:authorLst>"
+    ) % nsdecls("p188")
+    return AuthorsPart("/ppt/authors.xml", "application/test", None, parse_xml(xml))
+
+
+def _thread_element(attrs: str = "", children: str = ""):
+    """`p188:cm` authored by Alice (`{A1}`) with extra `attrs` and `children` XML."""
+    return parse_xml(
+        '<p188:cm %s id="{C1}" authorId="{A1}" created="2024-05-01T09:30:00.250" %s>%s</p188:cm>'
+        % (nsdecls("p188", "pc", "ac", "a"), attrs, children)
+    )
+
+
+_TXBODY = "<p188:txBody><a:bodyPr/><a:p><a:r><a:t>%s</a:t></a:r></a:p></p188:txBody>"
+
+
+class DescribeThreadedComment:
+    """Unit-test suite for `pptx.slide.ThreadedComment`."""
+
+    def it_knows_its_id_text_and_created_time(self):
+        thread = ThreadedComment(_thread_element(children=_TXBODY % "Fix"), _authors_part())
+
+        assert thread.id == "{C1}"
+        assert thread.text == "Fix"
+        assert thread.created == dt.datetime(2024, 5, 1, 9, 30, 0, 250000)
+
+    def it_knows_its_author(self):
+        thread = ThreadedComment(_thread_element(), _authors_part())
+
+        assert thread.author == "Alice"
+        assert thread.author_initials == "AA"
+
+    def but_its_author_is_blank_when_not_in_the_authors_part(self):
+        cm = _thread_element()
+        cm.set("authorId", "{ZZ}")
+
+        assert ThreadedComment(cm, _authors_part()).author == ""
+        assert ThreadedComment(cm, None).author == ""
+        assert ThreadedComment(cm, None).author_initials == ""
+
+    @pytest.mark.parametrize(
+        ("attrs", "expected_status", "expected_resolved"),
+        [
+            ("", "active", False),
+            ('status="resolved"', "resolved", True),
+            ('status="closed"', "closed", False),
+        ],
+    )
+    def it_knows_whether_it_is_resolved(
+        self, attrs: str, expected_status: str, expected_resolved: bool
+    ):
+        thread = ThreadedComment(_thread_element(attrs), _authors_part())
+
+        assert thread.status == expected_status
+        assert thread.resolved is expected_resolved
+
+    @pytest.mark.parametrize(
+        ("children", "expected_value"),
+        [
+            ('<pc:sldMkLst><pc:docMk/><pc:sldMk sldId="256"/></pc:sldMkLst>', "slide"),
+            ('<ac:deMkLst><pc:docMk/><pc:sldMk sldId="256"/></ac:deMkLst>', "shape"),
+            ("<ac:txMkLst/>", "text"),
+            ("<p188:unknownAnchor/>", "unknown"),
+        ],
+    )
+    def it_knows_what_it_is_anchored_to(self, children: str, expected_value: str):
+        thread = ThreadedComment(_thread_element(children=children), _authors_part())
+        assert thread.anchor == expected_value
+
+    @pytest.mark.parametrize(
+        ("children", "expected_value"),
+        [('<p188:pos x="100" y="200"/>', (100, 200)), ("", None)],
+    )
+    def it_knows_its_position(self, children: str, expected_value):
+        thread = ThreadedComment(_thread_element(children=children), _authors_part())
+        assert thread.position == expected_value
+
+    def it_provides_access_to_its_replies_in_order(self):
+        children = (
+            "<p188:replyLst>"
+            '<p188:reply id="{R1}" authorId="{B2}" created="2024-05-01T10:00:00Z">%s</p188:reply>'
+            '<p188:reply id="{R2}" authorId="{A1}" created="2024-05-02T08:00:00+02:00">%s'
+            "</p188:reply>"
+            "</p188:replyLst>"
+        ) % (_TXBODY % "one", _TXBODY % "two")
+        thread = ThreadedComment(_thread_element(children=children), _authors_part())
+
+        replies = thread.replies
+
+        assert all(isinstance(r, CommentReply) for r in replies)
+        assert [(r.id, r.author, r.text) for r in replies] == [
+            ("{R1}", "Bob", "one"),
+            ("{R2}", "Alice", "two"),
+        ]
+        assert replies[0].created == dt.datetime(2024, 5, 1, 10, 0, tzinfo=dt.timezone.utc)
+        assert replies[1].created == dt.datetime(
+            2024, 5, 2, 8, 0, tzinfo=dt.timezone(dt.timedelta(hours=2))
+        )
+
+    def but_it_has_no_replies_when_there_are_none(self):
+        assert ThreadedComment(_thread_element(), _authors_part()).replies == []
+
+
+class DescribeThreadedComments:
+    """Unit-test suite for `pptx.slide.ThreadedComments`.
+
+    Reading threads from a PowerPoint-shaped file is covered in `tests/test_roundtrip.py`.
+    """
+
+    def it_is_empty_when_the_slide_has_no_modern_comments(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+
+        assert len(slide.threaded_comments) == 0
+        assert list(slide.threaded_comments) == []
+
+    def it_raises_on_an_index_out_of_range(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        with pytest.raises(IndexError):
+            slide.threaded_comments[0]

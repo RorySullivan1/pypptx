@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import datetime as dt
+
 import pytest
 
-from pptx.oxml.comment import (
+from pptx.oxml.comment import (  # pyright: ignore[reportPrivateUsage]
     CT_ModernAuthor,
     CT_ModernAuthorList,
     CT_ModernComment,
     CT_ModernCommentList,
     CT_ModernCommentReply,
+    _parse_xsd_datetime,
 )
 
 from ..unitutil.cxml import element
@@ -139,3 +142,27 @@ class DescribeCT_ModernCommentList:
 
         assert isinstance(cmLst, CT_ModernCommentList)
         assert [cm.id for cm in cmLst.cm_lst] == ["c1", "c2"]
+
+
+class Describe_parse_xsd_datetime:
+    """Unit-test suite for `pptx.oxml.comment._parse_xsd_datetime`."""
+
+    @pytest.mark.parametrize(
+        ("value", "expected_value"),
+        [
+            ("2024-12-30T20:26:06.503", dt.datetime(2024, 12, 30, 20, 26, 6, 503000)),
+            ("2024-12-30T20:26:06", dt.datetime(2024, 12, 30, 20, 26, 6)),
+            ("2024-12-30T20:26:06.1234567", dt.datetime(2024, 12, 30, 20, 26, 6, 123456)),
+            ("2024-12-30T20:26:06Z", dt.datetime(2024, 12, 30, 20, 26, 6, tzinfo=dt.timezone.utc)),
+            (
+                "2024-12-30T20:26:06-05:30",
+                dt.datetime(
+                    2024, 12, 30, 20, 26, 6, tzinfo=dt.timezone(-dt.timedelta(hours=5, minutes=30))
+                ),
+            ),
+            ("2024-13-30T20:26:06", None),
+            ("yesterday", None),
+        ],
+    )
+    def it_parses_an_xsd_dateTime(self, value: str, expected_value: dt.datetime | None):
+        assert _parse_xsd_datetime(value) == expected_value

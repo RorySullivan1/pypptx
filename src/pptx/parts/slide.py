@@ -14,7 +14,7 @@ from pptx.opc.packuri import PackURI
 from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide, CT_Slide
 from pptx.oxml.theme import CT_OfficeStyleSheet
 from pptx.parts.chart import ChartPart
-from pptx.parts.comments import CommentsPart
+from pptx.parts.comments import CommentsPart, ModernCommentsPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
 from pptx.parts.tags import TagsPart
 from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
@@ -237,6 +237,14 @@ class SlidePart(BaseSlidePart):
             comments_part = CommentsPart.default(self._package, partname)
             self.relate_to(comments_part, RT.COMMENTS)
             return comments_part
+
+    @property
+    def modern_comments_part(self) -> ModernCommentsPart | None:
+        """The |ModernCommentsPart| holding this slide's comment threads, or None if absent."""
+        try:
+            return cast(ModernCommentsPart, self.part_related_by(RT.MODERN_COMMENTS))
+        except KeyError:
+            return None
 
     @property
     def has_comments(self) -> bool:

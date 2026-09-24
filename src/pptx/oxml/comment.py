@@ -7,6 +7,8 @@ section 2.16.3 and are what PowerPoint 365 writes; they carry replies and a reso
 
 from __future__ import annotations
 
+import datetime as dt
+import re
 from typing import TYPE_CHECKING
 
 from pptx.oxml.simpletypes import ST_CommentStatus, XsdString, XsdUnsignedInt
@@ -134,6 +136,15 @@ class _BaseModernComment(BaseOxmlElement):
     created: str = RequiredAttribute("created", XsdString)  # pyright: ignore[reportAssignmentType]
 
     @property
+    def created_datetime(self) -> dt.datetime | None:
+        """`created` as a |datetime|, or None when it isn't a valid `xsd:dateTime`.
+
+        The result is timezone-aware when the value carries a `Z` or `+hh:mm` suffix and naive
+        (local time, which is what PowerPoint writes) when it doesn't.
+        """
+        return _parse_xsd_datetime(self.created)
+
+    @property
     def text(self) -> str:
         """Text of the `p188:txBody` child, one line per paragraph; "" when there is none."""
         txBody = self.txBody
@@ -215,3 +226,32 @@ class CT_ModernCommentList(BaseOxmlElement):
     cm_lst: list[CT_ModernComment]
 
     cm = ZeroOrMore("p188:cm")
+
+
+_XSD_DATETIME_RE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$"
+)
+
+
+def _parse_xsd_datetime(value: str) -> dt.datetime | None:
+    """Return the |datetime| an `xsd:dateTime` string names, or None when it isn't one.
+
+    Fractional seconds of any length are accepted and truncated to microseconds.
+    """
+    match = _XSD_DATETIME_RE.match(value.strip())
+    if match is None:
+        return None
+    seconds_part, fraction, zone = match.groups()
+    try:
+        result = dt.datetime.strptime(seconds_part, "%Y-%m-%dT%H:%M:%S")
+    except ValueError:
+        return None
+    if fraction:
+        result = result.replace(microsecond=int(fraction[:6].ljust(6, "0")))
+    if zone == "Z":
+        result = result.replace(tzinfo=dt.timezone.utc)
+    elif zone:
+        sign = -1 if zone[0] == "-" else 1
+        offset = dt.timedelta(hours=int(zone[1:3]), minutes=int(zone[4:6]))
+        result = result.replace(tzinfo=dt.timezone(sign * offset))
+    return result

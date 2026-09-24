@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import IO, TYPE_CHECKING, Iterable
+from typing import IO, TYPE_CHECKING, Iterable, cast
 
 from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -15,6 +15,7 @@ from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.oxml.xmlchemy import BaseOxmlElement
+    from pptx.parts.comments import AuthorsPart
     from pptx.parts.coreprops import CorePropertiesPart
     from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
@@ -266,6 +267,14 @@ class PresentationPart(XmlPart):
             prefix, _, ext = match.groups()
             return f"{prefix}%d{ext}"
         return None
+
+    @property
+    def authors_part(self) -> AuthorsPart | None:
+        """The |AuthorsPart| naming the authors of modern comments, or None when not present."""
+        try:
+            return cast("AuthorsPart", self.part_related_by(RT.AUTHORS))
+        except KeyError:
+            return None
 
     @property
     def core_properties(self) -> CorePropertiesPart:
