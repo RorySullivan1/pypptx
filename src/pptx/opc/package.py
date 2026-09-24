@@ -431,6 +431,61 @@ class XmlPart(Part):
         return len([r for r in cast("list[str]", self._element.xpath("//@r:id")) if r == rId])
 
 
+class LazyXmlPart(XmlPart):
+    """Base class for XML parts whose element tree is parsed lazily, on first access.
+
+    `XmlPart.load()` always parses its blob eagerly, so its `blob` property always
+    re-serializes the element tree -- which can change insignificant bytes (XML
+    declaration, `standalone`, attribute/namespace order, whitespace) even when the
+    part's content was never touched. That breaks a "resave without modification is
+    byte-identical" guarantee for parts that are usually opened, inspected read-only,
+    and re-saved unchanged (e.g. `presProps.xml`, `tableStyles.xml`).
+
+    `LazyXmlPart` instead keeps the original blob and defers parsing `._element`
+    until it is first accessed. `.blob` returns the pristine original bytes if the
+    element was never parsed, or a fresh serialization once it has been. Note that
+    *reading* `._element` counts as "touched" for this purpose -- once the tree has
+    been parsed, `.blob` always re-serializes, even if nothing was actually changed.
+    This is a deliberate simplification; only avoid accessing `._element` (e.g. via
+    a subclass property) on a read path where byte-for-byte round-tripping matters.
+    """
+
+    def __init__(
+        self,
+        partname: PackURI,
+        content_type: str,
+        package: Package,
+        blob: bytes | None = None,
+        element: BaseOxmlElement | None = None,
+    ):
+        # --- deliberately skip `XmlPart.__init__`, which requires `element` ---
+        Part.__init__(self, partname, content_type, package, blob)
+        self.__element = element
+
+    @classmethod
+    def load(cls, partname: PackURI, content_type: str, package: Package, blob: bytes) -> Self:
+        """Return `cls` instance wrapping `blob`, without parsing it."""
+        return cls(partname, content_type, package, blob=blob)
+
+    @property
+    def _element(self) -> BaseOxmlElement:  # pyright: ignore[reportIncompatibleMethodOverride]
+        """The root XML element of this part, parsing `self._blob` on first access."""
+        if self.__element is None:
+            self.__element = cast("BaseOxmlElement", parse_xml(self._blob or b""))
+        return self.__element
+
+    @_element.setter
+    def _element(self, element: BaseOxmlElement) -> None:
+        self.__element = element
+
+    @property
+    def blob(self) -> bytes:  # pyright: ignore[reportIncompatibleMethodOverride]
+        """Original bytes if `._element` was never accessed, else a fresh serialization."""
+        if self.__element is None:
+            return self._blob or b""
+        return serialize_part_xml(self.__element)
+
+
 class PartFactory:
     """Constructs a registered subtype of |Part|.
 

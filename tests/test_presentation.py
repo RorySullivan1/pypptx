@@ -6,12 +6,16 @@ import pytest
 
 from pptx.custom_show import CustomShows
 from pptx.fonts import EmbeddedFonts
+from pptx.dml.color import RGBColor
+from pptx.enum.pres import PP_SLIDE_SHOW_TYPE
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.presentation import PresentationPart
+from pptx.parts.presprops import PresPropsPart
 from pptx.parts.slide import NotesMasterPart
-from pptx.presentation import Presentation, Section, Sections
+from pptx.parts.tablestyles import TableStylesPart
+from pptx.presentation import Presentation, Section, Sections, SlideShowSettings, TableStyles
 from pptx.slide import SlideLayouts, SlideMaster, SlideMasters, Slides
 from pptx.text.styles import TextListStyle
 from pptx.util import Pt
@@ -112,6 +116,23 @@ class DescribePresentation:
     def it_provides_access_to_its_core_properties(self, core_props_fixture):
         prs, core_properties_ = core_props_fixture
         assert prs.core_properties is core_properties_
+
+    def it_provides_access_to_its_slide_show_settings(self, prs_part_):
+        prs = Presentation(None, prs_part_)
+
+        slide_show_settings = prs.slide_show_settings
+
+        assert isinstance(slide_show_settings, SlideShowSettings)
+        assert slide_show_settings._presentation_part is prs_part_
+
+    def it_provides_access_to_its_table_styles(self, prs_part_, table_styles_part_):
+        prs_part_.table_styles_part = table_styles_part_
+        prs = Presentation(None, prs_part_)
+
+        table_styles = prs.table_styles
+
+        assert isinstance(table_styles, TableStyles)
+        assert table_styles._table_styles_part is table_styles_part_
 
     def it_provides_access_to_its_notes_master(self, notes_master_fixture):
         prs, notes_master_ = notes_master_fixture
@@ -341,6 +362,10 @@ class DescribePresentation:
         return property_mock(request, Presentation, "part")
 
     @pytest.fixture
+    def table_styles_part_(self, request):
+        return instance_mock(request, TableStylesPart)
+
+    @pytest.fixture
     def prs_part_(self, request):
         return instance_mock(request, PresentationPart)
 
@@ -470,3 +495,176 @@ class DescribeSection:
         section.remove()
         assert len(sectionLst.section_lst) == 1
         assert sectionLst.section_lst[0].name == "B"
+
+
+class _FakePresentationPart:
+    """Minimal stand-in for `PresentationPart` exposing the presProps.xml hooks.
+
+    Avoids mocking `PresentationPart` (an `XmlPart`), letting `SlideShowSettings`
+    exercise the real `PresPropsPart` / oxml round-trip.
+    """
+
+    def __init__(self, pres_props_part: PresPropsPart | None = None):
+        self._pres_props_part = pres_props_part
+
+    @property
+    def pres_props_part(self) -> PresPropsPart | None:
+        return self._pres_props_part
+
+    def get_or_add_pres_props_part(self) -> PresPropsPart:
+        if self._pres_props_part is None:
+            self._pres_props_part = PresPropsPart.new(None)
+        return self._pres_props_part
+
+
+class DescribeSlideShowSettings:
+    """Unit-test suite for `pptx.presentation.SlideShowSettings` objects."""
+
+    def it_reads_defaults_when_presProps_is_absent(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+
+        assert settings.loop is False
+        assert settings.show_narration is False
+        assert settings.show_animation is True
+        assert settings.use_timings is True
+        assert settings.show_type == PP_SLIDE_SHOW_TYPE.SPEAKER
+        assert settings.pen_color is None
+        assert settings.slide_range is None
+        assert settings.custom_show_id is None
+
+    def it_does_not_create_presProps_on_a_read(self):
+        prs_part = _FakePresentationPart()
+        settings = SlideShowSettings(prs_part)
+
+        settings.loop
+        settings.show_type
+        settings.pen_color
+        settings.slide_range
+
+        assert prs_part.pres_props_part is None
+
+    def it_creates_presProps_on_first_write(self):
+        prs_part = _FakePresentationPart()
+        settings = SlideShowSettings(prs_part)
+
+        settings.loop = True
+
+        assert prs_part.pres_props_part is not None
+        assert prs_part.pres_props_part._element.showPr.loop is True
+
+    def it_round_trips_loop_and_kiosk_settings(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+
+        settings.loop = True
+        settings.show_type = PP_SLIDE_SHOW_TYPE.KIOSK
+
+        assert settings.loop is True
+        assert settings.show_type == PP_SLIDE_SHOW_TYPE.KIOSK
+
+    @pytest.mark.parametrize(
+        "show_type",
+        [PP_SLIDE_SHOW_TYPE.SPEAKER, PP_SLIDE_SHOW_TYPE.BROWSE, PP_SLIDE_SHOW_TYPE.KIOSK],
+    )
+    def it_round_trips_each_show_type(self, show_type: PP_SLIDE_SHOW_TYPE):
+        settings = SlideShowSettings(_FakePresentationPart())
+        settings.show_type = show_type
+        assert settings.show_type == show_type
+
+    def it_round_trips_show_narration_animation_and_use_timings(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+
+        settings.show_narration = True
+        settings.show_animation = False
+        settings.use_timings = False
+
+        assert settings.show_narration is True
+        assert settings.show_animation is False
+        assert settings.use_timings is False
+
+    def it_round_trips_pen_color(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+
+        settings.pen_color = RGBColor(0xFF, 0x00, 0x00)
+
+        assert settings.pen_color == RGBColor(0xFF, 0x00, 0x00)
+
+        settings.pen_color = None
+        assert settings.pen_color is None
+
+    def it_round_trips_a_slide_range(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+
+        settings.slide_range = (2, 5)
+
+        assert settings.slide_range == (2, 5)
+        assert settings.custom_show_id is None
+
+    def it_round_trips_a_custom_show_id(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+
+        settings.custom_show_id = 3
+
+        assert settings.custom_show_id == 3
+        assert settings.slide_range is None
+
+    def it_clears_the_slide_range_choice_when_set_back_to_None(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+        settings.slide_range = (2, 5)
+
+        settings.slide_range = None
+
+        assert settings.slide_range is None
+        assert settings.custom_show_id is None
+
+    def it_switches_from_slide_range_to_custom_show(self):
+        settings = SlideShowSettings(_FakePresentationPart())
+        settings.slide_range = (2, 5)
+
+        settings.custom_show_id = 7
+
+        assert settings.custom_show_id == 7
+        assert settings.slide_range is None
+
+
+class DescribeTableStyles:
+    """Unit-test suite for `pptx.presentation.TableStyles` objects."""
+
+    def _table_styles_part(self, styles: tuple[tuple[str, str], ...] = (), def_: str | None = None):
+        from pptx.oxml import parse_xml
+
+        parts = ['<a:tblStyleLst %s' % nsdecls("a")]
+        if def_ is not None:
+            parts.append(' def="%s"' % def_)
+        parts.append(">")
+        for styleId, styleName in styles:
+            parts.append('<a:tblStyle styleId="%s" styleName="%s"/>' % (styleId, styleName))
+        parts.append("</a:tblStyleLst>")
+        element = parse_xml("".join(parts))
+        return TableStylesPart(
+            "/ppt/tableStyles.xml", "application/test", None, element=element
+        )
+
+    def it_is_empty_when_the_part_is_absent(self):
+        table_styles = TableStyles(None)
+
+        assert len(table_styles) == 0
+        assert dict(table_styles) == {}
+        assert table_styles.default_id is None
+        assert "any-id" not in table_styles
+
+    def it_lists_the_defined_styles(self):
+        part = self._table_styles_part(
+            styles=(("guid-1", "Light Style 1"), ("guid-2", "Medium Style 2")),
+            def_="guid-1",
+        )
+        table_styles = TableStyles(part)
+
+        assert dict(table_styles) == {"guid-1": "Light Style 1", "guid-2": "Medium Style 2"}
+        assert table_styles.default_id == "guid-1"
+        assert len(table_styles) == 2
+        assert table_styles["guid-2"] == "Medium Style 2"
+
+    def it_raises_KeyError_for_an_unknown_style_id(self):
+        table_styles = TableStyles(self._table_styles_part())
+        with pytest.raises(KeyError):
+            table_styles["not-there"]

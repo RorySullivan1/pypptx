@@ -1055,3 +1055,70 @@ stream2.seek(0)
 prs3 = Presentation(stream2)
 assert len(prs3.embedded_fonts) == 0
 """)
+
+    def it_round_trips_slide_show_settings(self):
+        _run_roundtrip_test("""\\
+from pptx.enum.pres import PP_SLIDE_SHOW_TYPE
+from pptx.dml.color import RGBColor
+
+prs = Presentation()
+settings = prs.slide_show_settings
+settings.loop = True
+settings.show_type = PP_SLIDE_SHOW_TYPE.KIOSK
+settings.show_narration = True
+settings.show_animation = False
+settings.use_timings = False
+settings.pen_color = RGBColor(0xFF, 0x00, 0x00)
+settings.slide_range = (1, 1)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+settings2 = prs2.slide_show_settings
+assert settings2.loop is True
+assert settings2.show_type == PP_SLIDE_SHOW_TYPE.KIOSK
+assert settings2.show_narration is True
+assert settings2.show_animation is False
+assert settings2.use_timings is False
+assert settings2.pen_color == RGBColor(0xFF, 0x00, 0x00)
+assert settings2.slide_range == (1, 1)
+""")
+
+    def it_round_trips_table_styles_read_only(self):
+        _run_roundtrip_test("""\\
+prs = Presentation()
+table_styles = prs.table_styles
+default_id = table_styles.default_id
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+assert dict(prs2.table_styles) == dict(table_styles)
+assert prs2.table_styles.default_id == default_id
+""")
+
+    def it_writes_presProps_and_tableStyles_bytes_unchanged_when_untouched(self):
+        _run_roundtrip_test("""\\
+import zipfile
+
+src = "src/pptx/templates/default.pptx"
+with zipfile.ZipFile(src) as z:
+    orig_pres_props = z.read("ppt/presProps.xml")
+    orig_table_styles = z.read("ppt/tableStyles.xml")
+
+prs = Presentation(src)
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+
+with zipfile.ZipFile(stream) as z:
+    new_pres_props = z.read("ppt/presProps.xml")
+    new_table_styles = z.read("ppt/tableStyles.xml")
+
+assert new_pres_props == orig_pres_props
+assert new_table_styles == orig_table_styles
+""")
