@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
+import pptx
+from pptx.dml.fill import FillFormat
+from pptx.dml.line import LineFormat
+from pptx.enum.dml import MSO_FILL, MSO_THEME_COLOR
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
+from pptx.package import Package
 from pptx.theme import EffectScheme, EffectStyle, Theme
+from pptx.util import Pt
+
+from .unitutil.cxml import element
+
+_DEFAULT_TEMPLATE = os.path.join(os.path.dirname(pptx.__file__), "templates", "default.pptx")
 
 
 class DescribeTheme:
@@ -174,3 +186,92 @@ class DescribeEffectStyle:
     def it_knows_if_it_has_3d_shape(self, effect_scheme):
         assert effect_scheme.subtle.has_3d_shape is False
         assert effect_scheme.intense.has_3d_shape is True
+
+
+_FMT_SCHEME_THEME_XML = (
+    "<a:theme %s><a:themeElements>"
+    '<a:fmtScheme name="Office">'
+    '<a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'
+    '<a:gradFill rotWithShape="1"><a:gsLst>'
+    '<a:gs pos="0"><a:schemeClr val="phClr"/></a:gs>'
+    '<a:gs pos="100000"><a:schemeClr val="phClr"/></a:gs>'
+    '</a:gsLst><a:lin ang="16200000" scaled="1"/></a:gradFill>'
+    '<a:pattFill prst="pct5"/></a:fillStyleLst>'
+    '<a:lnStyleLst><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'
+    '</a:ln><a:ln w="25400"><a:noFill/></a:ln><a:ln w="38100"/></a:lnStyleLst>'
+    "<a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst>"
+    '<a:bgFillStyleLst><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill>'
+    "<a:noFill/></a:bgFillStyleLst>"
+    "</a:fmtScheme>"
+    "</a:themeElements></a:theme>" % nsdecls("a")
+)
+
+
+class DescribeTheme_FormatSchemeStyles:
+    """Unit-test suite for the fill- and line-style lists of `pptx.theme.Theme`."""
+
+    def it_provides_the_fill_styles_in_order(self):
+        theme = Theme(parse_xml(_FMT_SCHEME_THEME_XML))
+
+        fill_styles = theme.fill_styles
+
+        assert all(isinstance(fill, FillFormat) for fill in fill_styles)
+        assert [fill.type for fill in fill_styles] == [
+            MSO_FILL.SOLID,
+            MSO_FILL.GRADIENT,
+            MSO_FILL.PATTERNED,
+        ]
+        assert fill_styles[1].gradient_angle == 90.0
+
+    def it_reports_the_placeholder_color_used_by_a_fill_style(self):
+        theme = Theme(parse_xml(_FMT_SCHEME_THEME_XML))
+        assert theme.fill_styles[0].fore_color.theme_color == MSO_THEME_COLOR.PLACEHOLDER
+
+    def it_provides_the_line_styles_in_order(self):
+        theme = Theme(parse_xml(_FMT_SCHEME_THEME_XML))
+
+        line_styles = theme.line_styles
+
+        assert all(isinstance(line, LineFormat) for line in line_styles)
+        assert [line.width for line in line_styles] == [Pt(0.75), Pt(2), Pt(3)]
+        assert [line.fill.type for line in line_styles] == [
+            MSO_FILL.SOLID,
+            MSO_FILL.BACKGROUND,
+            None,
+        ]
+
+    def it_provides_the_background_fill_styles_in_order(self):
+        theme = Theme(parse_xml(_FMT_SCHEME_THEME_XML))
+
+        bg_styles = theme.background_fill_styles
+
+        assert [fill.type for fill in bg_styles] == [MSO_FILL.SOLID, MSO_FILL.BACKGROUND]
+        assert str(bg_styles[0].fore_color.rgb) == "FF0000"
+
+    @pytest.mark.parametrize(
+        "theme_cxml",
+        [
+            "a:theme",
+            "a:theme/a:themeElements",
+            "a:theme/a:themeElements/a:fmtScheme",
+        ],
+    )
+    def it_returns_empty_lists_when_the_theme_has_none(self, theme_cxml):
+        theme = Theme(element(theme_cxml))
+
+        assert theme.fill_styles == ()
+        assert theme.line_styles == ()
+        assert theme.background_fill_styles == ()
+
+    def it_returns_the_three_fill_styles_of_the_default_theme(self):
+        theme_part = Package.open(_DEFAULT_TEMPLATE).presentation_part.presentation.slide_master.part.theme_part
+        theme = Theme(theme_part._element)
+
+        assert len(theme.fill_styles) == 3
+        assert len(theme.line_styles) == 3
+        assert len(theme.background_fill_styles) == 3
+        assert [fill.type for fill in theme.fill_styles] == [
+            MSO_FILL.SOLID,
+            MSO_FILL.GRADIENT,
+            MSO_FILL.GRADIENT,
+        ]

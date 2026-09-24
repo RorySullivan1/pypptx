@@ -70,6 +70,7 @@ content_type_to_part_class_map: dict[str, type[Part]] = {
     CT.PML_COMMENT_AUTHORS: CommentAuthorsPart,
     CT.PML_TAGS: TagsPart,
     CT.OFC_THEME: XmlPart,
+    CT.OFC_THEME_OVERRIDE: XmlPart,
     # -- accommodate "image/jpg" as an alias for "image/jpeg" --
     "image/jpg": ImagePart,
 }

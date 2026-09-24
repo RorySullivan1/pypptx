@@ -25,7 +25,7 @@ from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
 from pptx.shapes.autoshape import Shape
 from pptx.text.text import Font, TextFrame, _Hyperlink, _Paragraph, _Run
-from pptx.util import Inches, Pt
+from pptx.util import Emu, Inches, Pt
 
 from ..oxml.unitdata.text import a_p, a_t, an_hlinkClick, an_r, an_rPr
 from ..unitutil.cxml import element, xml
@@ -1152,6 +1152,7 @@ class Describe_Paragraph:
         [
             ("a:p", None),
             ("a:p/a:pPr{indent=457200}", Inches(0.5)),
+            ("a:p/a:pPr{indent=-342900}", -342900),
         ],
     )
     def it_knows_its_indent(self, p_cxml: str, expected_value: int | None):
@@ -1163,6 +1164,7 @@ class Describe_Paragraph:
         [
             ("a:p", Inches(0.5), "a:p/a:pPr{indent=457200}"),
             ("a:p/a:pPr{indent=457200}", None, "a:p/a:pPr"),
+            ("a:p", Emu(-342900), "a:p/a:pPr{indent=-342900}"),
         ],
     )
     def it_can_change_its_indent(

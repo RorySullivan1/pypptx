@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pptx.dml.fill import FillFormat, _Fill
+from pptx.dml.line import LineFormat
+
 
 class Theme:
     """Provides access to theme properties of a presentation.
@@ -25,6 +28,43 @@ class Theme:
         if clrScheme is None:
             return None
         return ColorScheme(clrScheme)
+
+    @property
+    def background_fill_styles(self) -> tuple[FillFormat, ...]:
+        """Read-only |FillFormat| objects for the theme's background fill styles.
+
+        From `a:bgFillStyleLst`, ordered subtle, moderate, intense (three in a valid theme).
+        Empty when the theme defines no format scheme.
+        """
+        fmtScheme = self._fmtScheme
+        if fmtScheme is None:
+            return ()
+        return _fill_formats(fmtScheme.bgFillStyleLst)
+
+    @property
+    def fill_styles(self) -> tuple[FillFormat, ...]:
+        """Read-only |FillFormat| objects for the theme's shape fill styles.
+
+        From `a:fillStyleLst`, ordered subtle, moderate, intense (three in a valid theme). Colors
+        in these styles are usually the placeholder `phClr`, filled in by whatever uses the
+        style. Empty when the theme defines no format scheme.
+        """
+        fmtScheme = self._fmtScheme
+        if fmtScheme is None:
+            return ()
+        return _fill_formats(fmtScheme.fillStyleLst)
+
+    @property
+    def line_styles(self) -> tuple[LineFormat, ...]:
+        """Read-only |LineFormat| objects for the theme's line styles.
+
+        From `a:lnStyleLst`, ordered subtle, moderate, intense (three in a valid theme). Empty
+        when the theme defines no format scheme.
+        """
+        fmtScheme = self._fmtScheme
+        if fmtScheme is None or fmtScheme.lnStyleLst is None:
+            return ()
+        return tuple(LineFormat(_LineStyleParent(ln)) for ln in fmtScheme.lnStyleLst.ln_lst)
 
     @property
     def effect_scheme(self):
@@ -61,6 +101,30 @@ class Theme:
     def name(self):
         """Read-only string name of this theme, from the ``name`` attribute."""
         return self._theme.get("name")
+
+    @property
+    def _fmtScheme(self):
+        themeElements = self._theme.themeElements
+        if themeElements is None:
+            return None
+        return themeElements.fmtScheme
+
+
+def _fill_formats(fill_style_lst) -> tuple[FillFormat, ...]:
+    """Return a read-only |FillFormat| for each fill in `fill_style_lst` (which may be None)."""
+    if fill_style_lst is None:
+        return ()
+    return tuple(FillFormat(fill_style_lst, _Fill(elm)) for elm in fill_style_lst.fill_elms)
+
+
+class _LineStyleParent:
+    """Adapts one `a:ln` in a theme line-style list to the parent interface |LineFormat| uses."""
+
+    def __init__(self, ln):
+        self.ln = ln
+
+    def get_or_add_ln(self):
+        return self.ln
 
 
 #: Maps color scheme slot names to their XML element tag suffixes.

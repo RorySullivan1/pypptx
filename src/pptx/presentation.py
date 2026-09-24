@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from pptx.parts.custprops import CustomPropertiesPart
     from pptx.parts.presentation import PresentationPart
     from pptx.slide import NotesMaster, SlideLayouts, SlideMaster
+    from pptx.text.styles import TextListStyle
     from pptx.theme import Theme
     from pptx.util import Length
 
@@ -110,6 +111,20 @@ class Presentation(PartElementProxy):
         simpler access in that common case.
         """
         return self.slide_masters[0]
+
+    @property
+    def default_text_style(self) -> TextListStyle:
+        """|TextListStyle| holding the presentation-wide text defaults (`p:defaultTextStyle`).
+
+        These are the lowest-priority text defaults, applying where neither the text itself nor
+        a master text style sets a value.
+        """
+        from pptx.text.styles import TextListStyle
+
+        prs = self._element
+        return TextListStyle(
+            lambda: prs.defaultTextStyle, lambda: prs.get_or_add_defaultTextStyle()
+        )
 
     @property
     def theme(self) -> Theme | None:

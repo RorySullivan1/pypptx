@@ -4,11 +4,18 @@
 
 from __future__ import annotations
 
+import io
+import os
+import zipfile
+
 import pytest
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.exc import SlideError
+from pptx.exc import InvalidXmlError, PackageError, SlideError
+from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.package import XmlPart
+from pptx.opc.packuri import PackURI
 from pptx.package import Package
 from pptx.parts.presentation import PresentationPart
 from pptx.parts.slide import SlideLayoutPart, SlideMasterPart, SlidePart
@@ -38,11 +45,22 @@ from pptx.slide import (
     _Background,
     _BaseMaster,
     _BaseSlide,
+    _source_theme_part,
+    _validate_theme,
 )
+from pptx.text.styles import MasterTextStyles
 from pptx.text.text import TextFrame
+from pptx.theme import Theme
 
 from .unitutil.cxml import element, xml
-from .unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
+from .unitutil.mock import (
+    call,
+    class_mock,
+    function_mock,
+    instance_mock,
+    method_mock,
+    property_mock,
+)
 
 
 class Describe_BaseSlide:
@@ -1185,6 +1203,165 @@ class DescribeSlideMaster:
     @pytest.fixture
     def slide_layouts_(self, request):
         return instance_mock(request, SlideLayouts)
+
+
+class DescribeSlideMaster_themes_and_text_styles:
+    """Unit-test suite for `SlideMaster.text_styles` and `SlideMaster.apply_theme()`."""
+
+    def it_provides_access_to_its_text_styles(self):
+        sldMaster = element("p:sldMaster/(p:cSld,p:txStyles/p:bodyStyle/a:lvl2pPr{marL=42})")
+
+        text_styles = SlideMaster(sldMaster, None).text_styles
+
+        assert isinstance(text_styles, MasterTextStyles)
+        assert text_styles.body[1].margin_left == 42
+
+    def it_can_apply_a_theme_from_a_source(self, request):
+        source_theme_part_ = XmlPart(
+            PackURI("/theme/theme/theme1.xml"), CT.OFC_THEME, None, element("a:theme")
+        )
+        new_theme_part_ = XmlPart(
+            PackURI("/ppt/theme/theme2.xml"), CT.OFC_THEME, None, element("a:theme{name=New}")
+        )
+        _source_theme_part_ = function_mock(
+            request, "pptx.slide._source_theme_part", return_value=source_theme_part_
+        )
+        _validate_theme_ = function_mock(request, "pptx.slide._validate_theme")
+        part_ = instance_mock(request, SlideMasterPart)
+        part_.apply_theme.return_value = new_theme_part_
+        slide_master = SlideMaster(element("p:sldMaster"), part_)
+
+        theme = slide_master.apply_theme("source.thmx")
+
+        _source_theme_part_.assert_called_once_with("source.thmx")
+        _validate_theme_.assert_called_once_with(source_theme_part_._element)
+        part_.apply_theme.assert_called_once_with(source_theme_part_)
+        assert isinstance(theme, Theme)
+        assert theme.name == "New"
+
+    def it_takes_the_theme_of_a_source_slide_master(self, request):
+        theme_part_ = instance_mock(request, XmlPart)
+        part_ = instance_mock(request, SlideMasterPart, theme_part=theme_part_)
+
+        assert _source_theme_part(SlideMaster(element("p:sldMaster"), part_)) is theme_part_
+
+    def it_takes_the_first_master_theme_of_a_source_presentation(self, request):
+        theme_part_ = instance_mock(request, XmlPart)
+        part_ = instance_mock(request, SlideMasterPart, theme_part=theme_part_)
+        prs_ = instance_mock(
+            request, Presentation, slide_master=SlideMaster(element("p:sldMaster"), part_)
+        )
+
+        assert _source_theme_part(prs_) is theme_part_
+
+    def it_loads_the_theme_of_a_thmx_file(self, tmp_path):
+        thmx_path = str(tmp_path / "custom.thmx")
+        _write_thmx(thmx_path, accent1="123456")
+
+        theme_part = _source_theme_part(thmx_path)
+
+        assert theme_part.content_type == CT.OFC_THEME
+        assert theme_part._element.xpath(
+            "a:themeElements/a:clrScheme/a:accent1/a:srgbClr/@val"
+        ) == ["123456"]
+
+    def it_accepts_a_path_like_source(self, tmp_path):
+        thmx_path = tmp_path / "custom.thmx"
+        _write_thmx(str(thmx_path), accent1="654321")
+
+        theme_part = _source_theme_part(thmx_path)
+
+        assert theme_part._element.xpath(
+            "a:themeElements/a:clrScheme/a:accent1/a:srgbClr/@val"
+        ) == ["654321"]
+
+    def it_loads_the_first_master_theme_of_a_pptx_stream(self):
+        with open(_default_template(), "rb") as f:
+            stream = io.BytesIO(f.read())
+
+        theme_part = _source_theme_part(stream)
+
+        assert theme_part.content_type == CT.OFC_THEME
+        assert theme_part.partname == "/ppt/theme/theme1.xml"
+
+    def it_raises_on_an_unsupported_source_type(self):
+        with pytest.raises(TypeError):
+            _source_theme_part(42)
+
+    def it_raises_when_the_source_master_has_no_theme(self, request):
+        part_ = instance_mock(request, SlideMasterPart, theme_part=None)
+        with pytest.raises(PackageError):
+            _source_theme_part(SlideMaster(element("p:sldMaster"), part_))
+
+    def it_accepts_a_complete_theme(self):
+        _validate_theme(_complete_theme())
+
+    @pytest.mark.parametrize(
+        ("xpath", "message"),
+        [
+            ("a:themeElements/a:clrScheme", "no color scheme"),
+            ("a:themeElements/a:clrScheme/a:accent3", "accent3"),
+            ("a:themeElements/a:clrScheme/a:hlink/*", "hlink"),
+            ("a:themeElements/a:fontScheme", "no font scheme"),
+            ("a:themeElements/a:fontScheme/a:minorFont/a:latin", "minorFont"),
+        ],
+    )
+    def it_rejects_a_theme_that_would_leave_references_dangling(self, xpath, message):
+        theme = _complete_theme()
+        for elm in theme.xpath(xpath):
+            elm.getparent().remove(elm)
+
+        with pytest.raises(InvalidXmlError, match=message):
+            _validate_theme(theme)
+
+
+def _complete_theme():
+    slots = ",".join(
+        "a:%s/a:srgbClr{val=000000}" % slot
+        for slot in (
+            "dk1", "lt1", "dk2", "lt2", "accent1", "accent2", "accent3", "accent4", "accent5",
+            "accent6", "hlink", "folHlink",
+        )
+    )
+    return element(
+        "a:theme/a:themeElements/(a:clrScheme/(%s),a:fontScheme/(a:majorFont/a:latin{typeface=A}"
+        ",a:minorFont/a:latin{typeface=B}))" % slots
+    )
+
+
+def _default_template() -> str:
+    import pptx
+
+    return os.path.join(os.path.dirname(pptx.__file__), "templates", "default.pptx")
+
+
+def _write_thmx(path: str, accent1: str) -> None:
+    """Write a minimal `.thmx` theme package, its theme copied from the default template."""
+    with zipfile.ZipFile(_default_template()) as template:
+        theme_xml = template.read("ppt/theme/theme1.xml").decode("utf-8")
+    theme_xml = theme_xml.replace(
+        '<a:accent1><a:srgbClr val="4F81BD"/>', '<a:accent1><a:srgbClr val="%s"/>' % accent1
+    )
+    assert accent1 in theme_xml
+    content_types = (
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" '
+        'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/theme/theme/theme1.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
+        "</Types>"
+    )
+    rels = (
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" Target="theme/theme/theme1.xml" Type="http://schemas.'
+        'openxmlformats.org/officeDocument/2006/relationships/officeDocument"/>'
+        "</Relationships>"
+    )
+    with zipfile.ZipFile(path, "w") as thmx:
+        thmx.writestr("[Content_Types].xml", content_types)
+        thmx.writestr("_rels/.rels", rels)
+        thmx.writestr("theme/theme/theme1.xml", theme_xml)
 
 
 class DescribeSlideMasters:

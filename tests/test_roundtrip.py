@@ -525,3 +525,126 @@ finally:
     os.unlink(img_path)
 """)
 
+
+    def it_round_trips_master_text_styles_and_the_default_text_style(self):
+        _run_roundtrip_test("""\
+from pptx.enum.text import PP_ALIGN
+
+prs = Presentation()
+styles = prs.slide_master.text_styles
+styles.body[0].font.size = Pt(20)
+styles.body[1].margin_left = Inches(1)
+styles.title[0].alignment = PP_ALIGN.LEFT
+styles.other[0].font.bold = True
+prs.default_text_style[0].font.italic = True
+slide = prs.slides.add_slide(prs.slide_layouts[1])
+slide.placeholders[1].text_frame.text = "inherits body level 1"
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+styles2 = prs2.slide_master.text_styles
+assert styles2.body[0].font.size == Pt(20)
+assert styles2.body[1].margin_left == Inches(1)
+assert styles2.title[0].alignment == PP_ALIGN.LEFT
+assert styles2.other[0].font.bold is True
+assert prs2.default_text_style[0].font.italic is True
+sldMaster = prs2.slide_master._element
+assert sldMaster.xpath("p:txStyles/p:bodyStyle/a:lvl1pPr/a:defRPr/@sz") == ["2000"]
+# -- the slide sets no size of its own, so the master's level-1 body style applies --
+p = prs2.slides[0].placeholders[1].text_frame.paragraphs[0]
+assert p.level == 0
+assert p.font.size is None and all(r.font.size is None for r in p.runs)
+""")
+
+    def it_round_trips_a_theme_applied_from_another_presentation(self):
+        _run_roundtrip_test("""\
+from pptx.enum.dml import MSO_THEME_COLOR
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+
+source = Presentation()
+source.theme.color_scheme._clrScheme.accent1[0].set("val", "C00000")
+source.theme.font_scheme.major_font.latin = "Georgia"
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[5])
+shape = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(3), Inches(1))
+shape.fill.solid()
+shape.fill.fore_color.theme_color = MSO_THEME_COLOR.ACCENT_1
+prs.slide_master.apply_theme(source)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+theme = prs2.slide_master.theme
+assert theme.color_scheme.accent_1 == "C00000"
+assert theme.font_scheme.major_font.latin == "Georgia"
+assert dict(theme.color_scheme) == dict(source.theme.color_scheme)
+theme_rels = [r for r in prs2.slide_master.part.rels.values() if r.reltype == RT.THEME]
+assert len(theme_rels) == 1
+theme_parts = [p for p in prs2.part.package.iter_parts() if p.partname.startswith("/ppt/theme/")]
+assert theme_parts == [prs2.slide_master.part.theme_part]
+
+# -- every scheme-color reference on the slide, layouts, and master resolves in the new theme --
+clrMap = prs2.slide_master._element.find(
+    "{http://schemas.openxmlformats.org/presentationml/2006/main}clrMap"
+)
+elements = [prs2.slide_master._element, prs2.slides[0]._element]
+elements += [layout._element for layout in prs2.slide_layouts]
+for elm in elements:
+    for val in elm.xpath(".//a:schemeClr/@val"):
+        if val == "phClr":
+            continue
+        slot = clrMap.get(val, val)
+        assert theme.color_scheme[slot] is not None, (val, slot)
+assert prs2.slides[0].shapes[-1].fill.fore_color.theme_color == MSO_THEME_COLOR.ACCENT_1
+""")
+
+    def it_round_trips_a_theme_applied_from_a_thmx_file(self):
+        _run_roundtrip_test("""\
+import os
+import tempfile
+import zipfile
+
+import pptx
+
+template = os.path.join(os.path.dirname(pptx.__file__), "templates", "default.pptx")
+with zipfile.ZipFile(template) as z:
+    theme_xml = z.read("ppt/theme/theme1.xml").decode("utf-8")
+theme_xml = theme_xml.replace(
+    '<a:accent2><a:srgbClr val="C0504D"/>', '<a:accent2><a:srgbClr val="00B050"/>'
+)
+assert "00B050" in theme_xml
+thmx = os.path.join(tempfile.mkdtemp(), "green.thmx")
+with zipfile.ZipFile(thmx, "w") as z:
+    z.writestr(
+        "[Content_Types].xml",
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" '
+        'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Override PartName="/theme/theme/theme1.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/></Types>',
+    )
+    z.writestr(
+        "_rels/.rels",
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" Target="theme/theme/theme1.xml" Type="http://schemas.'
+        'openxmlformats.org/officeDocument/2006/relationships/officeDocument"/></Relationships>',
+    )
+    z.writestr("theme/theme/theme1.xml", theme_xml)
+
+prs = Presentation()
+prs.slides.add_slide(prs.slide_layouts[0])
+prs.slide_master.apply_theme(thmx)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+assert prs2.slide_master.theme.color_scheme.accent_2 == "00B050"
+assert len(prs2.slides) == 1
+""")

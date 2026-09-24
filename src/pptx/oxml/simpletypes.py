@@ -771,8 +771,23 @@ class ST_TextColumnCount(BaseIntType):
         cls.validate_int_in_range(value, 1, 16)
 
 
+class ST_TextIndent(BaseIntType):
+    """Valid values for the `indent` attribute on `a:pPr` and `a:lvlNpPr`.
+
+    Integer in range -51206400..51206400 EMU; negative values give a hanging indent.
+    """
+
+    @classmethod
+    def convert_from_xml(cls, str_value):
+        return Emu(int(str_value))
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int_in_range(value, -51206400, 51206400)
+
+
 class ST_TextMargin(BaseIntType):
-    """Valid values for `marL`, `marR`, `marT`, `marB`, `indent` attributes on `a:pPr`.
+    """Valid values for `marL`, `marR`, `marT`, `marB` attributes on `a:pPr`.
 
     Integer in range 0..51206400 EMU.
     """

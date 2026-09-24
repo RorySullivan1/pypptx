@@ -394,6 +394,15 @@ class MSO_THEME_COLOR_INDEX(BaseXmlEnum):
     TEXT_2 = (15, "tx2", "Specifies the Text 2 theme color.")
     """Specifies the Text 2 theme color."""
 
+    PLACEHOLDER = (
+        17,
+        "phClr",
+        "Placeholder color used in theme format-scheme styles, replaced by the color of"
+        " whatever applies the style (read-only).",
+    )
+    """Placeholder color used in theme format-scheme styles, replaced by the color of whatever
+    applies the style (read-only). Not part of the VBA `MsoThemeColorIndex` enumeration."""
+
     MIXED = (
         -2,
         "",

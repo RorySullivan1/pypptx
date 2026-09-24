@@ -16,6 +16,7 @@ from pptx.oxml.xmlchemy import (
 from pptx.oxml.ns import qn
 
 if TYPE_CHECKING:
+    from pptx.oxml.text import CT_TextListStyle
     from pptx.util import Length
 
 
@@ -25,6 +26,7 @@ class CT_Presentation(BaseOxmlElement):
     get_or_add_sldSz: Callable[[], CT_SlideSize]
     get_or_add_sldIdLst: Callable[[], CT_SlideIdList]
     get_or_add_sldMasterIdLst: Callable[[], CT_SlideMasterIdList]
+    get_or_add_defaultTextStyle: Callable[[], CT_TextListStyle]
 
     _tag_seq = (
         "p:sldMasterIdLst",
@@ -47,6 +49,9 @@ class CT_Presentation(BaseOxmlElement):
     )
     sldSz: CT_SlideSize | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:sldSz", successors=_tag_seq[5:]
+    )
+    defaultTextStyle: CT_TextListStyle | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:defaultTextStyle", successors=_tag_seq[8:]
     )
     del _tag_seq
 
