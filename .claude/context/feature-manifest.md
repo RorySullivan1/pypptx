@@ -77,11 +77,11 @@ The codebase is organized in four layers, from low-level to high-level:
 ### Shapes
 - **AutoShapes** — 180+ preset geometries (`MSO_SHAPE`), adjustment handles, text, fill, line
 - **Pictures** — insert from file or stream, crop (all four edges), line formatting
-- **Tables** — create with rows/columns, cell access, merge/split cells, cell margins, vertical anchor, fill per cell, banding properties (first/last row/col, horizontal/vertical banding), table style (`tblStyle`), per-edge + diagonal borders with full `LineFormat`
+- **Tables** — create with rows/columns, cell access, insert/delete rows and columns (`rows.add/remove`, `columns.add/remove`, merges kept consistent), merge/split cells, cell margins, vertical anchor, text direction (`_Cell.text_direction`), fill per cell, banding properties (first/last row/col, horizontal/vertical banding), table style (`tblStyle`), per-edge + diagonal borders with full `LineFormat`
 - **Charts** — see Charts section below
 - **Connectors** — straight/elbow/curve types, begin/end positioning, connect to shape connection points; queryable connected shapes via `Connector.begin_connection`/`end_connection`
 - **Group shapes** — group existing shapes, access child shapes
-- **Freeform shapes** — programmatic path construction with line segments
+- **Freeform shapes** — programmatic path construction with line segments, cubic and quadratic Bezier curves, and elliptical arcs
 - **Graphic frames** — charts, tables, and OLE objects
 - **Placeholders** — typed placeholders (title, body, picture, chart, table) with insert operations
 - **Movies** — insert video with poster frame
@@ -102,7 +102,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Accessibility — `alternative_text`, `title`, `decorative`
 
 ### Text
-- Text frames with auto-size control (none, shrink text, resize shape)
+- Text frames with auto-size control (none, shrink text, resize shape); read-only autofit `font_scale` / `line_spacing_reduction`
 - `has_text` boolean
 - Vertical anchor, word wrap, four-edge margins
 - Text orientation (`vert`) and columns (`numCol`, `spcCol`)
@@ -117,8 +117,8 @@ The codebase is organized in four layers, from low-level to high-level:
 - Fit text to shape (requires font-metrics file)
 
 ### Drawing / Formatting
-- **Fill** — solid, gradient (angle, stops with color and position), patterned (50+ patterns), background (no fill), foreground/background colors
-- **Line** — width, color, dash style (8 presets), solid/pattern fill, no-fill check, transparency (color alpha), arrowheads (head + tail: type, width, length), compound type (`MSO_LINE_COMPOUND_TYPE`: single, double, thick-thin, etc.)
+- **Fill** — solid, gradient (angle, stops with color and position; linear/radial/rectangular/path via `gradient_type`, focus rect via `gradient_fill_to_rect`), picture (`fill.picture()`, stretched or `tile()`d; autoshapes), patterned (50+ patterns), background (no fill), foreground/background colors
+- **Line** — width, color, dash style (8 presets), solid/pattern fill, no-fill check, transparency (color alpha), arrowheads (head + tail: type, width, length), compound type (`MSO_LINE_COMPOUND_TYPE`: single, double, thick-thin, etc.), cap style (`MSO_LINE_CAP_STYLE`), join style (`MSO_LINE_JOIN_STYLE`) and miter limit
 - **Color** — RGB, theme color with brightness adjustment, color-type detection, alpha
 - **Shadow** — full read/write via `ShadowFormat`: type (outer/inner/none), blur radius, distance, direction, alignment, color with transparency, rotate-with-shape, visibility
 - **Reflection / Glow / Soft Edge** — full read/write via `ReflectionFormat`, `GlowFormat`, `SoftEdgeFormat` on `BaseShape`
@@ -167,7 +167,8 @@ The codebase is organized in four layers, from low-level to high-level:
 - 137 language identifiers
 - Shape types, placeholder types, connector types, media types
 - Fill types, color types, line dash styles, pattern types, theme colors
-- Line compound types (`MSO_LINE_COMPOUND_TYPE`)
+- Line compound, cap, and join types (`MSO_LINE_COMPOUND_TYPE`, `MSO_LINE_CAP_STYLE`, `MSO_LINE_JOIN_STYLE`)
+- Gradient types (`MSO_GRADIENT_TYPE`)
 - Text alignment, auto size, underline types, vertical anchor, font caps, font baseline
 - Chart axis types, data label positions, legend positions, marker styles, tick marks
 - Trendline types, error-bar type / direction / include

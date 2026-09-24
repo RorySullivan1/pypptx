@@ -47,10 +47,10 @@ prs.save("hello.pptx")
 - **180+ shape types** — autoshapes, pictures, tables, connectors, group shapes, freeforms, placeholders, OLE objects, movies, callouts
 - **Shape control** — z-order, visibility, lock aspect ratio, group containment, hyperlinks, click actions
 - **Rich text formatting** — bold, italic, underline, color, size, shadow, strikethrough, caps, superscript/subscript, character spacing, kerning, bullets, tab stops, columns, RTL, vertical orientation
-- **Fill styles** — solid, gradient, pattern, background (no fill)
-- **Line formatting** — width, color, dash styles, compound styles, arrowheads, transparency, pattern fill
+- **Fill styles** — solid, gradient (linear, radial, rectangular, path), pattern, picture (stretched or tiled), background (no fill)
+- **Line formatting** — width, color, dash styles, compound styles, cap and join styles, arrowheads, transparency, pattern fill
 - **75+ chart types** — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie (plus 3D variants); combo charts with trendlines, error bars, secondary axes, drop / hi-lo / up-down lines, log scale, 3D view, data labels with leader lines
-- **Tables** — create, merge/split cells, borders (including diagonal), cell fills, banding, table styles
+- **Tables** — create, insert/delete rows and columns, merge/split cells, borders (including diagonal), cell fills, cell text direction, banding, table styles
 - **Visual effects** — outer/inner shadow with transparency, reflection, glow, soft edges
 - **3D formatting** — extrusion, bevel, 3D scene, lighting, camera
 - **Headers & footers** — per-slide date/time, footer text, slide-number overrides

@@ -199,6 +199,8 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 ### DML enumerations — `enum/dml.py` (DONE)
 - [x] `MSO_LINE_COMPOUND_TYPE` — `sng`, `dbl`, `thickThin`, `thinThick`, `tri` → wired to `cmpd` on `CT_LineProperties`
 - [x] `MSO_RECT_ALIGNMENT` — 9 positions (tl, t, tr, l, ctr, r, bl, b, br) → wired to `algn` on `CT_OuterShadowEffect`
+- [x] `MSO_LINE_CAP_STYLE` (`flat`, `rnd`, `sq`) and `MSO_LINE_JOIN_STYLE` (round/bevel/miter) → `a:ln` (#81)
+- [x] `MSO_GRADIENT_TYPE` — linear/radial/rectangular/path → `a:lin` vs `a:path/@path` (#83)
 
 ### Deferred
 - [x] Shadow style enumeration — handled by `ShadowFormat.shadow_type` returning `"outer"`/`"inner"`/`None`
@@ -230,7 +232,9 @@ programmatically.
 - [x] Registered `a:alpha`, `a:satMod`, `a:satOff`, `a:shade`, `a:tint` as `CT_Percentage`
 
 ### Blip fill (DONE)
-- [x] `a:tile` and `a:stretch` declared as `ZeroOrOne` on `CT_BlipFillProperties`
+- [x] `a:tile` and `a:stretch` declared as a mutually exclusive `ZeroOrOneChoice` on `CT_BlipFillProperties` (`CT_TileInfoProperties`, `CT_StretchInfoProperties`, `ST_TileFlipMode`)
+- [x] Picture fill API — `FillFormat.picture(image)` (autoshapes; image part related from the owning slide/layout/master) and `FillFormat.tile(tx, ty, sx, sy, flip, algn)` (#82)
+- [x] Non-linear gradients — `FillFormat.gradient_type` and `gradient_fill_to_rect` (`a:path/a:fillToRect`) (#83)
 
 ### Shape style (DONE)
 - [x] `p:style` declared as `ZeroOrOne` on `CT_Shape` and `CT_Connector`
@@ -308,6 +312,7 @@ _Prerequisites: Sections 3.1 (`hidden`), 3.2 (`noChangeAspect`)_
 - [x] Shape visibility — `BaseShape.hidden` read/write property on cNvPr
 - [x] Lock aspect ratio — `BaseShape.lock_aspect_ratio` r/w property via lock elements on cNv*Pr
 - [x] Parent group reference — `BaseShape.is_in_group` and `BaseShape.parent_group` for group containment
+- [x] Freeform curves — `FreeformBuilder.add_cubic_bezier`, `add_quadratic_bezier`, `add_arc` (`a:cubicBezTo`, `a:quadBezTo`, `a:arcTo`) (#80)
 
 ---
 
@@ -348,6 +353,7 @@ _Prerequisites: Sections 3.3, 3.4, 3.5 (text attributes), Section 5 (enumeration
 - [x] Orientation — `text_frame.text_orientation` via `vert` attribute on `a:bodyPr`
 - [x] Text columns — `text_frame.columns` via `numCol`, `text_frame.column_spacing` via `spcCol`
 - [x] `has_text` property — boolean check for non-empty text content
+- [x] Autofit results — read-only `text_frame.font_scale` / `line_spacing_reduction` from `a:normAutofit` (#86)
 
 ---
 
@@ -358,6 +364,8 @@ _Prerequisites: Section 4.3 (table cell border elements)_
 - [x] Cell borders — `_Cell.border_left/right/top/bottom` via `_CellBorderAdapter` + `LineFormat`
 - [x] Diagonal borders — `_Cell.border_diagonal_down` / `border_diagonal_up` via `a:lnTlToBr`, `a:lnBlToTr`
 - [x] Table style — `Table.table_style_id` via the `a:tableStyleId` child of `a:tblPr` (fixed in #91)
+- [x] Insert/delete rows and columns — `rows.add(index)`, `columns.add(index)`, `rows.remove(row)`, `columns.remove(col)`; formatting copied from the neighbour, `gridSpan`/`rowSpan` merges kept consistent (#84)
+- [x] Cell text direction — `_Cell.text_direction` via `a:tcPr/@vert` (`MSO_TEXT_VERTICAL_TYPE`) (#85)
 
 ---
 
@@ -371,6 +379,7 @@ _Prerequisites: Section 3.6 (`cmpd` attribute)_
 - [x] Line visibility — `LineFormat.no_fill` read-only check
 - [x] Line pattern — `line.fill.patterned()` + `line.fill.pattern`/`fore_color`/`back_color` via `FillFormat`
 - [x] Query connected shapes — `Connector.begin_connection`/`end_connection`
+- [x] Cap and join style — `LineFormat.cap_style` (`a:ln/@cap`), `join_style` (`a:round`/`a:bevel`/`a:miter`), `miter_limit` (`a:miter/@lim`) (#81)
 
 ---
 
