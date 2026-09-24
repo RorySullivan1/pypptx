@@ -432,6 +432,12 @@ _Prerequisites: Section 4.5 (sections and tags elements)_
 - [x] Tags — `Slide.tags` via `TagsPart` with dict-like API (get/set/del/contains/iter/items)
 - [x] Sections — `Presentation.sections` with `Sections`/`Section` classes (add, remove, rename, iterate, slide IDs)
 - [x] Custom document properties — `Presentation.custom_properties` via `CustomPropertiesPart` with typed values (str/int/float/bool)
+- [x] Notes page size — `Presentation.notes_width/notes_height` via `CT_NotesSize` (`p:notesSz`) (#57)
+- [x] Custom shows — `Presentation.custom_shows` via `CT_CustomShowList`/`CT_CustomShow`/`CT_CustomShowSlideList`; `p:custShow` is shared with `p:showPr` (#58)
+- [x] Slide-show settings — `PresPropsPart` (`p:presentationPr/p:showPr`) and `Presentation.slide_show_settings`; `PP_SLIDE_SHOW_TYPE` (#59)
+- [x] Table styles — `TableStylesPart` (`a:tblStyleLst/a:tblStyle`) and read-only `Presentation.table_styles` (#60)
+- [x] Embedded fonts — `CT_EmbeddedFontList` (`p:embeddedFontLst`) and `Presentation.embedded_fonts` with `remove()`; font data registered as blob parts (#61)
+- [x] `LazyXmlPart` — XML parts written back byte for byte until their element is accessed
 
 ---
 
