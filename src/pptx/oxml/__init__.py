@@ -495,6 +495,22 @@ register_element_cls("p:sldMasterIdLst", CT_SlideMasterIdList)
 register_element_cls("p:sldSz", CT_SlideSize)
 
 
+from pptx.oxml.embeddedfont import (  # noqa: E402
+    CT_EmbeddedFontDataId,
+    CT_EmbeddedFontList,
+    CT_EmbeddedFontListEntry,
+    CT_Font,
+)
+
+register_element_cls("p:embeddedFontLst", CT_EmbeddedFontList)
+register_element_cls("p:embeddedFont", CT_EmbeddedFontListEntry)
+register_element_cls("p:font", CT_Font)
+register_element_cls("p:regular", CT_EmbeddedFontDataId)
+register_element_cls("p:bold", CT_EmbeddedFontDataId)
+register_element_cls("p:italic", CT_EmbeddedFontDataId)
+register_element_cls("p:boldItalic", CT_EmbeddedFontDataId)
+
+
 from pptx.oxml.shapes.autoshape import (  # noqa: E402
     CT_AdjPoint2D,
     CT_CustomGeometry2D,

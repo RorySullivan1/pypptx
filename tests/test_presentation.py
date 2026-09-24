@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from pptx.custom_show import CustomShows
+from pptx.fonts import EmbeddedFonts
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.parts.coreprops import CorePropertiesPart
@@ -93,6 +94,20 @@ class DescribePresentation:
     def it_knows_its_part(self, part_fixture):
         prs, prs_part_ = part_fixture
         assert prs.part is prs_part_
+
+    def it_provides_access_to_its_embedded_fonts(self, prs_part_):
+        prs = Presentation(
+            element(
+                "p:presentation/p:embeddedFontLst/p:embeddedFont/p:font{typeface=Calibri}"
+            ),
+            prs_part_,
+        )
+
+        embedded_fonts = prs.embedded_fonts
+
+        assert isinstance(embedded_fonts, EmbeddedFonts)
+        assert len(embedded_fonts) == 1
+        assert embedded_fonts[0].typeface == "Calibri"
 
     def it_provides_access_to_its_core_properties(self, core_props_fixture):
         prs, core_properties_ = core_props_fixture

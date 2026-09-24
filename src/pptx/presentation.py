@@ -10,6 +10,7 @@ from pptx.slide import SlideMasters, Slides
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.fonts import EmbeddedFonts
     from pptx.oxml.presentation import CT_Presentation, CT_SlideId
     from pptx.oxml.section import CT_Section, CT_SectionList
     from pptx.parts.coreprops import CorePropertiesPart
@@ -51,6 +52,18 @@ class Presentation(PartElementProxy):
         Provides read/write access to the Dublin Core document properties for the presentation.
         """
         return self.part.core_properties
+
+    @property
+    def embedded_fonts(self) -> EmbeddedFonts:
+        """|EmbeddedFonts| collection of fonts embedded in this presentation.
+
+        Supports `len()`, iteration, and indexed access; see `EmbeddedFont.remove()` (or
+        `EmbeddedFonts.remove()`) to remove one, e.g. to shrink the file or drop a
+        licensed font. Embedding new fonts is not supported.
+        """
+        from pptx.fonts import EmbeddedFonts
+
+        return EmbeddedFonts(self._element, self.part)
 
     @property
     def custom_properties(self) -> CustomPropertiesPart:
