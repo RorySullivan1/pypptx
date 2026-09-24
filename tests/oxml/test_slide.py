@@ -109,3 +109,27 @@ class DescribeCT_CommonSlideData:
         assert 1 <= creation_id <= 0xFFFFFFFF
         assert cSld.creation_id == creation_id
         assert cSld[-1].tag.endswith("}extLst")
+
+    def it_can_renew_its_creation_id(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+        from pptx.oxml.slide import CREATION_ID_EXT_URI
+
+        cSld = parse_xml(
+            '<p:cSld %s><p:spTree/><p:extLst><p:ext uri="%s"><p14:creationId val="42"/></p:ext>'
+            "</p:extLst></p:cSld>" % (nsdecls("p", "p14"), CREATION_ID_EXT_URI)
+        )
+
+        cSld.renew_creation_id()
+
+        assert cSld.creation_id not in (None, 42)
+
+    def but_it_does_not_add_one_when_renewing(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        cSld = parse_xml("<p:cSld %s><p:spTree/></p:cSld>" % nsdecls("p"))
+
+        cSld.renew_creation_id()
+
+        assert cSld.creation_id is None

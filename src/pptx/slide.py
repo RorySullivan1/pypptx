@@ -958,7 +958,6 @@ class Comment:
         self._cm.getparent().remove(self._cm)
 
 
-
 class ThreadedComments:
     """The modern (threaded) comment threads on a slide, in document order.
 

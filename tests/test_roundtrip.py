@@ -376,12 +376,18 @@ dup = prs.slides.duplicate(prs.slides[0])
 assert RT.MODERN_COMMENTS not in [r.reltype for r in dup.part.rels.values()]
 assert dup.part._element.comment_rel_rId is None
 assert prs.slides[0].part._element.comment_rel_rId is not None
+# -- the copy is a new slide, so modern comments added to it must not name the original --
+original_cid = prs.slides[0].part._element.cSld.creation_id
+assert dup.part._element.cSld.creation_id not in (None, original_cid)
+dup.threaded_comments.add("On the copy", "Alice Adams")
+assert dup.part.modern_comments_part.partname != prs.slides[0].part.modern_comments_part.partname
 
 stream = BytesIO()
 prs.save(stream)
 stream.seek(0)
 prs2 = Presentation(stream)
-assert prs2.slides[1].part._element.comment_rel_rId is None
+assert [t.text for t in prs2.slides[1].threaded_comments] == ["On the copy"]
+assert len(prs2.slides[0].threaded_comments) == 2
 """)
 
     def it_leaves_modern_comments_behind_when_importing_a_slide(self):
@@ -394,6 +400,9 @@ dst = Presentation()
 imported = dst.slides.import_slide(src.slides[0])
 assert RT.MODERN_COMMENTS not in [r.reltype for r in imported.part.rels.values()]
 assert imported.part._element.comment_rel_rId is None
+assert imported.part._element.cSld.creation_id not in (
+    None, src.slides[0].part._element.cSld.creation_id
+)
 
 stream = BytesIO()
 dst.save(stream)

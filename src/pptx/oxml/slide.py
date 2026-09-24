@@ -31,6 +31,7 @@ COMMENT_REL_EXT_URI = "{6950BFC3-D8DA-4A85-94F7-54DA5524770B}"
 # -- `p:ext/@uri` of the common-slide-data extension holding `p14:creationId`, per [MS-PPTX] --
 CREATION_ID_EXT_URI = "{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}"
 
+
 class _BaseSlideElement(BaseOxmlElement):
     """Base class for the six slide types, providing common methods."""
 
@@ -123,6 +124,14 @@ class CT_CommonSlideData(BaseOxmlElement):
             "./p:extLst/p:ext[@uri='%s']/p14:creationId/@val" % CREATION_ID_EXT_URI
         )
         return int(vals[0]) if vals else None
+
+    def renew_creation_id(self) -> None:
+        """Give a slide that has a `p14:creationId` a new random one, as a copied slide needs."""
+        vals = self.xpath(
+            "./p:extLst/p:ext[@uri='%s']/p14:creationId" % CREATION_ID_EXT_URI
+        )
+        for creationId in vals:
+            creationId.set("val", str(random.randint(1, 0xFFFFFFFF)))
 
     def get_or_add_creation_id(self) -> int:
         """Return the `p14:creationId` value, first adding a random one when there is none.

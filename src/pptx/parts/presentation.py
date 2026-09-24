@@ -72,8 +72,10 @@ class PresentationPart(XmlPart):
 
         # --- update rId references in the cloned XML (r:id, r:embed, r:link) ---
         _remap_rIds(new_element, rId_map)
-        # --- comments aren't carried over, so drop the extension that points at them ---
+        # --- comments aren't carried over, so drop the extension that points at them; the copy
+        # --- is a new slide, so it also gets its own creation id (modern comments key on it) ---
         new_element.remove_comment_rel()
+        new_element.cSld.renew_creation_id()
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
         return rId, new_slide_part.slide
@@ -135,8 +137,10 @@ class PresentationPart(XmlPart):
 
         # --- update rId references in the cloned XML ---
         _remap_rIds(new_element, rId_map)
-        # --- comments aren't carried over, so drop the extension that points at them ---
+        # --- comments aren't carried over, so drop the extension that points at them; the copy
+        # --- is a new slide, so it also gets its own creation id (modern comments key on it) ---
         new_element.remove_comment_rel()
+        new_element.cSld.renew_creation_id()
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
         return rId, new_slide_part.slide

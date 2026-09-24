@@ -136,7 +136,11 @@ class AuthorsPart(XmlPart):
         )
 
     def get_or_add_author(self, name: str, initials: str | None = None) -> CT_ModernAuthor:
-        """Return the first author named `name`, adding a new one when there is none."""
+        """Return the first author named `name`, adding a new one when there is none.
+
+        Authors are matched on display name only, so two people who share a name are recorded as
+        one author.
+        """
         for author in self._element.author_lst:
             if author.name == name:
                 return author
