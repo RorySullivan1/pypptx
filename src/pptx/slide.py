@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, cast
+import os
+from typing import IO, TYPE_CHECKING, Iterator, cast
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.exc import SlideError
+from pptx.exc import InvalidXmlError, PackageError, SlideError
 from pptx.shapes.shapetree import (
     LayoutPlaceholders,
     LayoutShapes,
@@ -32,6 +33,8 @@ if TYPE_CHECKING:
         CT_SlideLayoutIdList,
         CT_SlideMaster,
     )
+    from pptx.opc.package import XmlPart
+    from pptx.oxml.theme import CT_OfficeStyleSheet
     from pptx.parts.presentation import PresentationPart
     from pptx.oxml.comment import CT_Comment
     from pptx.parts.comments import CommentAuthorsPart
@@ -40,6 +43,7 @@ if TYPE_CHECKING:
     from pptx.presentation import Presentation
     from pptx.shapes.placeholder import LayoutPlaceholder, MasterPlaceholder
     from pptx.shapes.shapetree import NotesSlidePlaceholder
+    from pptx.text.styles import MasterTextStyles
     from pptx.text.text import TextFrame
 
 
@@ -545,6 +549,7 @@ class SlideMaster(_BaseMaster):
     """
 
     _element: CT_SlideMaster  # pyright: ignore[reportIncompatibleVariableOverride]
+    part: SlideMasterPart  # pyright: ignore[reportIncompatibleMethodOverride]
 
     @lazyproperty
     def header_footer(self) -> HeaderFooter:
@@ -557,12 +562,43 @@ class SlideMaster(_BaseMaster):
         return SlideLayouts(self._element.get_or_add_sldLayoutIdLst(), self)
 
     @property
+    def text_styles(self) -> MasterTextStyles:
+        """|MasterTextStyles| giving the master's default title, body, and other text formatting.
+
+        Formatting set here applies to every slide and layout that doesn't override it, e.g.
+        ``slide_master.text_styles.body[0].font.size = Pt(20)`` sets the size of first-level
+        body text.
+        """
+        from pptx.text.styles import MasterTextStyles
+
+        return MasterTextStyles(self._element)
+
+    @property
     def theme(self) -> Theme | None:
         """A |Theme| object for this slide master's theme, or None."""
         theme_part = self.part.theme_part
         if theme_part is None:
             return None
         return Theme(theme_part._element)
+
+    def apply_theme(
+        self, source: Presentation | SlideMaster | str | os.PathLike[str] | IO[bytes]
+    ) -> Theme:
+        """Replace this master's theme (colors, fonts, and formats) with a copy of `source`'s.
+
+        `source` is a |Presentation| (its first master's theme is used), a |SlideMaster|, or
+        the path or file-like object of a `.thmx` theme file or a `.pptx`/`.potx` file. Only
+        the theme is copied; the source's layouts and masters are not. Slides keep their
+        scheme-color and theme-font references, which now resolve against the new theme.
+
+        Raises |InvalidXmlError| when the source theme lacks any of the twelve color slots or
+        the major/minor fonts, since references on existing slides would then not resolve.
+        Returns the new |Theme|.
+        """
+        source_theme_part = _source_theme_part(source)
+        _validate_theme(source_theme_part._element)
+        new_theme_part = self.part.apply_theme(source_theme_part)
+        return Theme(new_theme_part._element)
 
 
 class SlideMasters(ParentedElementProxy):
@@ -906,3 +942,82 @@ class Comment:
     def delete(self) -> None:
         """Remove this comment from its slide."""
         self._cm.getparent().remove(self._cm)
+
+
+def _source_theme_part(
+    source: Presentation | SlideMaster | str | os.PathLike[str] | IO[bytes],
+) -> XmlPart:
+    """Return the theme part `source` provides, for |SlideMaster.apply_theme|."""
+    if isinstance(source, SlideMaster):
+        master = source
+    elif isinstance(source, (str, os.PathLike)) or hasattr(source, "read"):
+        from pptx.opc.constants import CONTENT_TYPE as CT
+        from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+        from pptx.package import Package
+
+        pkg_file = os.fspath(source) if isinstance(source, os.PathLike) else source
+        main_part = Package.open(cast("str | IO[bytes]", pkg_file)).part_related_by(
+            RT.OFFICE_DOCUMENT
+        )
+        if main_part.content_type == CT.OFC_THEME:
+            return cast("XmlPart", main_part)
+        presentation = getattr(main_part, "presentation", None)
+        if presentation is None:
+            raise PackageError(
+                "theme source must be a .thmx, .pptx, or .potx file, got main part of type %s"
+                % main_part.content_type
+            )
+        master = presentation.slide_master
+    elif hasattr(source, "slide_master"):
+        master = cast("Presentation", source).slide_master
+    else:
+        raise TypeError(
+            "theme source must be a Presentation, SlideMaster, path, or file-like object, got %s"
+            % type(source).__name__
+        )
+    theme_part = master.part.theme_part
+    if theme_part is None:
+        raise PackageError("source slide master has no theme")
+    return theme_part
+
+
+_REQUIRED_COLOR_SLOTS = (
+    "dk1",
+    "lt1",
+    "dk2",
+    "lt2",
+    "accent1",
+    "accent2",
+    "accent3",
+    "accent4",
+    "accent5",
+    "accent6",
+    "hlink",
+    "folHlink",
+)
+
+
+def _validate_theme(theme: CT_OfficeStyleSheet) -> None:
+    """Raise |InvalidXmlError| unless `theme` defines every color slot and both theme fonts.
+
+    Slides refer to theme colors by slot name (via the master's color map) and to theme fonts
+    as `+mj-*`/`+mn-*`, so a theme missing either would leave those references dangling.
+    """
+    themeElements = theme.themeElements
+    clrScheme = None if themeElements is None else themeElements.clrScheme
+    fontScheme = None if themeElements is None else themeElements.fontScheme
+    if clrScheme is None:
+        raise InvalidXmlError("source theme has no color scheme")
+    missing = [
+        slot
+        for slot in _REQUIRED_COLOR_SLOTS
+        if getattr(clrScheme, slot) is None or len(getattr(clrScheme, slot)) == 0
+    ]
+    if missing:
+        raise InvalidXmlError("source theme color scheme lacks slot(s): %s" % ", ".join(missing))
+    if fontScheme is None:
+        raise InvalidXmlError("source theme has no font scheme")
+    for font_name in ("majorFont", "minorFont"):
+        font = getattr(fontScheme, font_name)
+        if font is None or font.latin is None:
+            raise InvalidXmlError("source theme font scheme lacks a %s Latin typeface" % font_name)

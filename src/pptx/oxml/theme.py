@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pptx.oxml.simpletypes import XsdString
 from pptx.oxml.xmlchemy import BaseOxmlElement, OptionalAttribute, ZeroOrMore, ZeroOrOne
 
 from . import parse_from_template
+
+if TYPE_CHECKING:
+    from pptx.oxml.shapes.shared import CT_LineProperties
 
 
 class CT_ThemeColor(BaseOxmlElement):
@@ -90,12 +95,41 @@ class CT_EffectStyleList(BaseOxmlElement):
     effectStyle = ZeroOrMore("a:effectStyle")
 
 
+class CT_FillStyleList(BaseOxmlElement):
+    """`a:fillStyleLst` or `a:bgFillStyleLst` element, a sequence of fill elements.
+
+    Each child is one of the `EG_FillProperties` elements, e.g. `a:solidFill` or `a:gradFill`.
+    """
+
+    @property
+    def fill_elms(self) -> list[BaseOxmlElement]:
+        """The fill-properties child elements, in document order."""
+        return [child for child in self if isinstance(child, BaseOxmlElement)]
+
+
+class CT_LineStyleList(BaseOxmlElement):
+    """`a:lnStyleLst` element, a sequence of `a:ln` line-style definitions."""
+
+    ln_lst: list[CT_LineProperties]
+
+    ln = ZeroOrMore("a:ln")
+
+
 class CT_StyleMatrix(BaseOxmlElement):
     """`a:fmtScheme` element, the format scheme containing fill, line, effect, and bg styles."""
 
     _tag_seq = ("a:fillStyleLst", "a:lnStyleLst", "a:effectStyleLst", "a:bgFillStyleLst")
+    fillStyleLst: CT_FillStyleList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:fillStyleLst", successors=_tag_seq[1:]
+    )
+    lnStyleLst: CT_LineStyleList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:lnStyleLst", successors=_tag_seq[2:]
+    )
     effectStyleLst: CT_EffectStyleList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:effectStyleLst", successors=_tag_seq[3:]
+    )
+    bgFillStyleLst: CT_FillStyleList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:bgFillStyleLst", successors=()
     )
     del _tag_seq
 
@@ -116,6 +150,26 @@ class CT_BaseStyles(BaseOxmlElement):
     )
     fmtScheme: CT_StyleMatrix | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:fmtScheme", successors=_tag_seq[3:]
+    )
+    del _tag_seq
+
+
+class CT_BaseStylesOverride(BaseOxmlElement):
+    """`a:themeOverride` element, root of a theme-override part.
+
+    Theme overrides are used by charts and other embedded objects to override parts of the
+    presentation theme. They hold optional color, font, and format schemes.
+    """
+
+    _tag_seq = ("a:clrScheme", "a:fontScheme", "a:fmtScheme")
+    clrScheme: CT_ColorScheme | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:clrScheme", successors=_tag_seq[1:]
+    )
+    fontScheme: CT_FontScheme | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:fontScheme", successors=_tag_seq[2:]
+    )
+    fmtScheme: CT_StyleMatrix | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:fmtScheme", successors=()
     )
     del _tag_seq
 

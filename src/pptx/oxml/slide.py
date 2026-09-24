@@ -21,6 +21,7 @@ from pptx.oxml.xmlchemy import (
 
 if TYPE_CHECKING:
     from pptx.oxml.shapes.groupshape import CT_GroupShape
+    from pptx.oxml.text import CT_TextListStyle
 
 
 class _BaseSlideElement(BaseOxmlElement):
@@ -326,6 +327,7 @@ class CT_SlideMaster(_BaseSlideElement):
 
     get_or_add_hf: Callable[[], CT_HeaderFooter]
     get_or_add_sldLayoutIdLst: Callable[[], CT_SlideLayoutIdList]
+    get_or_add_txStyles: Callable[[], CT_SlideMasterTextStyles]
 
     _tag_seq = (
         "p:cSld",
@@ -343,6 +345,33 @@ class CT_SlideMaster(_BaseSlideElement):
     )
     hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:hf", successors=_tag_seq[6:]
+    )
+    txStyles: CT_SlideMasterTextStyles | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:txStyles", successors=_tag_seq[7:]
+    )
+    del _tag_seq
+
+
+class CT_SlideMasterTextStyles(BaseOxmlElement):
+    """`p:txStyles` element, child of `p:sldMaster`.
+
+    Holds the master's default formatting for title, body, and other text, each a
+    `CT_TextListStyle` with per-level paragraph properties.
+    """
+
+    get_or_add_titleStyle: Callable[[], CT_TextListStyle]
+    get_or_add_bodyStyle: Callable[[], CT_TextListStyle]
+    get_or_add_otherStyle: Callable[[], CT_TextListStyle]
+
+    _tag_seq = ("p:titleStyle", "p:bodyStyle", "p:otherStyle", "p:extLst")
+    titleStyle: CT_TextListStyle | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:titleStyle", successors=_tag_seq[1:]
+    )
+    bodyStyle: CT_TextListStyle | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:bodyStyle", successors=_tag_seq[2:]
+    )
+    otherStyle: CT_TextListStyle | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:otherStyle", successors=_tag_seq[3:]
     )
     del _tag_seq
 

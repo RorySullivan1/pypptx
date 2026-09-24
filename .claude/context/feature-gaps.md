@@ -174,6 +174,10 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 - [x] `CT_FontCollection` (`a:majorFont`/`a:minorFont`) — latin, ea, cs children
 - [x] `CT_BaseStyles` (`a:themeElements`) — `clrScheme` and `fontScheme` children
 - [x] `CT_OfficeStyleSheet` updated with `themeElements` child
+- [x] `CT_StyleMatrix` (`a:fmtScheme`) — `fillStyleLst`, `lnStyleLst`, `bgFillStyleLst` children (`CT_FillStyleList`, `CT_LineStyleList`)
+- [x] `CT_BaseStylesOverride` (`a:themeOverride`) — theme-override parts (`OFC_THEME_OVERRIDE`) load as `XmlPart`
+- [x] `CT_TextListStyle` (`a:lstStyle`, `p:titleStyle`/`p:bodyStyle`/`p:otherStyle`, `p:defaultTextStyle`) — `a:defPPr`, `a:lvl1pPr`–`a:lvl9pPr`; `CT_SlideMasterTextStyles` (`p:txStyles`)
+- [x] `ST_TextIndent` — `a:pPr/@indent` accepts negative (hanging) indents
 
 ### 4.10 WordArt — `oxml/text.py` (DONE)
 - [x] `CT_PresetTextShape` (`a:prstTxWarp`) — `prst` attribute, `avLst` child
@@ -649,6 +653,9 @@ _Prerequisites: Section 4.9 (theme elements)_
 - [x] Read/write theme color schemes — `a:clrScheme` in `theme.xml`
 - [x] Read/write theme font schemes — major and minor font families
 - [x] Theme effect schemes — `Theme.effect_scheme` returning `EffectScheme` with indexed/named access to 3 `EffectStyle` objects (subtle/moderate/intense)
+- [x] Theme fill, line, and background-fill style lists — `Theme.fill_styles` / `line_styles` / `background_fill_styles` (read-only `FillFormat` / `LineFormat`); `phClr` reads as `MSO_THEME_COLOR.PLACEHOLDER`
+- [x] Replace a master's theme — `SlideMaster.apply_theme(source)` from a `Presentation`, `SlideMaster`, `.thmx`, or `.pptx`/`.potx`
+- [x] Master text styles — `SlideMaster.text_styles.title/body/other[level]` and `Presentation.default_text_style` (paragraph formatting + `font`)
 
 ---
 

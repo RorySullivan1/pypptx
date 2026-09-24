@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+from io import BytesIO
 from typing import IO, TYPE_CHECKING, cast
 
 from pptx.enum.shapes import PROG_ID
@@ -24,6 +26,7 @@ if TYPE_CHECKING:
     from pptx.media import Video
     from pptx.opc.package import Package
     from pptx.parts.image import Image, ImagePart
+    from pptx.parts.presentation import PresentationPart
 
 
 class BaseSlidePart(XmlPart):
@@ -343,3 +346,64 @@ class SlideMasterPart(BaseSlidePart):
             return self.part_related_by(RT.THEME)
         except KeyError:
             return None
+
+    def apply_theme(self, source_theme_part: XmlPart) -> XmlPart:
+        """Relate this master to a new theme part copied from `source_theme_part`.
+
+        `source_theme_part` can belong to another package. Parts it relates to, such as images
+        used by fill styles, are copied too; slide-master and other structural relationships of
+        a `.thmx` theme are not. The previous theme part is dropped from the package unless
+        something else still relates to it. The presentation part's theme relationship follows
+        this master when no other master uses the previous theme. Returns the new theme part.
+        """
+        from pptx.parts.image import ImagePart
+        from pptx.parts.presentation import _STRUCTURAL_RELTYPES, _PartCopier, _remap_rIds
+
+        package = self.package
+        old_theme_part = self.theme_part
+        for rId in [rId for rId, rel in self.rels.items() if rel.reltype == RT.THEME]:
+            self._rels.pop(rId)
+
+        new_theme_part = XmlPart(
+            package.next_partname("/ppt/theme/theme%d.xml"),
+            CT.OFC_THEME,
+            package,
+            deepcopy(source_theme_part._element),
+        )
+        self.relate_to(new_theme_part, RT.THEME)
+
+        copier = _PartCopier(package, dedup=True)
+        rId_map: dict[str, str] = {}
+        for rId, rel in source_theme_part.rels.items():
+            if rel.is_external:
+                rId_map[rId] = new_theme_part.relate_to(
+                    rel.target_ref, rel.reltype, is_external=True
+                )
+            elif rel.reltype in _STRUCTURAL_RELTYPES:
+                continue
+            elif isinstance(rel.target_part, ImagePart):
+                image_part = package.get_or_add_image_part(BytesIO(rel.target_part.blob))
+                rId_map[rId] = new_theme_part.relate_to(image_part, rel.reltype)
+            else:
+                rId_map[rId] = new_theme_part.relate_to(copier.copy(rel.target_part), rel.reltype)
+        _remap_rIds(new_theme_part._element, rId_map)
+
+        if old_theme_part is not None:
+            self._repoint_presentation_theme(old_theme_part, new_theme_part)
+        return new_theme_part
+
+    def _repoint_presentation_theme(self, old_theme_part: XmlPart, new_theme_part: XmlPart):
+        """Move the presentation part's theme relationship from the old theme to the new one.
+
+        Only done when no other slide master still uses `old_theme_part`.
+        """
+        presentation_part = cast("PresentationPart", self.package.presentation_part)
+        for rel in presentation_part.rels.values():
+            if rel.reltype != RT.SLIDE_MASTER or rel.target_part is self:
+                continue
+            if getattr(rel.target_part, "theme_part", None) is old_theme_part:
+                return
+        for rId, rel in list(presentation_part.rels.items()):
+            if rel.reltype == RT.THEME and rel.target_part is old_theme_part:
+                presentation_part._rels.pop(rId)
+                presentation_part.relate_to(new_theme_part, RT.THEME)

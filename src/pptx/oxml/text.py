@@ -29,6 +29,7 @@ from pptx.oxml.simpletypes import (
     ST_TextColumnCount,
     ST_TextFontScalePercentOrPercentString,
     ST_TextFontSize,
+    ST_TextIndent,
     ST_TextIndentLevelType,
     ST_TextMargin,
     ST_TextNonNegativePoint,
@@ -625,7 +626,7 @@ class CT_TextParagraphProperties(BaseOxmlElement):
         "algn", PP_PARAGRAPH_ALIGNMENT
     )  # pyright: ignore[reportAssignmentType]
     indent: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "indent", ST_TextMargin
+        "indent", ST_TextIndent
     )
     marL: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "marL", ST_TextMargin
@@ -697,6 +698,61 @@ class CT_TextParagraphProperties(BaseOxmlElement):
         self._remove_spcBef()
         if value is not None:
             self._add_spcBef().set_spcPts(value)
+
+
+class CT_TextListStyle(BaseOxmlElement):
+    """`a:lstStyle` custom element class, also used for the master text-style elements.
+
+    `p:titleStyle`, `p:bodyStyle`, `p:otherStyle` (children of `p:txStyles`) and
+    `p:defaultTextStyle` share this type. Each holds an optional `a:defPPr` and per-level
+    paragraph properties `a:lvl1pPr` through `a:lvl9pPr`.
+    """
+
+    get_or_add_defPPr: Callable[[], CT_TextParagraphProperties]
+
+    _tag_seq = (
+        "a:defPPr",
+        "a:lvl1pPr",
+        "a:lvl2pPr",
+        "a:lvl3pPr",
+        "a:lvl4pPr",
+        "a:lvl5pPr",
+        "a:lvl6pPr",
+        "a:lvl7pPr",
+        "a:lvl8pPr",
+        "a:lvl9pPr",
+        "a:extLst",
+    )
+    defPPr: CT_TextParagraphProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:defPPr", successors=_tag_seq[1:]
+    )
+    lvl1pPr = ZeroOrOne("a:lvl1pPr", successors=_tag_seq[2:])
+    lvl2pPr = ZeroOrOne("a:lvl2pPr", successors=_tag_seq[3:])
+    lvl3pPr = ZeroOrOne("a:lvl3pPr", successors=_tag_seq[4:])
+    lvl4pPr = ZeroOrOne("a:lvl4pPr", successors=_tag_seq[5:])
+    lvl5pPr = ZeroOrOne("a:lvl5pPr", successors=_tag_seq[6:])
+    lvl6pPr = ZeroOrOne("a:lvl6pPr", successors=_tag_seq[7:])
+    lvl7pPr = ZeroOrOne("a:lvl7pPr", successors=_tag_seq[8:])
+    lvl8pPr = ZeroOrOne("a:lvl8pPr", successors=_tag_seq[9:])
+    lvl9pPr = ZeroOrOne("a:lvl9pPr", successors=_tag_seq[10:])
+    del _tag_seq
+
+    def lvl_pPr(self, level: int) -> CT_TextParagraphProperties | None:
+        """Return the `a:lvl{level+1}pPr` child, or |None| if not present.
+
+        `level` is zero-based, matching `a:pPr/@lvl`, so level 0 is `a:lvl1pPr`.
+        """
+        return getattr(self, "lvl%dpPr" % (self._validate_level(level) + 1))
+
+    def get_or_add_lvl_pPr(self, level: int) -> CT_TextParagraphProperties:
+        """Return the `a:lvl{level+1}pPr` child, newly added if not present."""
+        return getattr(self, "get_or_add_lvl%dpPr" % (self._validate_level(level) + 1))()
+
+    @staticmethod
+    def _validate_level(level: int) -> int:
+        if not isinstance(level, int) or isinstance(level, bool) or not 0 <= level <= 8:
+            raise IndexError("text style level must be an int in range 0-8, got %r" % (level,))
+        return level
 
 
 class CT_TextSpacing(BaseOxmlElement):

@@ -57,7 +57,8 @@ prs.save("hello.pptx")
 - **Metadata** — tags, sections, custom document properties
 - **Comments** — add, read, delete with author tracking and positioning
 - **Picture effects** — brightness, contrast, grayscale, transparency color
-- **Theme access** — color schemes, font schemes, effect schemes
+- **Theme access** — color schemes, font schemes, effect schemes, fill/line style lists; replace a master's theme from another deck or a `.thmx`
+- **Master text styles** — per-level title/body/other formatting on slide masters, plus the presentation default text style
 - **Bulk operations** — ShapeRange API for alignment, distribution, batch property setting
 - **Accessibility** — alternative text, title, decorative flag on shapes
 

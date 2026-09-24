@@ -65,6 +65,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Notes master and notes slides (create, read, access notes text)
 - Layout-to-master and slide-to-layout relationships
 - Placeholder inheritance chain (master → layout → slide)
+- Master text styles — `SlideMaster.text_styles.title/body/other[level]` (alignment, indent, margins, spacing, `font`) and `Presentation.default_text_style`
 - Headers & footers — `header_footer` on slide, layout, master, and notes master; per-slide show/hide of date, footer, slide number; date format (read-only field-type string) and auto-vs-fixed mode; footer text r/w
 
 ### Sections, Tags & Comments
@@ -156,6 +157,9 @@ The codebase is organized in four layers, from low-level to high-level:
 - Color schemes — read/write `a:clrScheme`
 - Font schemes — major and minor font families
 - Effect schemes — `Theme.effect_scheme` returning `EffectScheme` with indexed/named access to subtle/moderate/intense `EffectStyle` objects
+- Fill, line, and background-fill style lists — `Theme.fill_styles`, `line_styles`, `background_fill_styles` (read-only)
+- Replace a master's theme — `SlideMaster.apply_theme(source)` from a presentation, slide master, `.thmx`, or `.pptx`/`.potx` file
+- Theme-override parts (`a:themeOverride`) load as XML parts (read-only)
 
 ### Enumerations
 - 180+ auto shape types (`MSO_SHAPE`)

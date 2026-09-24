@@ -646,6 +646,7 @@ from pptx.oxml.slide import (  # noqa: E402
     CT_SlideLayoutIdList,
     CT_SlideLayoutIdListEntry,
     CT_SlideMaster,
+    CT_SlideMasterTextStyles,
     CT_SlideTiming,
     CT_TimeNodeList,
     CT_TLMediaNodeVideo,
@@ -663,6 +664,7 @@ register_element_cls("p:sldLayout", CT_SlideLayout)
 register_element_cls("p:sldLayoutId", CT_SlideLayoutIdListEntry)
 register_element_cls("p:sldLayoutIdLst", CT_SlideLayoutIdList)
 register_element_cls("p:sldMaster", CT_SlideMaster)
+register_element_cls("p:txStyles", CT_SlideMasterTextStyles)
 register_element_cls("p:timing", CT_SlideTiming)
 register_element_cls("p:video", CT_TLMediaNodeVideo)
 
@@ -699,6 +701,7 @@ from pptx.oxml.text import (  # noqa: E402
     CT_TextLineBreak,
     CT_TextNormalAutofit,
     CT_TextParagraph,
+    CT_TextListStyle,
     CT_TextParagraphProperties,
     CT_TextSpacing,
     CT_TextSpacingPercent,
@@ -722,6 +725,15 @@ register_element_cls("a:tab", CT_TabStop)
 register_element_cls("a:tabLst", CT_TabStopList)
 register_element_cls("a:p", CT_TextParagraph)
 register_element_cls("a:pPr", CT_TextParagraphProperties)
+register_element_cls("a:defPPr", CT_TextParagraphProperties)
+for _n in range(1, 10):
+    register_element_cls("a:lvl%dpPr" % _n, CT_TextParagraphProperties)
+del _n
+register_element_cls("a:lstStyle", CT_TextListStyle)
+register_element_cls("p:bodyStyle", CT_TextListStyle)
+register_element_cls("p:defaultTextStyle", CT_TextListStyle)
+register_element_cls("p:otherStyle", CT_TextListStyle)
+register_element_cls("p:titleStyle", CT_TextListStyle)
 register_element_cls("c:rich", CT_TextBody)
 register_element_cls("a:rPr", CT_TextCharacterProperties)
 register_element_cls("a:spcAft", CT_TextSpacing)
@@ -735,14 +747,21 @@ register_element_cls("p:txBody", CT_TextBody)
 
 from pptx.oxml.theme import (  # noqa: E402
     CT_BaseStyles,
+    CT_BaseStylesOverride,
     CT_ColorScheme,
     CT_EffectStyleItem,
     CT_EffectStyleList,
+    CT_FillStyleList,
     CT_FontCollection,
     CT_FontScheme,
+    CT_LineStyleList,
     CT_OfficeStyleSheet,
     CT_StyleMatrix,
 )
+
+register_element_cls("a:bgFillStyleLst", CT_FillStyleList)
+register_element_cls("a:fillStyleLst", CT_FillStyleList)
+register_element_cls("a:lnStyleLst", CT_LineStyleList)
 
 register_element_cls("a:clrScheme", CT_ColorScheme)
 register_element_cls("a:effectStyle", CT_EffectStyleItem)
@@ -752,4 +771,5 @@ register_element_cls("a:fontScheme", CT_FontScheme)
 register_element_cls("a:majorFont", CT_FontCollection)
 register_element_cls("a:minorFont", CT_FontCollection)
 register_element_cls("a:theme", CT_OfficeStyleSheet)
+register_element_cls("a:themeOverride", CT_BaseStylesOverride)
 register_element_cls("a:themeElements", CT_BaseStyles)

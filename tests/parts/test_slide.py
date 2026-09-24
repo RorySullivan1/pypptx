@@ -585,3 +585,79 @@ class DescribeSlideMasterPart:
 
         related_part_.assert_called_once_with(slide_master_part, "rId42")
         assert slide_layout is slide_layout_
+
+
+class DescribeSlideMasterPart_apply_theme:
+    """Unit-test suite for `SlideMasterPart.apply_theme()`, run against real packages."""
+
+    def it_relates_the_master_to_a_copy_of_the_source_theme(self):
+        package = Package.open(_default_template())
+        master_part = _first_master_part(package)
+        old_theme_part = master_part.theme_part
+        source_theme_part = _source_theme_part_with_accent1("FF0000")
+
+        new_theme_part = master_part.apply_theme(source_theme_part)
+
+        assert master_part.theme_part is new_theme_part
+        assert new_theme_part is not source_theme_part
+        assert new_theme_part.package is package
+        assert new_theme_part.content_type == CT.OFC_THEME
+        assert new_theme_part.partname.startswith("/ppt/theme/theme")
+        assert new_theme_part._element.xpath(
+            "a:themeElements/a:clrScheme/a:accent1/a:srgbClr/@val"
+        ) == ["FF0000"]
+        assert old_theme_part not in set(package.iter_parts())
+        assert len([r for r in master_part.rels.values() if r.reltype == RT.THEME]) == 1
+
+    def it_moves_the_presentation_theme_relationship_to_the_new_theme(self):
+        package = Package.open(_default_template())
+        presentation_part = package.presentation_part
+        master_part = _first_master_part(package)
+        assert presentation_part.part_related_by(RT.THEME) is master_part.theme_part
+
+        new_theme_part = master_part.apply_theme(_source_theme_part_with_accent1("00FF00"))
+
+        assert presentation_part.part_related_by(RT.THEME) is new_theme_part
+
+    def it_copies_images_the_source_theme_refers_to(self):
+        package = Package.open(_default_template())
+        master_part = _first_master_part(package)
+        source_package = Package.open(_default_template())
+        source_theme_part = _first_master_part(source_package).theme_part
+        image_part = source_package.get_or_add_image_part(
+            absjoin(test_file_dir, "python-icon.jpeg")
+        )
+        rId = source_theme_part.relate_to(image_part, RT.IMAGE)
+        bgFillStyleLst = source_theme_part._element.xpath(
+            "a:themeElements/a:fmtScheme/a:bgFillStyleLst"
+        )[0]
+        bgFillStyleLst.append(
+            element("a:blipFill/a:blip{r:embed=%s}" % rId)
+        )
+
+        new_theme_part = master_part.apply_theme(source_theme_part)
+
+        new_rId = new_theme_part._element.xpath("//a:blip/@r:embed")[0]
+        new_image_part = new_theme_part.related_part(new_rId)
+        assert new_image_part.package is package
+        assert new_image_part.blob == image_part.blob
+        assert new_image_part.partname.startswith("/ppt/media/image")
+
+
+def _default_template() -> str:
+    import pptx
+
+    return absjoin(pptx.__file__, "..", "templates", "default.pptx")
+
+
+def _first_master_part(package: Package) -> SlideMasterPart:
+    return package.presentation_part.presentation.slide_master.part
+
+
+def _source_theme_part_with_accent1(rgb: str):
+    source_theme_part = _first_master_part(Package.open(_default_template())).theme_part
+    srgbClr = source_theme_part._element.xpath(
+        "a:themeElements/a:clrScheme/a:accent1/a:srgbClr"
+    )[0]
+    srgbClr.set("val", rgb)
+    return source_theme_part

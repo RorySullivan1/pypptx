@@ -11,12 +11,43 @@ from pptx.parts.presentation import PresentationPart
 from pptx.parts.slide import NotesMasterPart
 from pptx.presentation import Presentation, Section, Sections
 from pptx.slide import SlideLayouts, SlideMaster, SlideMasters, Slides
+from pptx.text.styles import TextListStyle
+from pptx.util import Pt
 
 from .unitutil.cxml import element, xml
 from .unitutil.mock import class_mock, instance_mock, property_mock
 
 
 class DescribePresentation:
+    def it_provides_access_to_its_default_text_style(self):
+        prs = Presentation(
+            element("p:presentation/(p:sldSz,p:defaultTextStyle/(a:defPPr,a:lvl1pPr{marL=5}))"),
+            None,
+        )
+
+        default_text_style = prs.default_text_style
+
+        assert isinstance(default_text_style, TextListStyle)
+        assert default_text_style[0].margin_left == 5
+        assert default_text_style[1].margin_left is None
+
+    def it_adds_a_defaultTextStyle_in_schema_order_when_written(self):
+        presentation = element("p:presentation/(p:sldSz,p:notesSz,p:extLst)")
+        prs = Presentation(presentation, None)
+
+        assert prs.default_text_style[0].margin_left is None
+        assert presentation.defaultTextStyle is None
+
+        prs.default_text_style[0].font.size = Pt(18)
+
+        assert [child.tag.split("}")[1] for child in presentation] == [
+            "sldSz",
+            "notesSz",
+            "defaultTextStyle",
+            "extLst",
+        ]
+        assert presentation.xpath("p:defaultTextStyle/a:lvl1pPr/a:defRPr/@sz") == ["1800"]
+
     def it_knows_the_height_of_its_slides(self, sld_height_get_fixture):
         prs, expected_value = sld_height_get_fixture
         assert prs.slide_height == expected_value
