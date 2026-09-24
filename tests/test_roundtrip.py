@@ -290,6 +290,82 @@ assert threads[1].id == second.id
 assert len(slide.comments) == 0
 """)
 
+    def it_round_trips_added_modern_comment_threads(self):
+        _run_roundtrip_test("""\
+import re
+import zipfile
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+thread = slide.threaded_comments.add("Tighten this title", "Alice Adams", "AA")
+thread.reply("Agreed", "Bob Brown", "BB")
+thread.reply("Done", "Alice Adams")
+other = slide.threaded_comments.add("Check the date", "Bob Brown")
+other.resolved = True
+
+stream = BytesIO()
+prs.save(stream)
+
+# -- package shape PowerPoint expects --
+zf = zipfile.ZipFile(stream)
+names = zf.namelist()
+creation_id = int(re.search(
+    r'<p14:creationId [^>]*val="(\\d+)"', zf.read("ppt/slides/slide1.xml").decode()
+).group(1))
+partname = "ppt/comments/modernComment_%X_%X.xml" % (slide.slide_id, creation_id)
+assert partname in names, names
+assert "ppt/authors.xml" in names
+content_types = zf.read("[Content_Types].xml").decode()
+assert 'PartName="/%s" ContentType="application/vnd.ms-powerpoint.comments+xml"' % partname in (
+    content_types
+)
+assert 'PartName="/ppt/authors.xml" ContentType="application/vnd.ms-powerpoint.authors+xml"' in (
+    content_types
+)
+assert "relationships/authors" in zf.read("ppt/_rels/presentation.xml.rels").decode()
+assert "relationships/comments" in zf.read("ppt/slides/_rels/slide1.xml.rels").decode()
+slide_xml = zf.read("ppt/slides/slide1.xml").decode()
+assert "{6950BFC3-D8DA-4A85-94F7-54DA5524770B}" in slide_xml
+assert 'sldId="%d"' % slide.slide_id in zf.read(partname).decode()
+
+# -- and it reads back --
+stream.seek(0)
+threads = Presentation(stream).slides[0].threaded_comments
+assert len(threads) == 2
+first, second = threads
+assert (first.author, first.author_initials, first.text, first.anchor, first.resolved) == (
+    "Alice Adams", "AA", "Tighten this title", "slide", False
+)
+assert [(r.author, r.text) for r in first.replies] == [
+    ("Bob Brown", "Agreed"), ("Alice Adams", "Done")
+]
+assert (second.author, second.text, second.resolved) == ("Bob Brown", "Check the date", True)
+assert first.created is not None and first.created.tzinfo is None
+""")
+
+    def it_adds_to_the_modern_comments_already_in_a_file(self):
+        _run_roundtrip_test("""\
+from tests.unitutil.modern_comments import COMMENTS_PARTNAME, modern_comments_pptx
+
+prs = Presentation(modern_comments_pptx())
+slide = prs.slides[0]
+slide.threaded_comments.add("Third thread", "Alice Adams")
+slide.threaded_comments[0].reply("Third reply", "Carol", "CC")
+slide.threaded_comments[1].resolved = False
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+threads = prs2.slides[0].threaded_comments
+assert [t.text for t in threads] == ["Tighten this title", "Logo is off-brand", "Third thread"]
+assert threads[2].author == "Alice Adams"
+assert [r.author for r in threads[0].replies] == ["Bob Brown", "Alice Adams", "Carol"]
+assert threads[1].resolved is False
+assert str(prs2.slides[0].part.modern_comments_part.partname) == "/" + COMMENTS_PARTNAME
+assert len(prs2.part.authors_part) == 3
+""")
+
     def it_leaves_modern_comments_behind_when_duplicating_a_slide(self):
         _run_roundtrip_test("""\
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT

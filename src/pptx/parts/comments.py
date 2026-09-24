@@ -128,6 +128,20 @@ class AuthorsPart(XmlPart):
 
     _element: CT_ModernAuthorList
 
+    @classmethod
+    def new(cls, package: Package) -> AuthorsPart:
+        """Return a new, empty |AuthorsPart| at ``/ppt/authors.xml``."""
+        return cls(
+            PackURI("/ppt/authors.xml"), CT.PML_AUTHORS, package, CT_ModernAuthorList.new()
+        )
+
+    def get_or_add_author(self, name: str, initials: str | None = None) -> CT_ModernAuthor:
+        """Return the first author named `name`, adding a new one when there is none."""
+        for author in self._element.author_lst:
+            if author.name == name:
+                return author
+        return self._element.add_author(name, initials)
+
     def get_author(self, author_id: str) -> CT_ModernAuthor | None:
         """Return the author element whose GUID is `author_id`, or None."""
         return self._element.get_author(author_id)
@@ -152,6 +166,17 @@ class ModernCommentsPart(XmlPart):
     """
 
     _element: CT_ModernCommentList
+
+    @classmethod
+    def new(cls, partname: PackURI, package: Package) -> ModernCommentsPart:
+        """Return a new |ModernCommentsPart| at `partname` holding no threads."""
+        return cls(partname, CT.PML_MODERN_COMMENTS, package, CT_ModernCommentList.new())
+
+    def add_thread(
+        self, author_id: str, created: str, sld_id: int, creation_id: int, text: str
+    ) -> CT_ModernComment:
+        """Append and return a new thread anchored to the slide these ids identify."""
+        return self._element.add_cm(author_id, created, sld_id, creation_id, text)
 
     @property
     def comments(self) -> list[CT_ModernComment]:

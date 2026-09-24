@@ -17,7 +17,10 @@ from pptx.parts.comments import (
     CommentsPart,
     ModernCommentsPart,
 )
+from pptx.parts.presentation import PresentationPart
 from pptx.slide import Comment, CommentReply, SlideComments, ThreadedComment
+
+from .unitutil.mock import instance_mock
 
 
 
@@ -112,6 +115,20 @@ class DescribeAuthorsPart:
         assert len(part) == 2
         assert [a.name for a in part] == ["Alice", "Bob"]
         assert [a.name for a in part.authors] == ["Alice", "Bob"]
+
+    def it_reuses_an_author_with_the_same_name(self):
+        part = self._part()
+
+        assert part.get_or_add_author("Bob", "XX").id == "{B2}"
+        assert len(part) == 2
+
+    def it_adds_an_author_it_does_not_have(self):
+        part = self._part()
+
+        carol = part.get_or_add_author("Carol", "CC")
+
+        assert (carol.name, carol.initials) == ("Carol", "CC")
+        assert len(part) == 3
 
     def it_can_find_an_author_by_id(self):
         part = self._part()
@@ -226,26 +243,32 @@ _TXBODY = "<p188:txBody><a:bodyPr/><a:p><a:r><a:t>%s</a:t></a:r></a:p></p188:txB
 class DescribeThreadedComment:
     """Unit-test suite for `pptx.slide.ThreadedComment`."""
 
-    def it_knows_its_id_text_and_created_time(self):
-        thread = ThreadedComment(_thread_element(children=_TXBODY % "Fix"), _authors_part())
+    @pytest.fixture
+    def prs_part_(self, request: pytest.FixtureRequest):
+        return instance_mock(request, PresentationPart, authors_part=_authors_part())
+
+    def it_knows_its_id_text_and_created_time(self, prs_part_):
+        thread = ThreadedComment(_thread_element(children=_TXBODY % "Fix"), prs_part_)
 
         assert thread.id == "{C1}"
         assert thread.text == "Fix"
         assert thread.created == dt.datetime(2024, 5, 1, 9, 30, 0, 250000)
 
-    def it_knows_its_author(self):
-        thread = ThreadedComment(_thread_element(), _authors_part())
+    def it_knows_its_author(self, prs_part_):
+        thread = ThreadedComment(_thread_element(), prs_part_)
 
         assert thread.author == "Alice"
         assert thread.author_initials == "AA"
 
-    def but_its_author_is_blank_when_not_in_the_authors_part(self):
+    def but_its_author_is_blank_when_not_in_the_authors_part(self, prs_part_):
         cm = _thread_element()
         cm.set("authorId", "{ZZ}")
+        assert ThreadedComment(cm, prs_part_).author == ""
 
-        assert ThreadedComment(cm, _authors_part()).author == ""
-        assert ThreadedComment(cm, None).author == ""
-        assert ThreadedComment(cm, None).author_initials == ""
+        prs_part_.authors_part = None
+        cm.set("authorId", "{A1}")
+        assert ThreadedComment(cm, prs_part_).author == ""
+        assert ThreadedComment(cm, prs_part_).author_initials == ""
 
     @pytest.mark.parametrize(
         ("attrs", "expected_status", "expected_resolved"),
@@ -256,9 +279,9 @@ class DescribeThreadedComment:
         ],
     )
     def it_knows_whether_it_is_resolved(
-        self, attrs: str, expected_status: str, expected_resolved: bool
+        self, attrs: str, expected_status: str, expected_resolved: bool, prs_part_
     ):
-        thread = ThreadedComment(_thread_element(attrs), _authors_part())
+        thread = ThreadedComment(_thread_element(attrs), prs_part_)
 
         assert thread.status == expected_status
         assert thread.resolved is expected_resolved
@@ -272,19 +295,19 @@ class DescribeThreadedComment:
             ("<p188:unknownAnchor/>", "unknown"),
         ],
     )
-    def it_knows_what_it_is_anchored_to(self, children: str, expected_value: str):
-        thread = ThreadedComment(_thread_element(children=children), _authors_part())
+    def it_knows_what_it_is_anchored_to(self, prs_part_, children: str, expected_value: str):
+        thread = ThreadedComment(_thread_element(children=children), prs_part_)
         assert thread.anchor == expected_value
 
     @pytest.mark.parametrize(
         ("children", "expected_value"),
         [('<p188:pos x="100" y="200"/>', (100, 200)), ("", None)],
     )
-    def it_knows_its_position(self, children: str, expected_value):
-        thread = ThreadedComment(_thread_element(children=children), _authors_part())
+    def it_knows_its_position(self, prs_part_, children: str, expected_value):
+        thread = ThreadedComment(_thread_element(children=children), prs_part_)
         assert thread.position == expected_value
 
-    def it_provides_access_to_its_replies_in_order(self):
+    def it_provides_access_to_its_replies_in_order(self, prs_part_):
         children = (
             "<p188:replyLst>"
             '<p188:reply id="{R1}" authorId="{B2}" created="2024-05-01T10:00:00Z">%s</p188:reply>'
@@ -292,7 +315,7 @@ class DescribeThreadedComment:
             "</p188:reply>"
             "</p188:replyLst>"
         ) % (_TXBODY % "one", _TXBODY % "two")
-        thread = ThreadedComment(_thread_element(children=children), _authors_part())
+        thread = ThreadedComment(_thread_element(children=children), prs_part_)
 
         replies = thread.replies
 
@@ -306,8 +329,42 @@ class DescribeThreadedComment:
             2024, 5, 2, 8, 0, tzinfo=dt.timezone(dt.timedelta(hours=2))
         )
 
-    def but_it_has_no_replies_when_there_are_none(self):
-        assert ThreadedComment(_thread_element(), _authors_part()).replies == []
+    def but_it_has_no_replies_when_there_are_none(self, prs_part_):
+        assert ThreadedComment(_thread_element(), prs_part_).replies == []
+
+    @pytest.mark.parametrize(("value", "expected_attr"), [(True, "resolved"), (False, None)])
+    def it_can_be_resolved_and_reopened(self, value: bool, expected_attr, prs_part_):
+        cm = _thread_element('status="closed"')
+        thread = ThreadedComment(cm, prs_part_)
+
+        thread.resolved = value
+
+        assert thread.resolved is value
+        assert cm.get("status") == expected_attr
+
+    def it_can_add_a_reply(self, prs_part_):
+        authors_part = _authors_part()
+        prs_part_.get_or_add_authors_part.return_value = authors_part
+        thread = ThreadedComment(_thread_element(children=_TXBODY % "Fix"), prs_part_)
+
+        reply = thread.reply("Done", "Bob")
+
+        assert isinstance(reply, CommentReply)
+        assert (reply.author, reply.text) == ("Bob", "Done")
+        assert isinstance(reply.created, dt.datetime)
+        assert [r.id for r in thread.replies] == [reply.id]
+        assert len(authors_part) == 2
+
+    def and_it_registers_a_new_author_for_a_reply(self, prs_part_):
+        authors_part = _authors_part()
+        prs_part_.get_or_add_authors_part.return_value = authors_part
+        prs_part_.authors_part = authors_part
+        thread = ThreadedComment(_thread_element(), prs_part_)
+
+        reply = thread.reply("Seen", "Carol", "CC")
+
+        assert (reply.author, reply.author_initials) == ("Carol", "CC")
+        assert [a.name for a in authors_part] == ["Alice", "Bob", "Carol"]
 
 
 class DescribeThreadedComments:

@@ -73,6 +73,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Tags — dict-like API on slides (and shapes) via `TagsPart` (get/set/del/contains/iter/items)
 - Slide comments — `Slide.comments` with add/iterate/clear/indexed access; per-comment `author`, `text` (r/w), `datetime`, `position`, `delete()`
 - Comment authors — auto-managed via package-level `CommentAuthorsPart`
+- Modern threaded comments (PowerPoint 365) — `Slide.threaded_comments`: read threads with replies, authors, created time, anchor and resolved state; add threads, reply, and resolve/reopen
 
 ### Shapes
 - **AutoShapes** — 180+ preset geometries (`MSO_SHAPE`), adjustment handles, text, fill, line

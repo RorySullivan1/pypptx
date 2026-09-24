@@ -9,8 +9,11 @@ from __future__ import annotations
 
 import datetime as dt
 import re
-from typing import TYPE_CHECKING
+import uuid
+from typing import TYPE_CHECKING, Callable
 
+from pptx.oxml import parse_xml
+from pptx.oxml.ns import nsdecls
 from pptx.oxml.simpletypes import ST_CommentStatus, XsdString, XsdUnsignedInt
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -92,9 +95,25 @@ class CT_ModernAuthor(BaseOxmlElement):
 class CT_ModernAuthorList(BaseOxmlElement):
     """`p188:authorLst` element, root of the authors part."""
 
+    _add_author: Callable[..., CT_ModernAuthor]
     author_lst: list[CT_ModernAuthor]
 
     author = ZeroOrMore("p188:author")
+
+    @classmethod
+    def new(cls) -> CT_ModernAuthorList:
+        """Return a new, empty `p188:authorLst` element."""
+        return parse_xml("<p188:authorLst %s/>" % nsdecls("p188", "a", "r"))
+
+    def add_author(self, name: str, initials: str | None) -> CT_ModernAuthor:
+        """Append and return a new `p188:author` with a fresh GUID.
+
+        `userId` is `name` and `providerId` is "None", which is how PowerPoint records an author
+        who isn't signed in to an identity provider.
+        """
+        return self._add_author(
+            id=new_guid(), name=name, initials=initials, userId=name, providerId="None"
+        )
 
     def get_author(self, author_id: str) -> CT_ModernAuthor | None:
         """Return the `p188:author` child whose `id` is `author_id`, or None."""
@@ -124,6 +143,8 @@ class CT_SlideMonikerList(BaseOxmlElement):
 class _BaseModernComment(BaseOxmlElement):
     """Attributes and text shared by `p188:cm` and `p188:reply` (`AG_CommentProperties`)."""
 
+    _add_txBody: Callable[[], CT_TextBody]
+    _remove_txBody: Callable[[], None]
     txBody: CT_TextBody | None
 
     id: str = RequiredAttribute("id", XsdString)  # pyright: ignore[reportAssignmentType]
@@ -152,6 +173,20 @@ class _BaseModernComment(BaseOxmlElement):
             return ""
         return "\n".join(p.text for p in txBody.p_lst)
 
+    @text.setter
+    def text(self, value: str) -> None:
+        """Replace the text with `value`, one `a:p` per line of it."""
+        from pptx.oxml.xmlchemy import OxmlElement
+
+        self._remove_txBody()
+        txBody = self._add_txBody()
+        txBody.append(OxmlElement("a:bodyPr"))
+        txBody.append(OxmlElement("a:lstStyle"))
+        for line in value.split("\n"):
+            p = txBody.add_p()
+            if line:
+                p.add_r(line)
+
 
 class CT_ModernCommentReply(_BaseModernComment):
     """`p188:reply` element, one reply in a comment thread."""
@@ -164,6 +199,7 @@ class CT_ModernCommentReply(_BaseModernComment):
 class CT_ModernCommentReplyList(BaseOxmlElement):
     """`p188:replyLst` element, the replies of a comment thread in the order they were made."""
 
+    _add_reply: Callable[..., CT_ModernCommentReply]
     reply_lst: list[CT_ModernCommentReply]
 
     reply = ZeroOrMore("p188:reply")
@@ -171,6 +207,8 @@ class CT_ModernCommentReplyList(BaseOxmlElement):
 
 class CT_ModernComment(_BaseModernComment):
     """`p188:cm` element, the first comment of a thread; its replies are in `p188:replyLst`."""
+
+    get_or_add_replyLst: Callable[[], CT_ModernCommentReplyList]
 
     _tag_seq = (
         "pc:sldMkLst",
@@ -200,6 +238,24 @@ class CT_ModernComment(_BaseModernComment):
         "title", XsdString, default=""
     )
 
+    @classmethod
+    def new(cls, author_id: str, created: str, sld_id: int, creation_id: int) -> CT_ModernComment:
+        """Return a new `p188:cm` with a fresh GUID, anchored to the slide these ids identify."""
+        return parse_xml(
+            '<p188:cm %s id="%s" authorId="%s" created="%s">'
+            '<pc:sldMkLst><pc:docMk/><pc:sldMk cId="%d" sldId="%d"/></pc:sldMkLst>'
+            "</p188:cm>"
+            % (nsdecls("p188", "pc", "a"), new_guid(), author_id, created, creation_id, sld_id)
+        )
+
+    def add_reply(self, author_id: str, created: str, text: str) -> CT_ModernCommentReply:
+        """Append and return a new `p188:reply` with a fresh GUID, after any existing replies."""
+        reply = self.get_or_add_replyLst()._add_reply(
+            id=new_guid(), authorId=author_id, created=created
+        )
+        reply.text = text
+        return reply
+
     @property
     def anchor_tag(self) -> str | None:
         """Namespace-prefixed tag of the anchor child, e.g. "pc:sldMkLst", or None if absent."""
@@ -223,9 +279,28 @@ class CT_ModernComment(_BaseModernComment):
 class CT_ModernCommentList(BaseOxmlElement):
     """`p188:cmLst` element, root of a modern comments part holding one slide's threads."""
 
+    _insert_cm: Callable[[CT_ModernComment], CT_ModernComment]
     cm_lst: list[CT_ModernComment]
 
     cm = ZeroOrMore("p188:cm")
+
+    @classmethod
+    def new(cls) -> CT_ModernCommentList:
+        """Return a new, empty `p188:cmLst` element."""
+        return parse_xml("<p188:cmLst %s/>" % nsdecls("p188", "a", "r"))
+
+    def add_cm(
+        self, author_id: str, created: str, sld_id: int, creation_id: int, text: str
+    ) -> CT_ModernComment:
+        """Append and return a new slide-anchored thread."""
+        cm = self._insert_cm(CT_ModernComment.new(author_id, created, sld_id, creation_id))
+        cm.text = text
+        return cm
+
+
+def new_guid() -> str:
+    """Return a new random GUID in the braced upper-case form PowerPoint writes."""
+    return "{%s}" % str(uuid.uuid4()).upper()
 
 
 _XSD_DATETIME_RE = re.compile(

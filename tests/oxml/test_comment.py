@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 
 import pytest
 
@@ -94,7 +95,8 @@ class DescribeCT_ModernComment:
     def it_provides_access_to_its_replies_in_order(self):
         cm = element(
             "p188:cm{id=c1,authorId=a1,created=x}/(pc:sldMkLst/pc:sldMk{sldId=256}"
-            ',p188:replyLst/(p188:reply{id=r1,authorId=b2,created=y}/p188:txBody/(a:bodyPr,a:p/a:r/a:t"one")'
+            ",p188:replyLst/(p188:reply{id=r1,authorId=b2,created=y}"
+            '/p188:txBody/(a:bodyPr,a:p/a:r/a:t"one")'
             ',p188:reply{id=r2,authorId=a1,created=z,status=resolved})'
             ',p188:txBody/(a:bodyPr,a:p))'
         )
@@ -166,3 +168,68 @@ class Describe_parse_xsd_datetime:
     )
     def it_parses_an_xsd_dateTime(self, value: str, expected_value: dt.datetime | None):
         assert _parse_xsd_datetime(value) == expected_value
+
+
+class DescribeModernCommentWriting:
+    """Unit-test suite for the builders on the modern comment element classes."""
+
+    def it_adds_an_author_with_a_fresh_guid(self):
+        authorLst = CT_ModernAuthorList.new()
+
+        alice = authorLst.add_author("Alice", "AA")
+        bob = authorLst.add_author("Bob", None)
+
+        assert re.match(r"^\{[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\}$", alice.id)
+        assert alice.id != bob.id
+        assert (alice.name, alice.initials, alice.userId, alice.providerId) == (
+            "Alice",
+            "AA",
+            "Alice",
+            "None",
+        )
+        assert bob.get("initials") is None
+        assert authorLst.author_lst == [alice, bob]
+
+    def it_adds_a_slide_anchored_thread(self):
+        cmLst = CT_ModernCommentList.new()
+
+        cm = cmLst.add_cm("{A1}", "2024-05-01T09:30:00.000", 257, 99, "one\n\nthree")
+
+        assert cmLst.cm_lst == [cm]
+        assert (cm.authorId, cm.created, cm.status) == ("{A1}", "2024-05-01T09:30:00.000", "active")
+        assert cm.anchor_tag == "pc:sldMkLst"
+        assert (cm.sldMkLst.sldMk.sldId, cm.sldMkLst.sldMk.cId) == (257, 99)
+        assert cm.xpath("./pc:sldMkLst/*[1]")[0].tag.endswith("}docMk")
+        assert cm.text == "one\n\nthree"
+        assert [c.tag.split("}")[1] for c in cm.txBody] == ["bodyPr", "lstStyle", "p", "p", "p"]
+
+    def it_adds_replies_after_existing_ones_and_before_the_text(self):
+        cm = CT_ModernCommentList.new().add_cm("{A1}", "t0", 256, 1, "thread")
+
+        first = cm.add_reply("{B2}", "t1", "first")
+        second = cm.add_reply("{A1}", "t2", "second")
+
+        assert cm.reply_lst == [first, second]
+        assert [(r.authorId, r.created, r.text) for r in cm.reply_lst] == [
+            ("{B2}", "t1", "first"),
+            ("{A1}", "t2", "second"),
+        ]
+        assert first.id != second.id
+        assert [c.tag.split("}")[1] for c in cm] == ["sldMkLst", "replyLst", "txBody"]
+
+    def it_can_change_its_status(self):
+        cm = CT_ModernCommentList.new().add_cm("{A1}", "t0", 256, 1, "thread")
+
+        cm.status = "resolved"
+        assert cm.get("status") == "resolved"
+
+        cm.status = "active"
+        assert cm.get("status") is None
+
+    def it_replaces_its_text(self):
+        cm = CT_ModernCommentList.new().add_cm("{A1}", "t0", 256, 1, "old")
+
+        cm.text = "new"
+
+        assert cm.text == "new"
+        assert len(cm.xpath("./p188:txBody")) == 1

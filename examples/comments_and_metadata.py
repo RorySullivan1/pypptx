@@ -1,6 +1,6 @@
 """Comments, tags, sections, and custom document properties.
 
-Demonstrates adding comments to slides, setting key-value tags,
+Demonstrates adding legacy and modern (threaded) comments to slides, setting key-value tags,
 creating presentation sections, and custom properties.
 Saves to comments_and_metadata.pptx.
 """
@@ -25,6 +25,14 @@ txBox2.text_frame.paragraphs[0].font.size = Pt(24)
 slide1.comments.add("Alice", "AJ", "Please review the layout.", x=100, y=200)
 slide1.comments.add("Bob", "BK", "Looks good to me!", x=100, y=400)
 print(f"Slide 1 has {len(slide1.comments)} comments")
+
+# Add a modern threaded comment to slide 2, reply to it, and resolve it
+thread = slide2.threaded_comments.add("Can we add a chart here?", "Alice", "AJ")
+thread.reply("Added one in the next revision.", "Bob", "BK")
+thread.resolved = True
+for thread in slide2.threaded_comments:
+    replies = ", ".join(f"{r.author}: {r.text}" for r in thread.replies)
+    print(f"Thread by {thread.author} (resolved={thread.resolved}): {thread.text} [{replies}]")
 
 # Set tags on slide 1 (key-value metadata)
 slide1.tags["status"] = "draft"

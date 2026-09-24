@@ -42,7 +42,7 @@ if TYPE_CHECKING:
         CT_ModernComment,
         CT_ModernCommentReply,
     )
-    from pptx.parts.comments import AuthorsPart, CommentAuthorsPart
+    from pptx.parts.comments import CommentAuthorsPart
     from pptx.parts.slide import SlideLayoutPart, SlideMasterPart, SlidePart
     from pptx.parts.tags import TagsPart
     from pptx.presentation import Presentation
@@ -962,7 +962,7 @@ class Comment:
 class ThreadedComments:
     """The modern (threaded) comment threads on a slide, in document order.
 
-    Supports iteration, len(), and indexed access.
+    Supports iteration, len(), indexed access, and add().
     """
 
     def __init__(self, slide: Slide):
@@ -976,10 +976,8 @@ class ThreadedComments:
         comments_part = self._slide.part.modern_comments_part
         if comments_part is None:
             return
-        presentation_part = cast("PresentationPart", self._slide.part.package.presentation_part)
-        authors_part = presentation_part.authors_part
         for cm in comments_part:
-            yield ThreadedComment(cm, authors_part)
+            yield ThreadedComment(cm, self._presentation_part)
 
     def __getitem__(self, idx: int) -> ThreadedComment:
         threads = list(self)
@@ -987,15 +985,42 @@ class ThreadedComments:
             raise IndexError("threaded comment index out of range")
         return threads[idx]
 
+    def add(self, text: str, author: str, initials: str | None = None) -> ThreadedComment:
+        """Start a new thread on this slide and return it.
+
+        `author` is the display name PowerPoint shows; an author already recorded under that
+        name is reused, otherwise one is added with `initials`. The thread is anchored to the
+        slide and stamped with the current local time, as PowerPoint does.
+        """
+        slide_part = self._slide.part
+        author_elm = self._presentation_part.get_or_add_authors_part().get_or_add_author(
+            author, initials
+        )
+        comments_part = slide_part.get_or_add_modern_comments_part()
+        cm = comments_part.add_thread(
+            author_id=author_elm.id,
+            created=_now_xsd_datetime(),
+            sld_id=slide_part.slide_id,
+            creation_id=slide_part._element.cSld.get_or_add_creation_id(),
+            text=text,
+        )
+        return ThreadedComment(cm, self._presentation_part)
+
+    @property
+    def _presentation_part(self) -> PresentationPart:
+        return cast("PresentationPart", self._slide.part.package.presentation_part)
+
 
 class _BaseThreadedComment:
     """Properties common to the comment that starts a thread and each reply to it."""
 
     def __init__(
-        self, element: CT_ModernComment | CT_ModernCommentReply, authors_part: AuthorsPart | None
+        self,
+        element: CT_ModernComment | CT_ModernCommentReply,
+        presentation_part: PresentationPart,
     ):
         self._element = element
-        self._authors_part = authors_part
+        self._presentation_part = presentation_part
 
     @property
     def author(self) -> str:
@@ -1030,9 +1055,10 @@ class _BaseThreadedComment:
 
     @property
     def _author(self):
-        if self._authors_part is None:
+        authors_part = self._presentation_part.authors_part
+        if authors_part is None:
             return None
-        return self._authors_part.get_author(self._element.authorId)
+        return authors_part.get_author(self._element.authorId)
 
 
 class ThreadedComment(_BaseThreadedComment):
@@ -1057,15 +1083,33 @@ class ThreadedComment(_BaseThreadedComment):
         pos = self._element.pos
         return None if pos is None else (int(pos.x), int(pos.y))
 
+    def reply(self, text: str, author: str, initials: str | None = None) -> CommentReply:
+        """Add a reply to the end of this thread and return it.
+
+        `author` and `initials` are handled as in |ThreadedComments.add|.
+        """
+        author_elm = self._presentation_part.get_or_add_authors_part().get_or_add_author(
+            author, initials
+        )
+        reply = self._element.add_reply(author_elm.id, _now_xsd_datetime(), text)
+        return CommentReply(reply, self._presentation_part)
+
     @property
     def replies(self) -> list[CommentReply]:
         """The replies to this thread, oldest first as stored in the file."""
-        return [CommentReply(reply, self._authors_part) for reply in self._element.reply_lst]
+        return [CommentReply(reply, self._presentation_part) for reply in self._element.reply_lst]
 
     @property
     def resolved(self) -> bool:
-        """True when the thread has been resolved in PowerPoint."""
+        """True when the thread has been resolved.
+
+        Assigning True resolves the thread; assigning False reopens it.
+        """
         return self._element.status == "resolved"
+
+    @resolved.setter
+    def resolved(self, value: bool) -> None:
+        self._element.status = "resolved" if value else "active"
 
     @property
     def status(self) -> str:
@@ -1077,6 +1121,14 @@ class CommentReply(_BaseThreadedComment):
     """One reply in a modern comment thread."""
 
     _element: CT_ModernCommentReply
+
+
+def _now_xsd_datetime() -> str:
+    """The current local time as an `xsd:dateTime` with milliseconds and no zone.
+
+    This is the form PowerPoint writes in the `created` attribute of a modern comment.
+    """
+    return dt.datetime.now().isoformat(timespec="milliseconds")
 
 
 def _source_theme_part(

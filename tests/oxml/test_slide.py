@@ -64,3 +64,48 @@ class DescribeCT_Slide:
         sld.remove_comment_rel()
 
         assert sld.xpath("./p:extLst") == []
+
+    def it_can_point_its_comment_relationship_at_an_rId(self):
+        sld = self._sld("{X}", "C")
+
+        sld.set_comment_rel("rId4")
+
+        assert sld.comment_rel_rId == "rId4"
+        assert len(sld.xpath("./p:extLst/p:ext")) == 2
+
+    def and_it_adds_the_extLst_after_the_other_children_when_there_is_none(self):
+        sld = self._sld()
+
+        sld.set_comment_rel("rId4")
+
+        assert sld.comment_rel_rId == "rId4"
+        assert sld[-1].tag.endswith("}extLst")
+
+
+class DescribeCT_CommonSlideData:
+    """Unit-test suite for the `p14:creationId` extension of `CT_CommonSlideData`."""
+
+    def it_knows_its_creation_id(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+        from pptx.oxml.slide import CREATION_ID_EXT_URI
+
+        cSld = parse_xml(
+            '<p:cSld %s><p:spTree/><p:extLst><p:ext uri="%s"><p14:creationId val="42"/></p:ext>'
+            "</p:extLst></p:cSld>" % (nsdecls("p", "p14"), CREATION_ID_EXT_URI)
+        )
+
+        assert cSld.creation_id == 42
+        assert cSld.get_or_add_creation_id() == 42
+
+    def it_adds_a_creation_id_when_there_is_none(self):
+        from pptx.oxml import parse_xml
+        from pptx.oxml.ns import nsdecls
+
+        cSld = parse_xml("<p:cSld %s><p:spTree/></p:cSld>" % nsdecls("p"))
+
+        creation_id = cSld.get_or_add_creation_id()
+
+        assert 1 <= creation_id <= 0xFFFFFFFF
+        assert cSld.creation_id == creation_id
+        assert cSld[-1].tag.endswith("}extLst")

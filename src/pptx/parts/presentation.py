@@ -276,6 +276,16 @@ class PresentationPart(XmlPart):
         except KeyError:
             return None
 
+    def get_or_add_authors_part(self) -> AuthorsPart:
+        """The |AuthorsPart| for modern comments, created and related when not present."""
+        authors_part = self.authors_part
+        if authors_part is None:
+            from pptx.parts.comments import AuthorsPart
+
+            authors_part = AuthorsPart.new(self.package)
+            self.relate_to(authors_part, RT.AUTHORS)
+        return authors_part
+
     @property
     def core_properties(self) -> CorePropertiesPart:
         """A |CoreProperties| object for the presentation.
