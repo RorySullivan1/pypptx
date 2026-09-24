@@ -89,3 +89,17 @@ class DescribeCT_ShowProperties:
 
         assert showPr.penClr is penClr
         assert penClr.eg_colorChoice.val == "FF0000"
+
+
+class DescribeShowPrCustomShow:
+    """`p:showPr/p:custShow` shares its tag with the `p:custShowLst/p:custShow` definition."""
+
+    def it_reads_the_custom_show_id_through_the_shared_element_class(self):
+        from pptx.oxml.presentation import CT_CustomShow
+
+        showPr = element("p:showPr/p:custShow{id=3}")
+        definition = element("p:custShowLst/p:custShow{name=A,id=3}")[0]
+
+        assert isinstance(showPr.custShow, CT_CustomShow)
+        assert showPr.custShow.id == 3
+        assert definition.name == "A"

@@ -101,7 +101,6 @@ class CT_IndexRange(BaseOxmlElement):
     end: int = RequiredAttribute("end", XsdInt)  # pyright: ignore[reportAssignmentType]
 
 
-class CT_CustomShowId(BaseOxmlElement):
-    """`p:custShow` element, a reference to a custom show by id."""
-
-    id: int = RequiredAttribute("id", XsdUnsignedInt)  # pyright: ignore[reportAssignmentType]
+# -- NOTE: `p:showPr/p:custShow{id}` (the custom show to present) shares its tag with the
+# -- `p:custShowLst/p:custShow{name,id}` definition, and element classes are looked up by tag, so
+# -- it inflates as `pptx.oxml.presentation.CT_CustomShow`; only its `id` is used here.

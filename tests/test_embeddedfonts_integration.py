@@ -63,6 +63,15 @@ class DescribeEmbeddedFontsIntegration:
         assert font.has_regular is True
         assert font.has_bold is False
 
+    def it_writes_font_data_back_unchanged_when_untouched(self, tmp_path):
+        first_path, second_path = tmp_path / "first.pptx", tmp_path / "second.pptx"
+        _build_presentation_with_embedded_font().save(str(first_path))
+
+        Presentation(str(first_path)).save(str(second_path))
+
+        with zipfile.ZipFile(second_path) as zf:
+            assert zf.read("ppt/fonts/font1.fntdata") == calibriz_ttf_path.read_bytes()
+
     def it_removes_the_font_part_and_relationship_on_save_after_remove(self, tmp_path):
         prs = _build_presentation_with_embedded_font("Calibri")
         pptx_path = tmp_path / "with-font.pptx"

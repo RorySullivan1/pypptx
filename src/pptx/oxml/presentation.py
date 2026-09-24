@@ -15,6 +15,7 @@ from pptx.oxml.simpletypes import (
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     OptionalAttribute,
+    OxmlElement,
     RequiredAttribute,
     ZeroOrMore,
     ZeroOrOne,
@@ -250,10 +251,9 @@ class CT_CustomShowSlideList(BaseOxmlElement):
 
     def add_sld(self, rId: str) -> BaseOxmlElement:
         """Create and return a new `p:sld` child element referencing `rId`."""
-        from lxml import etree
-
-        sld = etree.SubElement(self, qn("p:sld"))
+        sld = OxmlElement("p:sld")
         sld.set(qn("r:id"), rId)
+        self.insert_element_before(sld, "p:extLst")
         return sld
 
     def remove_sld_with_rId(self, rId: str) -> bool:

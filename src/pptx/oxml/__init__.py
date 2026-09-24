@@ -690,7 +690,6 @@ register_element_cls("p:tagLst", CT_TagList)
 
 
 from pptx.oxml.presprops import (  # noqa: E402
-    CT_CustomShowId,
     CT_IndexRange,
     CT_PresentationProperties,
     CT_ShowInfoBrowse,
@@ -703,7 +702,6 @@ register_element_cls("p:showPr", CT_ShowProperties)
 register_element_cls("p:browse", CT_ShowInfoBrowse)
 register_element_cls("p:kiosk", CT_ShowInfoKiosk)
 register_element_cls("p:sldRg", CT_IndexRange)
-register_element_cls("p:custShow", CT_CustomShowId)
 register_element_cls("p:penClr", CT_Color)
 
 

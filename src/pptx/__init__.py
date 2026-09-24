@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pptx.exc as exceptions
 from pptx.api import Presentation
 from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.package import Part as _BlobPart
 from pptx.opc.package import PartFactory, XmlPart
 from pptx.parts.chart import ChartPart
 from pptx.parts.comments import (
@@ -82,6 +83,9 @@ content_type_to_part_class_map: dict[str, type[Part]] = {
     CT.PML_TABLE_STYLES: TableStylesPart,
     CT.OFC_THEME: XmlPart,
     CT.OFC_THEME_OVERRIDE: XmlPart,
+    # -- embedded font data is opaque; held and written back as a blob --
+    CT.X_FONTDATA: _BlobPart,
+    CT.X_FONT_TTF: _BlobPart,
     # -- accommodate "image/jpg" as an alias for "image/jpeg" --
     "image/jpg": ImagePart,
 }
@@ -106,6 +110,7 @@ del (
     TableStylesPart,
     TagsPart,
     XmlPart,
+    _BlobPart,
     CT,
     PartFactory,
 )

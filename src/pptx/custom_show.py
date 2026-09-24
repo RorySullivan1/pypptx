@@ -72,12 +72,20 @@ class CustomShows(ParentedElementProxy):
     def remove(self, custom_show: CustomShow) -> None:
         """Remove `custom_show` from this collection.
 
+        If the slide-show settings select this show (`p:showPr/p:custShow`), they fall back to
+        showing all slides, so the settings never refer to a show that no longer exists.
+
         Raises |SlideError| if `custom_show` is not present in this collection.
         """
         custShowLst = self._prs_elm.custShowLst
         if custShowLst is None or custom_show._element not in custShowLst.custShow_lst:
             raise SlideError("custom_show not in this collection")
+        show_id = custom_show.id
         custShowLst.remove(custom_show._element)
+        if self.part.pres_props_part is not None:
+            settings = self._prs.slide_show_settings
+            if settings.custom_show_id == show_id:
+                settings.custom_show_id = None
 
     def _rId_for_slide(self, slide: Slide) -> str:
         """Return the rId this presentation's `p:sldIdLst` uses to refer to `slide`."""

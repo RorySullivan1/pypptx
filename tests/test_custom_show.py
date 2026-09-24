@@ -104,6 +104,21 @@ class DescribeCustomShows:
 
         assert len(custom_shows) == 0
 
+    def it_stops_the_slide_show_settings_selecting_a_removed_show(self):
+        from pptx import Presentation
+
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        kept = prs.custom_shows.add("Kept", [slide])
+        removed = prs.custom_shows.add("Removed", [slide])
+
+        prs.slide_show_settings.custom_show_id = kept.id
+        prs.custom_shows.remove(removed)
+        assert prs.slide_show_settings.custom_show_id == kept.id
+
+        prs.custom_shows.remove(kept)
+        assert prs.slide_show_settings.custom_show_id is None
+
     def it_raises_removing_a_custom_show_not_in_the_collection(self, add_fixture):
         custom_shows, _, _, _ = add_fixture
         foreign_show = CustomShow(element("p:custShow{name=Foreign,id=9}"), None)
