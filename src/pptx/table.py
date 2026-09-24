@@ -155,12 +155,12 @@ class Table:
         tblPr = self._tbl.tblPr
         if tblPr is None:
             return None
-        return tblPr.tblStyle
+        return tblPr.style_id
 
     @table_style_id.setter
     def table_style_id(self, value: str | None) -> None:
         tblPr = self._tbl.get_or_add_tblPr()
-        tblPr.tblStyle = value
+        tblPr.style_id = value
 
     @lazyproperty
     def rows(self) -> _RowCollection:

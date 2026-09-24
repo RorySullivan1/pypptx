@@ -157,6 +157,69 @@ for s in prs2.slides:
     assert textboxes[0].text_frame.text == "Original"
 """)
 
+    def it_gives_a_duplicated_slide_its_own_chart(self):
+        _run_roundtrip_test("""\
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+chart_data = CategoryChartData()
+chart_data.categories = ["a", "b"]
+chart_data.add_series("S1", (1, 2))
+slide.shapes.add_chart(
+    XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(1), Inches(4), Inches(3), chart_data
+)
+dup = prs.slides.duplicate(slide)
+assert slide.shapes[0].chart.part is not dup.shapes[0].chart.part
+
+new_data = CategoryChartData()
+new_data.categories = ["a", "b"]
+new_data.add_series("S1", (7, 8))
+dup.shapes[0].chart.replace_data(new_data)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+values = [tuple(s.shapes[0].chart.plots[0].series[0].values) for s in prs2.slides]
+assert values == [(1.0, 2.0), (7.0, 8.0)], values
+partnames = {s.shapes[0].chart.part.partname for s in prs2.slides}
+assert len(partnames) == 2, partnames
+""")
+
+    def it_keeps_the_workbook_of_an_imported_chart(self):
+        _run_roundtrip_test("""\
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
+
+src = Presentation()
+src_slide = src.slides.add_slide(src.slide_layouts[6])
+for top in (Inches(0), Inches(3)):
+    chart_data = CategoryChartData()
+    chart_data.categories = ["a", "b"]
+    chart_data.add_series("S1", (1, 2) if top == 0 else (3, 4))
+    src_slide.shapes.add_chart(
+        XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), top, Inches(4), Inches(2), chart_data
+    )
+
+dst = Presentation()
+dst.slides.import_slide(src.slides[0])
+
+stream = BytesIO()
+dst.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+charts = [shape.chart for shape in prs2.slides[0].shapes]
+assert [tuple(c.plots[0].series[0].values) for c in charts] == [(1.0, 2.0), (3.0, 4.0)]
+workbooks = [c.part.chart_workbook.xlsx_part for c in charts]
+assert all(wb is not None for wb in workbooks)
+assert len({wb.partname for wb in workbooks}) == 2
+assert len({c.part.partname for c in charts}) == 2
+""")
+
     def it_round_trips_hidden_shapes(self):
         _run_roundtrip_test("""\
 prs = Presentation()
