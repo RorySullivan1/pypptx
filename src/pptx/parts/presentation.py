@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import IO, TYPE_CHECKING, Iterable
+from typing import IO, TYPE_CHECKING, Iterable, cast
 
 from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -15,6 +15,7 @@ from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.oxml.xmlchemy import BaseOxmlElement
+    from pptx.parts.comments import AuthorsPart
     from pptx.parts.coreprops import CorePropertiesPart
     from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
@@ -50,7 +51,7 @@ class PresentationPart(XmlPart):
         new_slide_part = SlidePart(partname, CT.PML_SLIDE, self.package, new_element)
 
         # --- per-slide parts that should NOT be shared with the duplicate ---
-        _skip_reltypes = {RT.NOTES_SLIDE, RT.COMMENTS, RT.TAGS}
+        _skip_reltypes = {RT.NOTES_SLIDE, RT.COMMENTS, RT.MODERN_COMMENTS, RT.TAGS}
 
         # --- a chart holds editable data, so each slide gets its own copy; images and media
         # --- are immutable blobs and stay shared ---
@@ -71,6 +72,10 @@ class PresentationPart(XmlPart):
 
         # --- update rId references in the cloned XML (r:id, r:embed, r:link) ---
         _remap_rIds(new_element, rId_map)
+        # --- comments aren't carried over, so drop the extension that points at them; the copy
+        # --- is a new slide, so it also gets its own creation id (modern comments key on it) ---
+        new_element.remove_comment_rel()
+        new_element.cSld.renew_creation_id()
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
         return rId, new_slide_part.slide
@@ -95,7 +100,13 @@ class PresentationPart(XmlPart):
         target_layout_part = self._find_or_import_layout(source_layout_part)
 
         # --- per-slide parts that should NOT be imported ---
-        _skip_reltypes = {RT.NOTES_SLIDE, RT.COMMENTS, RT.TAGS, RT.SLIDE_LAYOUT}
+        _skip_reltypes = {
+            RT.NOTES_SLIDE,
+            RT.COMMENTS,
+            RT.MODERN_COMMENTS,
+            RT.TAGS,
+            RT.SLIDE_LAYOUT,
+        }
 
         # --- content parts (charts, images, media, OLE) come with their own relationships, e.g.
         # --- a chart's embedded workbook; structural parts keep the flat import ---
@@ -126,6 +137,10 @@ class PresentationPart(XmlPart):
 
         # --- update rId references in the cloned XML ---
         _remap_rIds(new_element, rId_map)
+        # --- comments aren't carried over, so drop the extension that points at them; the copy
+        # --- is a new slide, so it also gets its own creation id (modern comments key on it) ---
+        new_element.remove_comment_rel()
+        new_element.cSld.renew_creation_id()
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
         return rId, new_slide_part.slide
@@ -258,6 +273,24 @@ class PresentationPart(XmlPart):
         return None
 
     @property
+    def authors_part(self) -> AuthorsPart | None:
+        """The |AuthorsPart| naming the authors of modern comments, or None when not present."""
+        try:
+            return cast("AuthorsPart", self.part_related_by(RT.AUTHORS))
+        except KeyError:
+            return None
+
+    def get_or_add_authors_part(self) -> AuthorsPart:
+        """The |AuthorsPart| for modern comments, created and related when not present."""
+        authors_part = self.authors_part
+        if authors_part is None:
+            from pptx.parts.comments import AuthorsPart
+
+            authors_part = AuthorsPart.new(self.package)
+            self.relate_to(authors_part, RT.AUTHORS)
+        return authors_part
+
+    @property
     def core_properties(self) -> CorePropertiesPart:
         """A |CoreProperties| object for the presentation.
 
@@ -362,6 +395,7 @@ _STRUCTURAL_RELTYPES = frozenset(
         RT.HANDOUT_MASTER,
         RT.THEME,
         RT.COMMENTS,
+        RT.MODERN_COMMENTS,
         RT.TAGS,
     )
 )

@@ -14,7 +14,7 @@ from pptx.opc.packuri import PackURI
 from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide, CT_Slide
 from pptx.oxml.theme import CT_OfficeStyleSheet
 from pptx.parts.chart import ChartPart
-from pptx.parts.comments import CommentsPart
+from pptx.parts.comments import CommentsPart, ModernCommentsPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
 from pptx.parts.tags import TagsPart
 from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
@@ -237,6 +237,35 @@ class SlidePart(BaseSlidePart):
             comments_part = CommentsPart.default(self._package, partname)
             self.relate_to(comments_part, RT.COMMENTS)
             return comments_part
+
+    @property
+    def modern_comments_part(self) -> ModernCommentsPart | None:
+        """The |ModernCommentsPart| holding this slide's comment threads, or None if absent."""
+        try:
+            return cast(ModernCommentsPart, self.part_related_by(RT.MODERN_COMMENTS))
+        except KeyError:
+            return None
+
+    def get_or_add_modern_comments_part(self) -> ModernCommentsPart:
+        """The |ModernCommentsPart| for this slide, created and related when not present.
+
+        A new part is named after the slide as PowerPoint names it,
+        ``modernComment_<slide-id>_<creation-id>.xml`` in hex, and the slide's
+        `p188:commentRel` extension is pointed at the new relationship.
+        """
+        comments_part = self.modern_comments_part
+        if comments_part is not None:
+            return comments_part
+
+        creation_id = self._element.cSld.get_or_add_creation_id()
+        partname = PackURI(
+            "/ppt/comments/modernComment_%X_%X.xml" % (self.slide_id, creation_id)
+        )
+        if partname in {part.partname for part in self._package.iter_parts()}:
+            partname = self._package.next_partname("/ppt/comments/modernComment_%d.xml")
+        comments_part = ModernCommentsPart.new(partname, self._package)
+        self._element.set_comment_rel(self.relate_to(comments_part, RT.MODERN_COMMENTS))
+        return comments_part
 
     @property
     def has_comments(self) -> bool:

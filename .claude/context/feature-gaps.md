@@ -155,6 +155,11 @@ New `CT_*` element classes defined and registered with `xmlchemy`.
 - [x] `CT_CommentList` (`p:cmLst`) — container for comments
 - [x] `CT_CommentAuthor` (`p:cmAuthor`) — `id`, `name`, `initials`, `lastIdx`, `clrIdx`
 - [x] `CT_CommentAuthorList` (`p:cmAuthorLst`) — container for authors
+- [x] Modern comments ([MS-PPTX] 2.16.3, `p188` namespace) — `CT_ModernCommentList` (`p188:cmLst`),
+  `CT_ModernComment` (`p188:cm`: `id`, `authorId`, `created`, `status`, `title`; anchor, `pos`,
+  `replyLst`, `txBody`), `CT_ModernCommentReply` (`p188:reply`), `CT_ModernAuthorList` /
+  `CT_ModernAuthor` (`p188:authorLst` / `p188:author`), `CT_SlideMonikerList` (`pc:sldMkLst`).
+  Slide side: `p188:commentRel` extension on `p:sld`, `p14:creationId` extension on `p:cSld`
 
 ### 4.7 Picture Format Effects — `oxml/dml/picture.py` (DONE)
 - [x] `CT_LuminanceEffect` (`a:lum`) — `bright`, `contrast` attributes
@@ -439,6 +444,12 @@ _Prerequisites: Section 4.6 (comment elements)_
 - [x] Comment positioning — `Comment.position` returns (x, y) tuple
 - [x] Comment metadata — `Comment.author`, `Comment.text` (r/w), `Comment.datetime`, `Comment.delete()`
 - [x] Part registration — `CommentsPart` and `CommentAuthorsPart` registered in PartFactory
+- [x] Modern threaded comments — `Slide.threaded_comments` returns `ThreadedComments` with iterate,
+  len, indexed access and `add(text, author, initials=None)`; each `ThreadedComment` has `author`,
+  `author_initials`, `created`, `text`, `status`, `resolved` (r/w), `anchor`, `position`,
+  `replies` and `reply(text, author, initials=None)`. `ModernCommentsPart` and `AuthorsPart` are
+  registered in PartFactory. Only slide-level anchoring is written; shape and text anchors are read
+  only. Duplicated and imported slides leave modern comments behind, like legacy ones
 
 ---
 

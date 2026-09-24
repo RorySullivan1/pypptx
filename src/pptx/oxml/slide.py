@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING, Callable, cast
 
 from pptx.oxml import parse_from_template, parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
-from pptx.oxml.ns import nsdecls
+from pptx.oxml.ns import nsdecls, qn
 from pptx.oxml.simpletypes import XsdBoolean, XsdString
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     Choice,
     OneAndOnlyOne,
     OptionalAttribute,
+    OxmlElement,
     RequiredAttribute,
     ZeroOrMore,
     ZeroOrOne,
@@ -22,6 +24,12 @@ from pptx.oxml.xmlchemy import (
 if TYPE_CHECKING:
     from pptx.oxml.shapes.groupshape import CT_GroupShape
     from pptx.oxml.text import CT_TextListStyle
+
+
+# -- `p:ext/@uri` of the slide extension holding `p188:commentRel`, per [MS-PPTX] --
+COMMENT_REL_EXT_URI = "{6950BFC3-D8DA-4A85-94F7-54DA5524770B}"
+# -- `p:ext/@uri` of the common-slide-data extension holding `p14:creationId`, per [MS-PPTX] --
+CREATION_ID_EXT_URI = "{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}"
 
 
 class _BaseSlideElement(BaseOxmlElement):
@@ -94,16 +102,53 @@ class CT_CommonSlideData(BaseOxmlElement):
 
     _remove_bg: Callable[[], None]
     get_or_add_bg: Callable[[], CT_Background]
+    get_or_add_extLst: Callable[[], BaseOxmlElement]
 
     _tag_seq = ("p:bg", "p:spTree", "p:custDataLst", "p:controls", "p:extLst")
     bg: CT_Background | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:bg", successors=_tag_seq[1:]
     )
     spTree: CT_GroupShape = OneAndOnlyOne("p:spTree")  # pyright: ignore[reportAssignmentType]
+    extLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:extLst", successors=()
+    )
     del _tag_seq
     name: str = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "name", XsdString, default=""
     )
+
+    @property
+    def creation_id(self) -> int | None:
+        """Value of the `p14:creationId` extension identifying this slide, or None if absent."""
+        vals = self.xpath(
+            "./p:extLst/p:ext[@uri='%s']/p14:creationId/@val" % CREATION_ID_EXT_URI
+        )
+        return int(vals[0]) if vals else None
+
+    def renew_creation_id(self) -> None:
+        """Give a slide that has a `p14:creationId` a new random one, as a copied slide needs."""
+        vals = self.xpath(
+            "./p:extLst/p:ext[@uri='%s']/p14:creationId" % CREATION_ID_EXT_URI
+        )
+        for creationId in vals:
+            creationId.set("val", str(random.randint(1, 0xFFFFFFFF)))
+
+    def get_or_add_creation_id(self) -> int:
+        """Return the `p14:creationId` value, first adding a random one when there is none.
+
+        PowerPoint gives every slide a creation id; modern comments name their slide by it.
+        """
+        creation_id = self.creation_id
+        if creation_id is not None:
+            return creation_id
+        creation_id = random.randint(1, 0xFFFFFFFF)
+        ext = OxmlElement("p:ext")
+        ext.set("uri", CREATION_ID_EXT_URI)
+        creationId = OxmlElement("p14:creationId")
+        creationId.set("val", str(creation_id))
+        ext.append(creationId)
+        self.get_or_add_extLst().append(ext)
+        return creation_id
 
     def get_or_add_bgPr(self) -> CT_BackgroundProperties:
         """Return `p:bg/p:bgPr` grandchild.
@@ -185,6 +230,7 @@ class CT_NotesSlide(_BaseSlideElement):
 class CT_Slide(_BaseSlideElement):
     """`p:sld` element, root element of a slide part (XML document)."""
 
+    get_or_add_extLst: Callable[[], BaseOxmlElement]
     get_or_add_hf: Callable[[], CT_HeaderFooter]
 
     _tag_seq = ("p:cSld", "p:clrMapOvr", "p:transition", "p:timing", "p:hf", "p:extLst")
@@ -195,12 +241,41 @@ class CT_Slide(_BaseSlideElement):
     hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:hf", successors=_tag_seq[5:]
     )
+    extLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:extLst", successors=()
+    )
     del _tag_seq
 
     @classmethod
     def new(cls) -> CT_Slide:
         """Return new `p:sld` element configured as base slide shape."""
         return cast(CT_Slide, parse_xml(cls._sld_xml()))
+
+    @property
+    def comment_rel_rId(self) -> str | None:
+        """`r:id` of the `p188:commentRel` extension naming the modern comments part, or None."""
+        rIds = self.xpath(
+            "./p:extLst/p:ext[@uri='%s']/p188:commentRel/@r:id" % COMMENT_REL_EXT_URI
+        )
+        return str(rIds[0]) if rIds else None
+
+    def set_comment_rel(self, rId: str) -> None:
+        """Point the `p188:commentRel` extension at relationship `rId`, adding it if needed."""
+        self.remove_comment_rel()
+        ext = OxmlElement("p:ext")
+        ext.set("uri", COMMENT_REL_EXT_URI)
+        commentRel = OxmlElement("p188:commentRel")
+        commentRel.set(qn("r:id"), rId)
+        ext.append(commentRel)
+        self.get_or_add_extLst().append(ext)
+
+    def remove_comment_rel(self) -> None:
+        """Remove the `p188:commentRel` extension, and `p:extLst` if that leaves it empty."""
+        for ext in self.xpath("./p:extLst/p:ext[@uri='%s']" % COMMENT_REL_EXT_URI):
+            extLst = ext.getparent()
+            extLst.remove(ext)
+            if len(extLst) == 0:
+                self.remove(extLst)
 
     @property
     def bg(self):

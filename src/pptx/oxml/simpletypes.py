@@ -314,6 +314,16 @@ class ST_BubbleScale(BaseIntType):
         cls.validate_int_in_range(value, 0, 300)
 
 
+class ST_CommentStatus(XsdTokenEnumeration):
+    """Valid values for the `status` attribute of a modern `<p188:cm>` or `<p188:reply>`."""
+
+    ACTIVE = "active"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
+
+    _members = (ACTIVE, RESOLVED, CLOSED)
+
+
 class ST_ContentType(XsdString):
     """
     Has a pretty wicked regular expression it needs to match in the schema,

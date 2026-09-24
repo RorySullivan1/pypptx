@@ -6,6 +6,7 @@ from __future__ import annotations
 # -- Maps namespace prefix to namespace name for all known PowerPoint XML namespaces --
 _nsmap = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "ac": "http://schemas.microsoft.com/office/drawing/2013/main/command",
     "a14": "http://schemas.microsoft.com/office/drawing/2010/main",
     "adec": "http://schemas.microsoft.com/office/drawing/2017/decorative",
     "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
@@ -24,6 +25,8 @@ _nsmap = {
     "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
     "p14": "http://schemas.microsoft.com/office/powerpoint/2010/main",
     "p15": "http://schemas.microsoft.com/office/powerpoint/2012/main",
+    "p188": "http://schemas.microsoft.com/office/powerpoint/2018/8/main",
+    "pc": "http://schemas.microsoft.com/office/powerpoint/2013/main/command",
     "pd": "http://schemas.openxmlformats.org/drawingml/2006/presentationDrawing",
     "pic": "http://schemas.openxmlformats.org/drawingml/2006/picture",
     "pr": "http://schemas.openxmlformats.org/package/2006/relationships",

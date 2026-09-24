@@ -1,4 +1,4 @@
-"""Comments parts for slide comments and comment authors."""
+"""Comments parts for slide comments and comment authors, legacy and modern."""
 
 from __future__ import annotations
 
@@ -7,7 +7,16 @@ from typing import TYPE_CHECKING, Callable, Iterator
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.package import XmlPart
 from pptx.opc.packuri import PackURI
-from pptx.oxml.comment import CT_Comment, CT_CommentAuthor, CT_CommentAuthorList, CT_CommentList
+from pptx.oxml.comment import (
+    CT_Comment,
+    CT_CommentAuthor,
+    CT_CommentAuthorList,
+    CT_CommentList,
+    CT_ModernAuthor,
+    CT_ModernAuthorList,
+    CT_ModernComment,
+    CT_ModernCommentList,
+)
 
 if TYPE_CHECKING:
     from pptx.package import Package
@@ -108,4 +117,78 @@ class CommentsPart(XmlPart):
         return len(self._element.cm_lst)
 
     def __iter__(self) -> Iterator[CT_Comment]:
+        return iter(self._element.cm_lst)
+
+
+class AuthorsPart(XmlPart):
+    """Corresponds to the ``/ppt/authors.xml`` part, the authors of modern comments.
+
+    The presentation part relates to it with the `RT.AUTHORS` relationship.
+    """
+
+    _element: CT_ModernAuthorList
+
+    @classmethod
+    def new(cls, package: Package) -> AuthorsPart:
+        """Return a new, empty |AuthorsPart| at ``/ppt/authors.xml``."""
+        return cls(
+            PackURI("/ppt/authors.xml"), CT.PML_AUTHORS, package, CT_ModernAuthorList.new()
+        )
+
+    def get_or_add_author(self, name: str, initials: str | None = None) -> CT_ModernAuthor:
+        """Return the first author named `name`, adding a new one when there is none.
+
+        Authors are matched on display name only, so two people who share a name are recorded as
+        one author.
+        """
+        for author in self._element.author_lst:
+            if author.name == name:
+                return author
+        return self._element.add_author(name, initials)
+
+    def get_author(self, author_id: str) -> CT_ModernAuthor | None:
+        """Return the author element whose GUID is `author_id`, or None."""
+        return self._element.get_author(author_id)
+
+    @property
+    def authors(self) -> list[CT_ModernAuthor]:
+        """List of all author elements."""
+        return self._element.author_lst
+
+    def __len__(self) -> int:
+        return len(self._element.author_lst)
+
+    def __iter__(self) -> Iterator[CT_ModernAuthor]:
+        return iter(self._element.author_lst)
+
+
+class ModernCommentsPart(XmlPart):
+    """Corresponds to a ``/ppt/comments/modernComment_*.xml`` part, one slide's comment threads.
+
+    A slide relates to it with the `RT.MODERN_COMMENTS` relationship and also names that
+    relationship in a `p188:commentRel` extension of its `p:sld/p:extLst`.
+    """
+
+    _element: CT_ModernCommentList
+
+    @classmethod
+    def new(cls, partname: PackURI, package: Package) -> ModernCommentsPart:
+        """Return a new |ModernCommentsPart| at `partname` holding no threads."""
+        return cls(partname, CT.PML_MODERN_COMMENTS, package, CT_ModernCommentList.new())
+
+    def add_thread(
+        self, author_id: str, created: str, sld_id: int, creation_id: int, text: str
+    ) -> CT_ModernComment:
+        """Append and return a new thread anchored to the slide these ids identify."""
+        return self._element.add_cm(author_id, created, sld_id, creation_id, text)
+
+    @property
+    def comments(self) -> list[CT_ModernComment]:
+        """List of all thread-starting comment elements."""
+        return self._element.cm_lst
+
+    def __len__(self) -> int:
+        return len(self._element.cm_lst)
+
+    def __iter__(self) -> Iterator[CT_ModernComment]:
         return iter(self._element.cm_lst)
