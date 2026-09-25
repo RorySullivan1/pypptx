@@ -48,6 +48,14 @@ class DescribeQn:
     def it_calculates_the_clark_name_for_an_ns_prefixed_tag_string(self, nsptag_str, clark_name):
         assert qn(nsptag_str) == clark_name
 
+    def it_caches_its_results(self):
+        qn.cache_clear()
+
+        assert qn("p:sp") == "{http://schemas.openxmlformats.org/presentationml/2006/main}sp"
+        qn("p:sp")
+
+        assert qn.cache_info().hits == 1
+
 
 # ===========================================================================
 # fixtures

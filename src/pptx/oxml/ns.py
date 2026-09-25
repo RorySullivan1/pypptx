@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+
 
 # -- Maps namespace prefix to namespace name for all known PowerPoint XML namespaces --
 _nsmap = {
@@ -130,6 +132,7 @@ def nsuri(nspfx: str):
     return _nsmap[nspfx]
 
 
+@functools.lru_cache(maxsize=None)
 def qn(namespace_prefixed_tag: str) -> str:
     """Return a Clark-notation qualified tag name corresponding to `namespace_prefixed_tag`.
 
@@ -137,6 +140,9 @@ def qn(namespace_prefixed_tag: str) -> str:
 
     As an example, `qn("p:cSld")` returns:
         `"{http://schemas.openxmlformats.org/drawingml/2006/main}cSld"`.
+
+    Results are cached: every element accessor calls this, tens of thousands of times per deck,
+    with a small fixed set of tags.
     """
     nsptag = NamespacePrefixedTag(namespace_prefixed_tag)
     return nsptag.clark_name

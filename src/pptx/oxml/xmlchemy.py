@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import threading
 from typing import Any, Callable, Iterable, Protocol, Sequence, Type, cast
 
 from lxml import etree
@@ -661,6 +662,29 @@ class ZeroOrOneChoice(_BaseChildElement):
 
 
 # -- lxml typing isn't quite right here, just ignore this error on _Element --
+# -- compiled XPath objects are cached per thread, so no XPath object is ever evaluated by two
+# -- threads at once; each cache is bounded because a few expressions embed an index --
+_XPATH_CACHE_SIZE = 512
+_xpath_cache = threading.local()
+
+
+def compiled_xpath(xpath_str: str) -> etree.XPath:
+    """Return the compiled `etree.XPath` for `xpath_str`, using the standard namespace mapping.
+
+    Compiling an XPath expression costs far more than evaluating it, and element accessors run
+    the same few expressions on every shape, so compiled expressions are cached (per thread).
+    """
+    cache: dict[str, etree.XPath] | None = getattr(_xpath_cache, "cache", None)
+    if cache is None:
+        cache = _xpath_cache.cache = {}
+    xpath = cache.get(xpath_str)
+    if xpath is None:
+        if len(cache) >= _XPATH_CACHE_SIZE:
+            cache.clear()
+        xpath = cache[xpath_str] = etree.XPath(xpath_str, namespaces=_nsmap)
+    return xpath
+
+
 class BaseOxmlElement(etree.ElementBase, metaclass=MetaOxmlElement):
     """Effective base class for all custom element classes.
 
@@ -708,9 +732,11 @@ class BaseOxmlElement(etree.ElementBase, metaclass=MetaOxmlElement):
     def xpath(self, xpath_str: str) -> Any:  # pyright: ignore[reportIncompatibleMethodOverride]
         """Override of `lxml` _Element.xpath() method.
 
-        Provides standard Open XML namespace mapping (`nsmap`) in centralized location.
+        Provides standard Open XML namespace mapping (`nsmap`) in centralized location, and
+        evaluates a compiled, cached `etree.XPath` rather than compiling `xpath_str` anew on
+        every call.
         """
-        return super().xpath(xpath_str, namespaces=_nsmap)
+        return compiled_xpath(xpath_str)(self)
 
     @property
     def _nsptag(self) -> str:

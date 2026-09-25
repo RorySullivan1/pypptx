@@ -6,11 +6,14 @@ is provided by the metaclass-built test classes at the end of the file.
 
 from __future__ import annotations
 
+import threading
+
 import pytest
+from lxml import etree
 
 from pptx.exc import InvalidXmlError
-from pptx.oxml import register_element_cls
-from pptx.oxml.ns import qn
+from pptx.oxml import register_element_cls, xmlchemy
+from pptx.oxml.ns import _nsmap, qn  # pyright: ignore[reportPrivateUsage]
 from pptx.oxml.simpletypes import BaseIntType
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
@@ -22,9 +25,50 @@ from pptx.oxml.xmlchemy import (
     ZeroOrMore,
     ZeroOrOne,
     ZeroOrOneChoice,
+    compiled_xpath,
 )
 
 from ..unitdata import BaseBuilder
+from ..unitutil.cxml import element
+
+
+class DescribeCompiledXPath:
+    """Unit-test suite for `pptx.oxml.xmlchemy.compiled_xpath` and `BaseOxmlElement.xpath`."""
+
+    def it_compiles_each_expression_once(self):
+        xpath = compiled_xpath("./p:nvSpPr/p:cNvPr")
+
+        assert isinstance(xpath, etree.XPath)
+        assert compiled_xpath("./p:nvSpPr/p:cNvPr") is xpath
+        assert compiled_xpath("./p:spPr") is not xpath
+
+    def it_finds_what_lxml_finds_with_the_standard_namespaces(self):
+        sp = element("p:sp/(p:nvSpPr/p:cNvPr{id=4,name=foo},p:spPr)")
+
+        assert sp.xpath("./p:nvSpPr/p:cNvPr/@name") == ["foo"]
+        assert sp.xpath("./p:nvSpPr/p:cNvPr") == etree.ElementBase.xpath(
+            sp, "./p:nvSpPr/p:cNvPr", namespaces=_nsmap
+        )
+        assert sp.xpath("count(./*)") == 2.0
+
+    def it_keeps_its_cache_bounded(self, monkeypatch):
+        monkeypatch.setattr(xmlchemy, "_XPATH_CACHE_SIZE", 4)
+        monkeypatch.setattr(xmlchemy, "_xpath_cache", threading.local())
+
+        for idx in range(10):
+            compiled_xpath(".//c:pt[@idx=%d]" % idx)
+
+        assert len(xmlchemy._xpath_cache.cache) <= 4
+
+    def it_keeps_a_separate_cache_for_each_thread(self):
+        here = compiled_xpath("./p:spPr")
+        there: list[etree.XPath] = []
+        thread = threading.Thread(target=lambda: there.append(compiled_xpath("./p:spPr")))
+        thread.start()
+        thread.join()
+
+        assert there[0] is not here
+        assert compiled_xpath("./p:spPr") is here
 
 
 class DescribeCustomElementClass:
