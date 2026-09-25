@@ -825,6 +825,9 @@ class MSO_SHAPE_TYPE(BaseEnum):
     MEDIA = (16, "Media")
     """Media"""
 
+    MODEL_3D = (30, "3D model")
+    """3D model"""
+
     OLE_CONTROL_OBJECT = (12, "OLE control object")
     """OLE control object"""
 

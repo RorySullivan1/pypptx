@@ -56,16 +56,21 @@ class CT_MarkupCompatibilityElement(BaseOxmlElement):
 def tree_elm(shape_elm: BaseOxmlElement) -> BaseOxmlElement:
     """The element that holds `shape_elm` as a direct child of its shape tree or group.
 
-    This is `shape_elm` itself, except for a shape that is the `mc:Choice` of an
-    `mc:AlternateContent` element (as a chartex chart is), where it is that alternate-content
-    element: moving, copying or removing the shape must act on the whole of it.
+    This is `shape_elm` itself, except for a shape inside the `mc:Choice` or `mc:Fallback` of an
+    `mc:AlternateContent` element (a chartex chart, 3D model, zoom or equation), where it is that
+    alternate-content element: moving, copying or removing the shape must act on the whole of it.
     """
+    alternateContent = alternate_content_of(shape_elm)
+    return shape_elm if alternateContent is None else alternateContent
+
+
+def alternate_content_of(shape_elm: BaseOxmlElement) -> BaseOxmlElement | None:
+    """The `mc:AlternateContent` element `shape_elm` is a choice or fallback of, if any."""
     parent = shape_elm.getparent()
-    if parent is not None and parent.tag == qn("mc:Choice"):
-        alternateContent = parent.getparent()
-        if alternateContent is not None:
-            return alternateContent
-    return shape_elm
+    if parent is not None and parent.tag in (qn("mc:Choice"), qn("mc:Fallback")):
+        return parent.getparent()
+    return None
+
 
 class BaseShapeElement(BaseOxmlElement):
     """Provides common behavior for shape element classes like CT_Shape, CT_Picture, etc."""

@@ -148,14 +148,29 @@ class CT_GroupShape(BaseShapeElement):
             if elm.tag in self._shape_tags:
                 yield elm
             elif elm.tag == qn("mc:AlternateContent"):
-                # -- a chartex chart is written as the `mc:Choice` of an alternate-content
-                # -- element; the graphic frame in that choice is the shape --
-                frames = elm.xpath(
-                    "./mc:Choice/p:graphicFrame[a:graphic/a:graphicData/@uri='%s']"
-                    % GRAPHIC_DATA_URI_CHARTEX
-                )
-                if frames:
-                    yield frames[0]
+                shape_elm = self._alternate_content_shape_elm(elm)
+                if shape_elm is not None:
+                    yield shape_elm
+
+    def _alternate_content_shape_elm(self, alternateContent: BaseOxmlElement):
+        """The element standing for the shape held in `alternateContent`, or |None|.
+
+        A chartex chart is its `mc:Choice` graphic frame, read through the chart API. Any other
+        wrapped shape (3D model, zoom, equation, ...) is represented by the shape in its
+        `mc:Fallback`, whose position and size are what an older reader shows, or by the shape in
+        its first `mc:Choice` when there is no fallback shape.
+        """
+        frames = alternateContent.xpath(
+            "./mc:Choice/p:graphicFrame[a:graphic/a:graphicData/@uri='%s']"
+            % GRAPHIC_DATA_URI_CHARTEX
+        )
+        if frames:
+            return frames[0]
+        for container in ("mc:Fallback", "mc:Choice"):
+            for elm in alternateContent.xpath("./%s/*" % container):
+                if elm.tag in self._shape_tags:
+                    return elm
+        return None
 
     @property
     def max_shape_id(self) -> int:

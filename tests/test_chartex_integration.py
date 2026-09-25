@@ -81,13 +81,15 @@ class DescribeReadingChartexCharts:
         assert list(series.categories) == xlsx_column(workbook(treemap), "B")
         assert list(series.values) == TREEMAP_VALUES == xlsx_column(workbook(treemap), "C")
 
-    def it_ignores_alternate_content_that_is_not_a_chartex_chart(self):
+    def it_yields_the_choice_frame_of_a_chartex_chart_even_with_a_fallback(self):
         spTree = element(
-            "p:spTree/(p:sp,mc:AlternateContent/mc:Choice/p:sp,"
-            "mc:AlternateContent/mc:Choice/p:graphicFrame/a:graphic/a:graphicData{uri=foo})"
+            "p:spTree/mc:AlternateContent/(mc:Choice/p:graphicFrame/a:graphic/a:graphicData"
+            "{uri=http://schemas.microsoft.com/office/drawing/2014/chartex},mc:Fallback/p:sp)"
         )
 
-        assert [elm.tag for elm in spTree.iter_shape_elms()] == [qn("p:sp")]
+        (shape_elm,) = spTree.iter_shape_elms()
+
+        assert shape_elm.tag == qn("p:graphicFrame")
 
 
 class DescribeAddingChartexCharts:

@@ -15,8 +15,9 @@ from pptx.oxml.ns import qn
 from pptx.oxml.shapes.autoshape import CT_Shape
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
 from pptx.oxml.shapes.picture import CT_Picture
-from pptx.oxml.shapes.shared import tree_elm
+from pptx.oxml.shapes.shared import alternate_content_of, tree_elm
 from pptx.oxml.simpletypes import ST_Direction
+from pptx.shapes.altcontent import AlternateContentShape
 from pptx.shapes.autoshape import AutoShapeType, Shape
 from pptx.shapes.base import BaseShape
 from pptx.shapes.connector import Connector
@@ -536,13 +537,13 @@ class _BaseGroupShapes(_BaseShapes):
         """
         outer_elm = tree_elm(shape.element)
         new_outer = deepcopy(outer_elm)
-        # -- for a chartex chart the copy is the whole `mc:AlternateContent`; the shape is the
-        # -- graphic frame in its `mc:Choice`, and its fallback shape shares that shape's id --
-        new_element = (
-            new_outer
-            if outer_elm is shape.element
-            else new_outer.xpath("./mc:Choice/p:graphicFrame")[0]
-        )
+        # -- for a shape wrapped in `mc:AlternateContent` (chartex chart, 3D model, ...) the copy
+        # -- is the whole wrapper; the shape is the element at the same place in the copy, and
+        # -- every shape in the wrapper takes the new id --
+        new_element = new_outer
+        if outer_elm is not shape.element:
+            container = shape.element.getparent()
+            new_element = new_outer[outer_elm.index(container)][container.index(shape.element)]
 
         # --- assign new shape ID and update name ---
         new_id = self._next_shape_id
@@ -969,6 +970,13 @@ def BaseShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShape
     """Return an instance of the appropriate shape proxy class for `shape_elm`."""
     tag = shape_elm.tag
 
+    # -- a shape wrapped in mc:AlternateContent (3D model, zoom, equation) is read-only; a
+    # -- chartex chart, also wrapped, is a graphic frame --
+    if alternate_content_of(shape_elm) is not None and not (
+        tag == qn("p:graphicFrame") and shape_elm.xpath("./a:graphic/a:graphicData/cx:chart")
+    ):
+        return AlternateContentShape(shape_elm, parent)
+
     if isinstance(shape_elm, CT_Picture):
         videoFiles = shape_elm.xpath("./p:nvPicPr/p:nvPr/a:videoFile")
         if videoFiles:
@@ -1027,7 +1035,7 @@ def _SlidePlaceholderFactory(shape_elm: ShapeElement, parent: ProvidesPart):
 
 def SlideShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShape:
     """Return appropriate shape object for `shape_elm` on a slide."""
-    if shape_elm.has_ph_elm:
+    if shape_elm.has_ph_elm and alternate_content_of(shape_elm) is None:
         return _SlidePlaceholderFactory(shape_elm, parent)
     return BaseShapeFactory(shape_elm, parent)
 

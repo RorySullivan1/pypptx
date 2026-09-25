@@ -1299,3 +1299,23 @@ with zipfile.ZipFile(stream) as z:
 assert slide_xml.count("<mc:AlternateContent") == 3
 assert slide_xml.count("<mc:Fallback>") == 3
 """)
+
+    def it_round_trips_alternate_content_shapes_unchanged(self):
+        _run_roundtrip_test("""\\
+from tests.unitutil.altcontent import altcontent_pptx
+
+prs = Presentation(altcontent_pptx())
+shapes = prs.slides[0].shapes
+assert len(shapes) == 5
+kinds = [getattr(shape, "content_kind", None) for shape in shapes]
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+shapes2 = Presentation(stream).slides[0].shapes
+
+assert len(shapes2) == 5
+assert [getattr(shape, "content_kind", None) for shape in shapes2] == kinds
+assert [shape.shape_id for shape in shapes2] == [10, 11, 12, 13, 14]
+assert len(shapes2._spTree.xpath("./mc:AlternateContent/mc:Fallback")) == 3
+""")
