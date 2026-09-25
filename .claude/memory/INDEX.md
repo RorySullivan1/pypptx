@@ -41,8 +41,8 @@
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
 - Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
-- Issue #51: trim the issue's checklist; perf harness now on main (`tests/perf/`, `pytest -m perf`, `python -m tests.perf.run_baseline`),
-  plan + baseline in `.claude/context/performance.md`; `examples/batch_process.py` added.
+- Issue #51 (checklist trimmed 2026-09-25): open items are proxy-tuple caching (paragraphs/runs/shapes) and a "no slower than
+  baseline" `pytest -m perf` gate in CI; plan + baseline in `.claude/context/performance.md`.
 - `unverified` surfaces (verification-surface.md): type checker, Sphinx build, real-world corpus.
 
 ## Log              (append-only pointers)
@@ -57,3 +57,4 @@
 - 2026-09-25 1600 | Epic #75 audio, trim/fade, AlternateContent shapes | sessions/2026-09-25-1600-epic-75-media-altcontent.md
 - 2026-09-25 1610 | Merge PR #105; epic #75 + #76-#78 closed | sessions/2026-09-25-1600-epic-75-media-altcontent.md
 - 2026-09-25 1630 | Issue #51: profile + qn/XPath caches (−39%/deck) | sessions/2026-09-25-1630-issue-51-perf-caches.md
+- 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
