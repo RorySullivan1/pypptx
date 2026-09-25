@@ -6,7 +6,7 @@
 - Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); cursor `.meta/version` = v0.2.0 shipped; next v0.2.1.
 - Epic #87 closed (PR #94): master text styles, theme style lists, `SlideMaster.apply_theme`.
 - Epic #79 closed (PR #96): freeform curves/arcs, line cap/join, picture fill, non-linear gradients, table row/col add/remove, cell text direction, autofit readouts.
-- Epic #62 SmartArt (#63-#65): detect, read node tree, edit node text (drops cached drawing) — PR open.
+- Epic #62 closed (PR #101): SmartArt detection, node-tree read, node text edit (drops cached drawing).
 - Epic #56 closed (PR #99): notes size, custom shows, slide-show settings (presProps), table-style listing, embedded fonts; `LazyXmlPart` keeps untouched parts byte-stable.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
 
@@ -39,3 +39,4 @@
 - 2026-09-24 1844 | Close epic #79 (shape/line/fill/table completeness) | sessions/2026-09-24-1844-epic-79-shape-line-fill-table.md
 - 2026-09-25 1202 | Close epic #56 (package-level presentation parts) | sessions/2026-09-25-1202-epic-56-presentation-parts.md
 - 2026-09-25 1400 | Epic #62 SmartArt read + node text edit | sessions/2026-09-25-1400-epic-62-smartart.md
+- 2026-09-25 1430 | Merge PR #101; epic #62 + #63-#65 closed | sessions/2026-09-25-1400-epic-62-smartart.md
