@@ -107,6 +107,61 @@ class DescribePresentationPart:
         related_part_.assert_called_once_with(prs_part, "rId42")
         assert slide_master is slide_master_
 
+    def it_finds_the_rId_a_slide_part_is_related_by(self, request, related_part_):
+        prs_elm = element(
+            "p:presentation/p:sldIdLst/(p:sldId{id=256,r:id=rId1},p:sldId{id=257,r:id=rId2})"
+        )
+        prs_part = PresentationPart(None, None, None, prs_elm)
+        target_part_ = instance_mock(request, SlidePart)
+        other_part_ = instance_mock(request, SlidePart)
+        related_part_.side_effect = lambda self, rId: (
+            target_part_ if rId == "rId2" else other_part_
+        )
+
+        rId = prs_part.rId_for_slide(target_part_)
+
+        assert rId == "rId2"
+
+    def it_returns_None_for_the_rId_of_an_unrelated_slide_part(self, request, related_part_):
+        prs_elm = element("p:presentation/p:sldIdLst/p:sldId{id=256,r:id=rId1}")
+        prs_part = PresentationPart(None, None, None, prs_elm)
+        other_part_ = instance_mock(request, SlidePart)
+        unrelated_part_ = instance_mock(request, SlidePart)
+        related_part_.return_value = other_part_
+
+        assert prs_part.rId_for_slide(unrelated_part_) is None
+
+    def it_returns_None_for_the_rId_with_no_sldIdLst(self, request):
+        prs_part = PresentationPart(None, None, None, element("p:presentation"))
+        assert prs_part.rId_for_slide(instance_mock(request, SlidePart)) is None
+
+    def it_drops_custom_show_refs_to_a_slide_rId(self):
+        prs_elm = element(
+            "p:presentation/p:custShowLst/p:custShow{name=A,id=0}/p:sldLst/"
+            "(p:sld{r:id=rId1},p:sld{r:id=rId2})"
+        )
+        prs_part = PresentationPart(None, None, None, prs_elm)
+
+        prs_part.drop_custom_show_refs("rId1")
+
+        assert prs_elm.xpath("p:custShowLst/p:custShow/p:sldLst/p:sld/@r:id") == ["rId2"]
+
+    def it_leaves_an_empty_custom_show_in_place_when_dropping_its_last_slide(self):
+        prs_elm = element(
+            "p:presentation/p:custShowLst/p:custShow{name=A,id=0}/p:sldLst/p:sld{r:id=rId1}"
+        )
+        prs_part = PresentationPart(None, None, None, prs_elm)
+
+        prs_part.drop_custom_show_refs("rId1")
+
+        assert len(prs_elm.custShowLst.custShow_lst) == 1
+        assert prs_elm.xpath("p:custShowLst/p:custShow/p:sldLst/p:sld") == []
+
+    def it_no_ops_dropping_custom_show_refs_with_no_custShowLst(self):
+        prs_part = PresentationPart(None, None, None, element("p:presentation"))
+        # -- raises nothing --
+        prs_part.drop_custom_show_refs("rId1")
+
     def it_can_rename_related_slide_parts(self, request, related_part_):
         rIds = tuple("rId%d" % n for n in range(5, 0, -1))
         slide_parts = tuple(instance_mock(request, SlidePart) for _ in range(5))

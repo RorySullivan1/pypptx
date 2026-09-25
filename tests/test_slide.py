@@ -546,6 +546,18 @@ class DescribeSlides:
         assert sldIdLst.sldId_lst[0].rId == "rId1"
         prs_part_.drop_rel.assert_called_once_with("rId2")
 
+    def it_removes_custom_show_refs_when_deleting_a_slide(self, part_prop_, prs_part_):
+        sldIdLst = element("p:sldIdLst/(p:sldId{r:id=rId1},p:sldId{r:id=rId2})")
+        slides = Slides(sldIdLst, None)
+        sld_elm = element("p:sld")
+        slide_to_delete = Slide(sld_elm, None)
+        other_slide = Slide(element("p:sld"), None)
+        prs_part_.related_slide.side_effect = lambda rId: (
+            slide_to_delete if rId == "rId2" else other_slide
+        )
+        slides.delete(slide_to_delete)
+        prs_part_.drop_custom_show_refs.assert_called_once_with("rId2")
+
     def it_can_move_a_slide(self):
         sldIdLst = element(
             "p:sldIdLst/(p:sldId{r:id=rId1,id=256},"

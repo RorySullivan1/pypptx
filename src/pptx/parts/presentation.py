@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.comments import AuthorsPart
     from pptx.parts.coreprops import CorePropertiesPart
+    from pptx.parts.presprops import PresPropsPart
+    from pptx.parts.tablestyles import TableStylesPart
     from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
 
@@ -290,6 +292,40 @@ class PresentationPart(XmlPart):
             self.relate_to(authors_part, RT.AUTHORS)
         return authors_part
 
+    # -- #59: presProps.xml (slide-show settings) -------------------------------------------
+
+    @property
+    def pres_props_part(self) -> PresPropsPart | None:
+        """The |PresPropsPart| for this presentation, or None when not present.
+
+        Accessing this property never creates the part; use
+        `get_or_add_pres_props_part()` to write slide-show settings.
+        """
+        try:
+            return cast("PresPropsPart", self.part_related_by(RT.PRES_PROPS))
+        except KeyError:
+            return None
+
+    def get_or_add_pres_props_part(self) -> PresPropsPart:
+        """The |PresPropsPart| for this presentation, created and related when absent."""
+        pres_props_part = self.pres_props_part
+        if pres_props_part is None:
+            from pptx.parts.presprops import PresPropsPart
+
+            pres_props_part = PresPropsPart.new(self.package)
+            self.relate_to(pres_props_part, RT.PRES_PROPS)
+        return pres_props_part
+
+    # -- #60: tableStyles.xml (available table styles) --------------------------------------
+
+    @property
+    def table_styles_part(self) -> TableStylesPart | None:
+        """The |TableStylesPart| for this presentation, or None when not present."""
+        try:
+            return cast("TableStylesPart", self.part_related_by(RT.TABLE_STYLES))
+        except KeyError:
+            return None
+
     @property
     def core_properties(self) -> CorePropertiesPart:
         """A |CoreProperties| object for the presentation.
@@ -343,6 +379,36 @@ class PresentationPart(XmlPart):
     def related_slide(self, rId: str) -> Slide:
         """Return |Slide| object for related |SlidePart| related by `rId`."""
         return self.related_part(rId).slide
+
+    def rId_for_slide(self, slide_part: SlidePart) -> str | None:
+        """Return the `r:id` by which `slide_part` is related to this presentation part.
+
+        Returns |None| if `slide_part` is not related to this presentation, e.g. it belongs
+        to a different presentation.
+        """
+        sldIdLst = self._element.sldIdLst
+        if sldIdLst is None:
+            return None
+        for sldId in sldIdLst.sldId_lst:
+            if self.related_part(sldId.rId) is slide_part:
+                return sldId.rId
+        return None
+
+    def drop_custom_show_refs(self, rId: str) -> None:
+        """Remove any `p:custShow/p:sldLst/p:sld` entries in this part referencing `rId`.
+
+        Called when the slide related by `rId` is being removed from the presentation, so
+        custom shows are not left pointing at a dangling relationship. A custom show that
+        ends up empty is left in place rather than being deleted.
+        """
+        custShowLst = self._element.custShowLst
+        if custShowLst is None:
+            return
+        for custShow in custShowLst.custShow_lst:
+            sldLst = custShow.sldLst
+            if sldLst is None:
+                continue
+            sldLst.remove_sld_with_rId(rId)
 
     def related_slide_master(self, rId: str) -> SlideMaster:
         """Return |SlideMaster| object for |SlideMasterPart| related by `rId`."""

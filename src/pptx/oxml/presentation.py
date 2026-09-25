@@ -4,10 +4,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
 
-from pptx.oxml.simpletypes import ST_SlideId, ST_SlideSizeCoordinate, XsdInt, XsdString
+from pptx.oxml.simpletypes import (
+    ST_SlideId,
+    ST_SlideSizeCoordinate,
+    XsdBoolean,
+    XsdInt,
+    XsdString,
+    XsdUnsignedInt,
+)
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     OptionalAttribute,
+    OxmlElement,
     RequiredAttribute,
     ZeroOrMore,
     ZeroOrOne,
@@ -16,6 +24,7 @@ from pptx.oxml.xmlchemy import (
 from pptx.oxml.ns import qn
 
 if TYPE_CHECKING:
+    from pptx.oxml.embeddedfont import CT_EmbeddedFontList
     from pptx.oxml.text import CT_TextListStyle
     from pptx.util import Length
 
@@ -24,10 +33,16 @@ class CT_Presentation(BaseOxmlElement):
     """`p:presentation` element, root of the Presentation part stored as `/ppt/presentation.xml`."""
 
     get_or_add_sldSz: Callable[[], CT_SlideSize]
+    get_or_add_notesSz: Callable[[], CT_NotesSize]
     get_or_add_sldIdLst: Callable[[], CT_SlideIdList]
     get_or_add_sldMasterIdLst: Callable[[], CT_SlideMasterIdList]
     get_or_add_defaultTextStyle: Callable[[], CT_TextListStyle]
+    get_or_add_embeddedFontLst: Callable[[], CT_EmbeddedFontList]
+    get_or_add_custShowLst: Callable[[], CT_CustomShowList]
 
+    # -- NOTE: `p:smartTags` (between `p:notesSz` and `p:embeddedFontLst`), `p:photoAlbum` and
+    # -- `p:custDataLst` (between `p:custShowLst` and `p:kinsoku`) and `p:modifyVerifier` (between
+    # -- `p:defaultTextStyle` and `p:extLst`) are valid schema positions not yet modeled here.
     _tag_seq = (
         "p:sldMasterIdLst",
         "p:notesMasterIdLst",
@@ -35,6 +50,8 @@ class CT_Presentation(BaseOxmlElement):
         "p:sldIdLst",
         "p:sldSz",
         "p:notesSz",
+        "p:embeddedFontLst",
+        "p:custShowLst",
         "p:kinsoku",
         "p:defaultTextStyle",
         "p:extLst",
@@ -50,13 +67,28 @@ class CT_Presentation(BaseOxmlElement):
     sldSz: CT_SlideSize | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:sldSz", successors=_tag_seq[5:]
     )
+    notesSz: CT_NotesSize | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:notesSz", successors=_tag_seq[6:]
+    )
+    embeddedFontLst: CT_EmbeddedFontList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:embeddedFontLst", successors=_tag_seq[7:]
+    )
+    custShowLst: CT_CustomShowList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:custShowLst", successors=_tag_seq[8:]
+    )
     defaultTextStyle: CT_TextListStyle | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "p:defaultTextStyle", successors=_tag_seq[8:]
+        "p:defaultTextStyle", successors=_tag_seq[10:]
     )
     del _tag_seq
 
     firstSlideNum: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
         "firstSlideNum", XsdInt
+    )
+    # -- (#61) toggled off by EmbeddedFonts.remove() when the last embedded font is
+    # -- removed, so PowerPoint doesn't re-embed fonts on next save; left untouched
+    # -- otherwise, since fonts may still be embedded --
+    embedTrueTypeFonts: bool | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "embedTrueTypeFonts", XsdBoolean
     )
 
     _SECTION_EXT_URI = "{521415D9-36F7-43E2-AB2F-B2CE04A55DE4}"
@@ -185,3 +217,85 @@ class CT_SlideSize(BaseOxmlElement):
     cy: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
         "cy", ST_SlideSizeCoordinate
     )
+
+
+class CT_NotesSize(BaseOxmlElement):
+    """`p:notesSz` element.
+
+    Direct child of <p:presentation> that contains the width and height of notes pages in the
+    presentation.
+    """
+
+    cx: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
+        "cx", ST_SlideSizeCoordinate
+    )
+    cy: Length = RequiredAttribute(  # pyright: ignore[reportAssignmentType]
+        "cy", ST_SlideSizeCoordinate
+    )
+
+
+class CT_CustomShowSlideList(BaseOxmlElement):
+    """`p:sldLst` element, child of `p:custShow` listing its member slides in order.
+
+    NOTE: PowerPoint's schema reuses the `p:sld` tag for the `r:id`-only reference elements
+    contained here -- the *same* tag used for a slide part's root element (`CT_Slide`).
+    Because pypptx's element-class lookup is global by tag name, these children are parsed as
+    whatever class is registered for `p:sld` (`CT_Slide`). To avoid depending on that
+    class's unrelated shape, only the generic, tag-agnostic `r:id` attribute is read or
+    written here rather than declaring a dedicated element class.
+    """
+
+    def sld_rIds(self) -> list[str]:
+        """List of `r:id` values of the `p:sld` children, in document order."""
+        return cast("list[str]", self.xpath("./p:sld/@r:id"))
+
+    def add_sld(self, rId: str) -> BaseOxmlElement:
+        """Create and return a new `p:sld` child element referencing `rId`."""
+        sld = OxmlElement("p:sld")
+        sld.set(qn("r:id"), rId)
+        self.insert_element_before(sld, "p:extLst")
+        return sld
+
+    def remove_sld_with_rId(self, rId: str) -> bool:
+        """Remove the `p:sld` child referencing `rId`, if present.
+
+        Returns |True| if a matching child was found and removed, |False| otherwise.
+        """
+        for sld in self.findall(qn("p:sld")):
+            if sld.get(qn("r:id")) == rId:
+                self.remove(sld)
+                return True
+        return False
+
+    def clear_slds(self) -> None:
+        """Remove all `p:sld` children."""
+        for sld in self.findall(qn("p:sld")):
+            self.remove(sld)
+
+
+class CT_CustomShow(BaseOxmlElement):
+    """`p:custShow` element, a named, ordered subset of the presentation's slides."""
+
+    get_or_add_sldLst: Callable[[], CT_CustomShowSlideList]
+
+    _tag_seq = ("p:sldLst", "p:extLst")
+    sldLst: CT_CustomShowSlideList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:sldLst", successors=_tag_seq[1:]
+    )
+    del _tag_seq
+
+    name: str = RequiredAttribute("name", XsdString)  # pyright: ignore[reportAssignmentType]
+    id: int = RequiredAttribute("id", XsdUnsignedInt)  # pyright: ignore[reportAssignmentType]
+
+
+class CT_CustomShowList(BaseOxmlElement):
+    """`p:custShowLst` element, child of `p:presentation` containing the custom shows."""
+
+    custShow_lst: list[CT_CustomShow]
+
+    _add_custShow: Callable[..., CT_CustomShow]
+    custShow = ZeroOrMore("p:custShow")
+
+    def add_custShow(self, name: str, id: int) -> CT_CustomShow:
+        """Create and return a new `p:custShow` child element with `name` and `id`."""
+        return self._add_custShow(name=name, id=id)

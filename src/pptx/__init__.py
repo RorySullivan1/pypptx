@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pptx.exc as exceptions
 from pptx.api import Presentation
 from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.package import Part as _BlobPart
 from pptx.opc.package import PartFactory, XmlPart
 from pptx.parts.chart import ChartPart
 from pptx.parts.comments import (
@@ -21,6 +22,7 @@ from pptx.parts.custprops import CustomPropertiesPart
 from pptx.parts.image import ImagePart
 from pptx.parts.media import MediaPart
 from pptx.parts.presentation import PresentationPart
+from pptx.parts.presprops import PresPropsPart
 from pptx.parts.slide import (
     NotesMasterPart,
     NotesSlidePart,
@@ -28,6 +30,7 @@ from pptx.parts.slide import (
     SlideMasterPart,
     SlidePart,
 )
+from pptx.parts.tablestyles import TableStylesPart
 from pptx.parts.tags import TagsPart
 
 if TYPE_CHECKING:
@@ -76,8 +79,13 @@ content_type_to_part_class_map: dict[str, type[Part]] = {
     CT.PML_AUTHORS: AuthorsPart,
     CT.PML_MODERN_COMMENTS: ModernCommentsPart,
     CT.PML_TAGS: TagsPart,
+    CT.PML_PRES_PROPS: PresPropsPart,
+    CT.PML_TABLE_STYLES: TableStylesPart,
     CT.OFC_THEME: XmlPart,
     CT.OFC_THEME_OVERRIDE: XmlPart,
+    # -- embedded font data is opaque; held and written back as a blob --
+    CT.X_FONTDATA: _BlobPart,
+    CT.X_FONT_TTF: _BlobPart,
     # -- accommodate "image/jpg" as an alias for "image/jpeg" --
     "image/jpg": ImagePart,
 }
@@ -98,8 +106,11 @@ del (
     SlideLayoutPart,
     SlideMasterPart,
     PresentationPart,
+    PresPropsPart,
+    TableStylesPart,
     TagsPart,
     XmlPart,
+    _BlobPart,
     CT,
     PartFactory,
 )

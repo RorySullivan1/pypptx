@@ -48,6 +48,12 @@ The codebase is organized in four layers, from low-level to high-level:
 - Core document properties (title, author, subject, etc.)
 - Custom document properties — typed values (str/int/float/bool) via `Presentation.custom_properties`
 - First-slide-number — `Presentation.first_slide_number` r/w (`firstSlideNum`)
+- Notes page size — `Presentation.notes_width` / `notes_height` r/w (`p:notesSz`)
+- Custom shows — `Presentation.custom_shows`: add, remove, rename, get by name, reorder/replace slides (`p:custShowLst`); deleting a slide prunes it from every show
+- Slide-show settings — `Presentation.slide_show_settings` (`presProps.xml`, `p:showPr`): loop, show type (`PP_SLIDE_SHOW_TYPE` speaker/browse/kiosk), narration, animation, timings, RGB pen color, slide range or custom show; the part is created on first write
+- Table styles — `Presentation.table_styles` read-only id→name mapping plus `default_id` (`tableStyles.xml`)
+- Embedded fonts — `Presentation.embedded_fonts`: typeface and styles present; `remove()` drops the font parts (`p:embeddedFontLst`)
+- `presProps.xml` and `tableStyles.xml` are written back byte for byte unless their API is used (`LazyXmlPart`)
 
 ### Slide Management
 - Add slides from existing slide layouts

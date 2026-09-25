@@ -103,3 +103,23 @@ def xml_text():
         "  <a:bar>foobar</a:bar>\n"
         "</a:foo>\n"
     )
+
+
+class DescribeElementClassRegistry:
+    """Unit-test suite for the element-class registrations in `pptx.oxml`."""
+
+    def it_registers_each_tag_only_once(self):
+        # -- lookup is by tag alone, so a second registration silently replaces the first; two
+        # -- features sharing a tag (e.g. `p:custShow`) must share one element class --
+        import collections
+        import inspect
+        import re
+
+        import pptx.oxml
+
+        source = inspect.getsource(pptx.oxml)
+        tags = re.findall(r'register_element_cls\(\s*"([^"]+)"', source)
+        duplicates = [t for t, n in collections.Counter(tags).items() if n > 1]
+
+        assert tags
+        assert duplicates == []

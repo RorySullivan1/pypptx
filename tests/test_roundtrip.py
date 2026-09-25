@@ -976,3 +976,149 @@ prs2 = Presentation(stream)
 assert prs2.slide_master.theme.color_scheme.accent_2 == "00B050"
 assert len(prs2.slides) == 1
 """)
+
+    def it_round_trips_custom_shows_and_notes_size(self):
+        _run_roundtrip_test("""\
+prs = Presentation()
+layout = prs.slide_layouts[5]
+slide1 = prs.slides.add_slide(layout)
+slide2 = prs.slides.add_slide(layout)
+slide3 = prs.slides.add_slide(layout)
+
+prs.notes_height = Inches(11)
+prs.notes_width = Inches(8.5)
+
+show = prs.custom_shows.add("Intro Only", [slide1, slide3])
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+assert prs2.notes_height == Inches(11)
+assert prs2.notes_width == Inches(8.5)
+
+assert len(prs2.custom_shows) == 1
+custom_show = prs2.custom_shows[0]
+assert custom_show.name == "Intro Only"
+assert [s.slide_id for s in custom_show.slides] == [
+    prs2.slides[0].slide_id,
+    prs2.slides[2].slide_id,
+]
+
+# -- deleting a referenced slide prunes it from the custom show --
+prs2.slides.delete(prs2.slides[2])
+stream2 = BytesIO()
+prs2.save(stream2)
+stream2.seek(0)
+prs3 = Presentation(stream2)
+
+assert len(prs3.slides) == 2
+custom_show3 = prs3.custom_shows[0]
+assert len(custom_show3.slides) == 1
+assert custom_show3.slides[0].slide_id == prs3.slides[0].slide_id
+""")
+
+    def it_round_trips_embedded_fonts(self):
+        _run_roundtrip_test("""\
+from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.opc.package import Part
+from pptx.opc.packuri import PackURI
+
+prs = Presentation()
+prs_part = prs.part
+
+font_part = Part(
+    PackURI("/ppt/fonts/font1.fntdata"), CT.X_FONTDATA, prs_part.package, b"dummy-font-bytes"
+)
+rId = prs_part.relate_to(font_part, RT.FONT)
+entry = prs._element.get_or_add_embeddedFontLst().add_embeddedFont("Calibri")
+entry.add_style("regular", rId)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+embedded_fonts = prs2.embedded_fonts
+assert len(embedded_fonts) == 1
+assert embedded_fonts[0].typeface == "Calibri"
+assert embedded_fonts[0].styles == ("regular",)
+
+embedded_fonts[0].remove()
+assert len(prs2.embedded_fonts) == 0
+
+stream2 = BytesIO()
+prs2.save(stream2)
+stream2.seek(0)
+prs3 = Presentation(stream2)
+assert len(prs3.embedded_fonts) == 0
+""")
+
+    def it_round_trips_slide_show_settings(self):
+        _run_roundtrip_test("""\\
+from pptx.enum.pres import PP_SLIDE_SHOW_TYPE
+from pptx.dml.color import RGBColor
+
+prs = Presentation()
+settings = prs.slide_show_settings
+settings.loop = True
+settings.show_type = PP_SLIDE_SHOW_TYPE.KIOSK
+settings.show_narration = True
+settings.show_animation = False
+settings.use_timings = False
+settings.pen_color = RGBColor(0xFF, 0x00, 0x00)
+settings.slide_range = (1, 1)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+settings2 = prs2.slide_show_settings
+assert settings2.loop is True
+assert settings2.show_type == PP_SLIDE_SHOW_TYPE.KIOSK
+assert settings2.show_narration is True
+assert settings2.show_animation is False
+assert settings2.use_timings is False
+assert settings2.pen_color == RGBColor(0xFF, 0x00, 0x00)
+assert settings2.slide_range == (1, 1)
+""")
+
+    def it_round_trips_table_styles_read_only(self):
+        _run_roundtrip_test("""\\
+prs = Presentation()
+table_styles = prs.table_styles
+default_id = table_styles.default_id
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+assert dict(prs2.table_styles) == dict(table_styles)
+assert prs2.table_styles.default_id == default_id
+""")
+
+    def it_writes_presProps_and_tableStyles_bytes_unchanged_when_untouched(self):
+        _run_roundtrip_test("""\\
+import zipfile
+
+src = "src/pptx/templates/default.pptx"
+with zipfile.ZipFile(src) as z:
+    orig_pres_props = z.read("ppt/presProps.xml")
+    orig_table_styles = z.read("ppt/tableStyles.xml")
+
+prs = Presentation(src)
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+
+with zipfile.ZipFile(stream) as z:
+    new_pres_props = z.read("ppt/presProps.xml")
+    new_table_styles = z.read("ppt/tableStyles.xml")
+
+assert new_pres_props == orig_pres_props
+assert new_table_styles == orig_table_styles
+""")
