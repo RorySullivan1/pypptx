@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pptx.enum.shapes import PROG_ID
+from pptx.enum.shapes import MSO_SHAPE_TYPE, PROG_ID
 
 
 class DescribeProgId:
@@ -44,3 +44,12 @@ class DescribeProgId:
     )
     def it_knows_each_of_its_members_is_an_instance(self, value: object, expected_value: bool):
         assert isinstance(value, PROG_ID) is expected_value
+
+
+class DescribeMsoShapeType:
+    """Unit-test suite for `pptx.enum.shapes.MSO_SHAPE_TYPE`."""
+
+    def it_names_smartart_SMART_ART_and_keeps_IGX_GRAPHIC_as_an_alias(self):
+        assert MSO_SHAPE_TYPE.SMART_ART == 24
+        assert MSO_SHAPE_TYPE.IGX_GRAPHIC is MSO_SHAPE_TYPE.SMART_ART
+        assert MSO_SHAPE_TYPE(24).name == "SMART_ART"

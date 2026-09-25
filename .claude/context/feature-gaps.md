@@ -715,6 +715,16 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 
 ---
 
+## 25. Python API — SmartArt (DONE)
+
+- [x] Diagram parts — `DiagramDataPart`/`DiagramLayoutPart`/`DiagramStylePart`/`DiagramColorsPart`/`DiagramDrawingPart` (all `LazyXmlPart`) registered for the five `DML_DIAGRAM_*` content types; `dgm`/`dsp` namespaces (#63)
+- [x] Detection — `GraphicFrame.has_smartart`, `shape_type` → `MSO_SHAPE_TYPE.SMART_ART` (`IGX_GRAPHIC` kept as an alias); `dgm:relIds` via `CT_DiagramRelIds` (#63)
+- [x] Node tree — `CT_DataModel`/`CT_Pt`/`CT_Cxn` (`dgm:dataModel/dgm:ptLst`, `dgm:cxnLst`); `GraphicFrame.smartart` → `SmartArt.nodes`/`iter_nodes()` of `SmartArtNode` (`text`, `level`, `children`, `model_id`), children ordered by `parOf` `srcOrd` (#64)
+- [x] Text editing — `SmartArtNode.text` setter writes `dgm:t`, clears `phldr`, and drops the cached `dsp:drawing` part + `dsp:dataModelExt` reference so PowerPoint regenerates it (#65)
+- [ ] Deferred — create SmartArt, add/remove nodes, change layout/style/colors, rich-text formatting of node text
+
+---
+
 ## Out of Scope
 
 The following are **not planned** as they require capabilities beyond XML file manipulation:

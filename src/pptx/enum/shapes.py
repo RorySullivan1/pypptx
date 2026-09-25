@@ -801,8 +801,11 @@ class MSO_SHAPE_TYPE(BaseEnum):
     GROUP = (6, "Group shape")
     """Group shape"""
 
-    IGX_GRAPHIC = (24, "SmartArt graphic")
+    SMART_ART = (24, "SmartArt graphic")
     """SmartArt graphic"""
+
+    IGX_GRAPHIC = (24, "SmartArt graphic")
+    """SmartArt graphic (alias of `SMART_ART`, from the MS API's historical name)"""
 
     INK = (22, "Ink")
     """Ink"""

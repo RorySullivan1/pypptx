@@ -7,12 +7,15 @@ import pytest
 from pptx.chart.chart import Chart
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.parts.chart import ChartPart
+from pptx.parts.diagram import DiagramDataPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
 from pptx.parts.slide import SlidePart
 from pptx.shapes.graphfrm import GraphicFrame, _OleFormat
 from pptx.shapes.shapetree import SlideShapes
+from pptx.smartart import SmartArt
 from pptx.spec import (
     GRAPHIC_DATA_URI_CHART,
+    GRAPHIC_DATA_URI_DIAGRAM,
     GRAPHIC_DATA_URI_OLEOBJ,
     GRAPHIC_DATA_URI_TABLE,
 )
@@ -77,6 +80,49 @@ class DescribeGraphicFrame:
         graphicFrame = element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % graphicData_uri)
         assert GraphicFrame(graphicFrame, None).has_table is expected_value
 
+    @pytest.mark.parametrize(
+        "graphicData_uri, expected_value",
+        (
+            (GRAPHIC_DATA_URI_CHART, False),
+            (GRAPHIC_DATA_URI_DIAGRAM, True),
+            (GRAPHIC_DATA_URI_OLEOBJ, False),
+            (GRAPHIC_DATA_URI_TABLE, False),
+        ),
+    )
+    def it_knows_whether_it_contains_smartart(self, graphicData_uri, expected_value):
+        graphicFrame = element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % graphicData_uri)
+        assert GraphicFrame(graphicFrame, None).has_smartart is expected_value
+
+    def it_provides_access_to_the_smartart_it_contains(self, request):
+        data_part_ = instance_mock(request, DiagramDataPart)
+        smartart_ = instance_mock(request, SmartArt)
+        SmartArt_ = class_mock(request, "pptx.shapes.graphfrm.SmartArt", return_value=smartart_)
+        slide_part_ = instance_mock(request, SlidePart)
+        slide_part_.related_part.return_value = data_part_
+        property_mock(request, GraphicFrame, "part", return_value=slide_part_)
+        graphic_frame = GraphicFrame(
+            element(
+                "p:graphicFrame/a:graphic/a:graphicData{uri=%s}"
+                "/dgm:relIds{r:dm=rId7,r:lo=rId8,r:qs=rId9,r:cs=rId10}" % GRAPHIC_DATA_URI_DIAGRAM
+            ),
+            None,
+        )
+
+        smartart = graphic_frame.smartart
+
+        slide_part_.related_part.assert_called_once_with("rId7")
+        SmartArt_.assert_called_once_with(data_part_, slide_part_)
+        assert smartart is smartart_
+
+    def but_it_raises_on_smartart_when_it_does_not_contain_smartart(self):
+        graphic_frame = GraphicFrame(
+            element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % GRAPHIC_DATA_URI_TABLE),
+            None,
+        )
+        with pytest.raises(ValueError) as e:
+            graphic_frame.smartart
+        assert str(e.value) == "shape does not contain SmartArt"
+
     def it_provides_access_to_the_OleFormat_object(self, request):
         ole_format_ = instance_mock(request, _OleFormat)
         _OleFormat_ = class_mock(
@@ -118,6 +164,7 @@ class DescribeGraphicFrame:
             (GRAPHIC_DATA_URI_OLEOBJ, "embed", MSO_SHAPE_TYPE.EMBEDDED_OLE_OBJECT),
             (GRAPHIC_DATA_URI_OLEOBJ, "link", MSO_SHAPE_TYPE.LINKED_OLE_OBJECT),
             (GRAPHIC_DATA_URI_TABLE, None, MSO_SHAPE_TYPE.TABLE),
+            (GRAPHIC_DATA_URI_DIAGRAM, None, MSO_SHAPE_TYPE.SMART_ART),
             ("foobar", None, None),
         ),
     )
