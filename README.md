@@ -76,6 +76,7 @@ See the [`examples/`](examples/) directory for runnable scripts:
 | [`shape_effects.py`](examples/shape_effects.py) | Shadow, glow, reflection, and 3D formatting |
 | [`add_table.py`](examples/add_table.py) | Tables with merged cells, borders, and cell fills |
 | [`add_chart.py`](examples/add_chart.py) | Bar and line charts with data labels and legends |
+| [`batch_process.py`](examples/batch_process.py) | Process a folder of decks in parallel with a process pool (find/replace text, per-file error reporting) |
 | [`modern_charts.py`](examples/modern_charts.py) | Waterfall, histogram, box & whisker, treemap, sunburst and funnel charts, and a chart data table |
 | [`slide_operations.py`](examples/slide_operations.py) | Duplicate, reorder, and delete slides |
 | [`merge_presentations.py`](examples/merge_presentations.py) | Import and merge slides across presentations |
