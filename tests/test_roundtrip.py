@@ -1122,3 +1122,65 @@ with zipfile.ZipFile(stream) as z:
 assert new_pres_props == orig_pres_props
 assert new_table_styles == orig_table_styles
 """)
+
+    def it_finds_smartart_and_reads_its_node_tree(self):
+        _run_roundtrip_test("""\\
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+from tests.unitutil.smartart import smartart_pptx
+
+slide = Presentation(smartart_pptx()).slides[0]
+frames = [shape for shape in slide.shapes if shape.shape_type == MSO_SHAPE_TYPE.SMART_ART]
+assert len(frames) == 1
+frame = frames[0]
+assert frame.has_smartart
+assert [(node.text, node.level) for node in frame.smartart.iter_nodes()] == [
+    ("Plan", 0), ("Scope", 1), ("Budget", 1), ("Build", 0), ("", 0),
+]
+assert [node.text for node in frame.smartart.nodes[0].children] == ["Scope", "Budget"]
+""")
+
+    def it_writes_untouched_smartart_parts_bytes_unchanged(self):
+        _run_roundtrip_test("""\\
+import zipfile
+from tests.unitutil.smartart import DIAGRAM_PARTS, smartart_pptx
+
+prs = Presentation(smartart_pptx())
+stream = BytesIO()
+prs.save(stream)
+
+with zipfile.ZipFile(stream) as z:
+    for partname, xml in DIAGRAM_PARTS.items():
+        assert z.read(partname) == xml.encode("utf-8"), partname
+""")
+
+    def it_round_trips_edited_smartart_node_text(self):
+        _run_roundtrip_test("""\\
+import zipfile
+from tests.unitutil.smartart import DRAWING_PARTNAME, smartart_pptx
+
+prs = Presentation(smartart_pptx())
+smartart = prs.slides[0].shapes[-1].smartart
+plan, build, empty = smartart.nodes
+plan.children[1].text = "Costs"
+empty.text = "Ship\\nMeasure"
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+
+with zipfile.ZipFile(stream) as z:
+    names = z.namelist()
+    slide_rels = z.read("ppt/slides/_rels/slide1.xml.rels").decode()
+    content_types = z.read("[Content_Types].xml").decode()
+# -- the stale cached drawing is dropped so PowerPoint lays the diagram out again --
+assert DRAWING_PARTNAME not in names
+assert "diagramDrawing" not in slide_rels
+assert "diagramDrawing" not in content_types
+assert "ppt/diagrams/data1.xml" in names
+
+stream.seek(0)
+smartart2 = Presentation(stream).slides[0].shapes[-1].smartart
+assert [(node.text, node.level) for node in smartart2.iter_nodes()] == [
+    ("Plan", 0), ("Scope", 1), ("Costs", 1), ("Build", 0), ("Ship\\nMeasure", 0),
+]
+""")

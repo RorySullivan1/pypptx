@@ -24,6 +24,7 @@ from pptx.spec import (
 )
 
 if TYPE_CHECKING:
+    from pptx.oxml.diagram import CT_DiagramRelIds
     from pptx.oxml.shapes.shared import (
         CT_ApplicationNonVisualDrawingProps,
         CT_NonVisualDrawingProps,
@@ -56,6 +57,9 @@ class CT_GraphicalObjectData(BaseShapeElement):
 
     chart: CT_Chart | None = ZeroOrOne("c:chart")  # pyright: ignore[reportAssignmentType]
     tbl: CT_Table | None = ZeroOrOne("a:tbl")  # pyright: ignore[reportAssignmentType]
+    relIds: CT_DiagramRelIds | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "dgm:relIds"
+    )
     uri: str = RequiredAttribute("uri", XsdString)  # pyright: ignore[reportAssignmentType]
 
     @property

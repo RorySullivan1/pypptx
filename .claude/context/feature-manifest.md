@@ -89,7 +89,8 @@ The codebase is organized in four layers, from low-level to high-level:
 - **Connectors** — straight/elbow/curve types, begin/end positioning, connect to shape connection points; queryable connected shapes via `Connector.begin_connection`/`end_connection`
 - **Group shapes** — group existing shapes, access child shapes
 - **Freeform shapes** — programmatic path construction with line segments, cubic and quadratic Bezier curves, and elliptical arcs
-- **Graphic frames** — charts, tables, and OLE objects
+- **Graphic frames** — charts, tables, SmartArt, and OLE objects
+- **SmartArt** — `GraphicFrame.has_smartart`, `MSO_SHAPE_TYPE.SMART_ART`; `GraphicFrame.smartart.nodes` / `iter_nodes()` give the node tree (`.text`, `.level` zero-based, `.children`, `.model_id`) from the diagram-data part; `node.text = ...` rewrites `dgm:t` and drops PowerPoint's cached drawing part so the diagram is laid out again on open. Diagram parts are written back byte for byte unless read. Creating SmartArt, adding/removing nodes, and changing layouts are not supported
 - **Placeholders** — typed placeholders (title, body, picture, chart, table) with insert operations
 - **Movies** — insert video with poster frame
 - **Callout shapes** — `MSO_SHAPE.LINE_CALLOUT_*` presets with adjustment handles

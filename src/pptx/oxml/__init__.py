@@ -823,6 +823,25 @@ register_element_cls("p:txBody", CT_TextBody)
 register_element_cls("p188:txBody", CT_TextBody)
 
 
+from pptx.oxml.diagram import (  # noqa: E402
+    CT_CxnList,
+    CT_Cxn,
+    CT_DataModel,
+    CT_DiagramRelIds,
+    CT_ElemPropSet,
+    CT_Pt,
+    CT_PtList,
+)
+
+register_element_cls("dgm:cxn", CT_Cxn)
+register_element_cls("dgm:cxnLst", CT_CxnList)
+register_element_cls("dgm:dataModel", CT_DataModel)
+register_element_cls("dgm:prSet", CT_ElemPropSet)
+register_element_cls("dgm:pt", CT_Pt)
+register_element_cls("dgm:ptLst", CT_PtList)
+register_element_cls("dgm:relIds", CT_DiagramRelIds)
+register_element_cls("dgm:t", CT_TextBody)
+
 from pptx.oxml.theme import (  # noqa: E402
     CT_BaseStyles,
     CT_BaseStylesOverride,
