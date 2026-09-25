@@ -105,6 +105,27 @@ class BaseShape:
         return False
 
     @property
+    def has_chartex(self) -> bool:
+        """|True| if this shape is a graphic frame containing a chartex (Office 2016+) chart.
+
+        |False| otherwise. When |True|, the chart can be read using the ``.chartex`` property.
+        """
+        # This implementation is unconditionally False, the True version is
+        # on GraphicFrame subclass.
+        return False
+
+    @property
+    def has_smartart(self) -> bool:
+        """|True| if this shape is a graphic frame containing SmartArt.
+
+        |False| otherwise. When |True|, the SmartArt can be accessed using the ``.smartart``
+        property.
+        """
+        # This implementation is unconditionally False, the True version is
+        # on GraphicFrame subclass.
+        return False
+
+    @property
     def has_table(self) -> bool:
         """|True| if this shape is a graphic frame containing a table object.
 
@@ -142,7 +163,9 @@ class BaseShape:
         """
         from pptx.oxml.ns import qn
 
-        parent_elm = self._element.getparent()
+        from pptx.oxml.shapes.shared import tree_elm
+
+        parent_elm = tree_elm(self._element).getparent()
         return parent_elm is not None and parent_elm.tag == qn("p:grpSp")
 
     @property
@@ -155,7 +178,9 @@ class BaseShape:
             raise ShapeError("shape is not contained in a group")
         from pptx.shapes.group import GroupShape
 
-        grpSp_elm = self._element.getparent()
+        from pptx.oxml.shapes.shared import tree_elm
+
+        grpSp_elm = tree_elm(self._element).getparent()
         return GroupShape(grpSp_elm, self._parent)
 
     @property

@@ -603,6 +603,7 @@ Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless
 - [x] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
 - [x] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
 - [x] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
+- [x] `CT_PlotArea` — add `c:dTable` descriptor (`CT_DTable`: `showHorzBorder`, `showVertBorder`, `showOutline`, `showKeys`, `spPr`), correctly sequenced after axes and before `spPr`/`extLst`; `Chart.has_data_table`, `Chart.data_table` → `DataTable` proxy (#70)
 
 ### 18.11 OXML Foundation — Data Label Descriptor Gaps
 
@@ -658,6 +659,14 @@ _Prerequisites: 18.12 (axis descriptors)_
 - [x] Axis label rotation — `TickLabels.label_rotation` (rot on a:bodyPr, degrees)
 - [x] Display units — `CT_DispUnits`, `CT_BuiltInUnit` + `ValueAxis.display_units`
 - [x] Series API — `PieSeries.explosion`, `BarSeries.bar_shape`, `BubbleSeries.bubble_3d`
+
+### 18.15 Chartex (Office 2016+) Charts (DONE)
+
+- [x] Part + oxml — `ChartExPart` (`LazyXmlPart`, `/ppt/charts/chartExN.xml`) for `OFC_CHART_EX`; `cx:chartSpace`/`chartData`/`data`/`strDim`/`numDim`/`lvl`/`pt` and `cx:chart`/`plotArea`/`plotAreaRegion`/`series` in `oxml/chart/chartex.py`; `cx`/`mc` namespaces; `RT.CHART_EX` (#67)
+- [x] Shape tree — the chartex `p:graphicFrame` in `mc:AlternateContent/mc:Choice` is listed as a shape; move/remove/duplicate/group act on the wrapper (`oxml.shapes.shared.tree_elm`); `GraphicFrame.has_chartex`/`chartex`/`chartex_part`; `shape_type` → `CHART` (#67)
+- [x] Read API — `ChartEx.chart_type`, `ChartExSeries.name`/`values`/`categories`/`category_paths`/`layout_id`/`hidden` (#68)
+- [x] Authoring — `XL_CHART_TYPE.WATERFALL`/`HISTOGRAM`/`BOX_WHISKER`/`TREEMAP`/`SUNBURST`/`FUNNEL` via `shapes.add_chart()` from `CategoryChartData`; embedded workbook; image-less `mc:Fallback` (#69)
+- [ ] Deferred — adding Pareto and region-map charts (both readable), editing chartex data, chartex styling (titles, colors, axis options), chart style/color parts
 
 ---
 

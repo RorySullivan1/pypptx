@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
+from xml.sax.saxutils import escape
 
 from pptx.oxml import parse_xml
 from pptx.oxml.chart.chart import CT_Chart
@@ -19,6 +20,7 @@ from pptx.oxml.xmlchemy import (
 )
 from pptx.spec import (
     GRAPHIC_DATA_URI_CHART,
+    GRAPHIC_DATA_URI_CHARTEX,
     GRAPHIC_DATA_URI_OLEOBJ,
     GRAPHIC_DATA_URI_TABLE,
 )
@@ -150,6 +152,12 @@ class CT_GraphicalObjectFrame(BaseShapeElement):
             return None
         return chart.rId
 
+    @property
+    def chartex_rId(self) -> str | None:
+        """`r:id` of the `cx:chart` chartex reference in this graphic frame, or |None|."""
+        rIds = cast("list[str]", self.xpath("./a:graphic/a:graphicData/cx:chart/@r:id"))
+        return rIds[0] if rIds else None
+
     def get_or_add_xfrm(self) -> CT_Transform2D:
         """Return the required `p:xfrm` child element.
 
@@ -191,6 +199,42 @@ class CT_GraphicalObjectFrame(BaseShapeElement):
         graphicData.uri = GRAPHIC_DATA_URI_CHART
         graphicData.append(CT_Chart.new_chart(rId))
         return graphicFrame
+
+    @classmethod
+    def new_chartex_alternateContent(
+        cls, id_: int, name: str, rId: str, x: int, y: int, cx: int, cy: int, requires_ns: str
+    ) -> BaseOxmlElement:
+        """Return a new `mc:AlternateContent` element holding a chartex graphic frame.
+
+        PowerPoint writes a chartex chart this way: the `p:graphicFrame` referring to the chartex
+        part by `rId` is the `mc:Choice` for a reader that understands `requires_ns`, and a
+        rectangle saying the chart is not available is the `mc:Fallback` for any other reader.
+        """
+        graphicFrame = cls.new_graphicFrame(id_, name, x, y, cx, cy)
+        graphicData = graphicFrame.graphic.graphicData
+        graphicData.uri = GRAPHIC_DATA_URI_CHARTEX
+        graphicData.append(
+            parse_xml('<cx:chart %s r:id="%s"/>' % (nsdecls("cx", "r"), rId))
+        )
+        alternateContent = cast(
+            BaseOxmlElement,
+            parse_xml(
+                f"<mc:AlternateContent {nsdecls('mc', 'a', 'p')}>"
+                f'<mc:Choice xmlns:cx1="{requires_ns}" Requires="cx1"/>'
+                f"<mc:Fallback><p:sp><p:nvSpPr>"
+                f'<p:cNvPr id="{id_}" name="{escape(name, {chr(34): "&quot;"})}"/>'
+                f'<p:cNvSpPr><a:spLocks noTextEdit="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>'
+                f'<p:spPr><a:xfrm><a:off x="{x}" y="{y}"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
+                f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>'
+                f"<p:txBody><a:bodyPr/><a:lstStyle/><a:p>"
+                f'<a:r><a:rPr lang="en-US" sz="1100"/>'
+                f"<a:t>This chart isn't available in your version of PowerPoint.</a:t></a:r>"
+                f"</a:p></p:txBody></p:sp></mc:Fallback>"
+                f"</mc:AlternateContent>"
+            ),
+        )
+        alternateContent[0].append(graphicFrame)
+        return alternateContent
 
     @classmethod
     def new_graphicFrame(

@@ -220,6 +220,47 @@ assert len({wb.partname for wb in workbooks}) == 2
 assert len({c.part.partname for c in charts}) == 2
 """)
 
+    def it_round_trips_a_chart_data_table(self):
+        _run_roundtrip_test("""\
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+chart_data = CategoryChartData()
+chart_data.categories = ["a", "b"]
+chart_data.add_series("S1", (1, 2))
+gframe = slide.shapes.add_chart(
+    XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(1), Inches(4), Inches(3), chart_data
+)
+chart = gframe.chart
+assert chart.has_data_table is False
+assert chart.data_table is None
+
+chart.has_data_table = True
+data_table = chart.data_table
+data_table.show_keys = True
+data_table.outline = False
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+chart2 = prs2.slides[0].shapes[0].chart
+assert chart2.has_data_table is True
+data_table2 = chart2.data_table
+assert data_table2 is not None
+assert data_table2.horizontal_border is True
+assert data_table2.vertical_border is True
+assert data_table2.outline is False
+assert data_table2.show_keys is True
+
+chart2.has_data_table = False
+assert chart2.has_data_table is False
+assert chart2.data_table is None
+""")
+
     def it_round_trips_hidden_shapes(self):
         _run_roundtrip_test("""\
 prs = Presentation()
@@ -1183,4 +1224,78 @@ smartart2 = Presentation(stream).slides[0].shapes[-1].smartart
 assert [(node.text, node.level) for node in smartart2.iter_nodes()] == [
     ("Plan", 0), ("Scope", 1), ("Costs", 1), ("Build", 0), ("Ship\\nMeasure", 0),
 ]
+""")
+
+    def it_round_trips_added_chartex_charts(self):
+        _run_roundtrip_test("""\\
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
+
+flat = CategoryChartData()
+flat.categories = ["Start", "Q1", "Q2", "End"]
+flat.add_series("Flow", (100, -20, 35, 115))
+
+tree = CategoryChartData()
+fruit = tree.add_category("Fruit")
+fruit.add_sub_category("Apple")
+fruit.add_sub_category("Pear")
+tree.add_category("Veg").add_sub_category("Kale")
+tree.add_series("Sales", (30, 12, 7))
+
+boxes = CategoryChartData()
+boxes.categories = ["a", "b", "c", "d"]
+boxes.add_series("East", (1, 4, 2, 8))
+boxes.add_series("West", (3, 3, 5, 9))
+
+charts = [
+    (XL_CHART_TYPE.WATERFALL, flat),
+    (XL_CHART_TYPE.HISTOGRAM, flat),
+    (XL_CHART_TYPE.BOX_WHISKER, boxes),
+    (XL_CHART_TYPE.TREEMAP, tree),
+    (XL_CHART_TYPE.SUNBURST, tree),
+    (XL_CHART_TYPE.FUNNEL, flat),
+]
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+for chart_type, chart_data in charts:
+    slide.shapes.add_chart(chart_type, Inches(1), Inches(1), Inches(4), Inches(3), chart_data)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+shapes = Presentation(stream).slides[0].shapes
+
+assert len(shapes) == 6
+assert [shape.chartex.chart_type for shape in shapes] == [t for t, _ in charts]
+assert len({shape.shape_id for shape in shapes}) == 6
+waterfall, histogram, box, treemap, sunburst, funnel = (shape.chartex for shape in shapes)
+assert waterfall.series[0].values == (100.0, -20.0, 35.0, 115.0)
+assert waterfall.series[0].categories == ("Start", "Q1", "Q2", "End")
+assert [s.name for s in box.series] == ["East", "West"]
+assert box.series[1].values == (3.0, 3.0, 5.0, 9.0)
+for chart in (treemap, sunburst):
+    assert chart.series[0].category_paths == (
+        ("Fruit", "Apple"), ("Fruit", "Pear"), ("Veg", "Kale"),
+    )
+assert funnel.series[0].name == "Flow"
+assert all(shape.chartex_part.xlsx_part is not None for shape in shapes)
+""")
+
+    def it_writes_untouched_chartex_parts_bytes_unchanged(self):
+        _run_roundtrip_test("""\\
+import zipfile
+from tests.unitutil.chartex import CHARTS, chartex_pptx
+
+prs = Presentation(chartex_pptx())
+assert len(prs.slides[0].shapes) == 3
+stream = BytesIO()
+prs.save(stream)
+
+with zipfile.ZipFile(stream) as z:
+    for chart_partname, chart_xml, xlsx_partname, xlsx_blob, _ in CHARTS:
+        assert z.read(chart_partname) == chart_xml.encode("utf-8"), chart_partname
+        assert z.read(xlsx_partname) == xlsx_blob, xlsx_partname
+    slide_xml = z.read("ppt/slides/slide1.xml").decode()
+assert slide_xml.count("<mc:AlternateContent") == 3
+assert slide_xml.count("<mc:Fallback>") == 3
 """)

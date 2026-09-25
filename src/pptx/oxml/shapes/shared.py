@@ -44,6 +44,29 @@ if TYPE_CHECKING:
     from pptx.util import Length
 
 
+
+class CT_MarkupCompatibilityElement(BaseOxmlElement):
+    """`mc:AlternateContent`, `mc:Choice` or `mc:Fallback` element.
+
+    Markup-compatibility wrappers carry no content of their own; a class is registered for them
+    so they get the namespace-aware `xpath()` of |BaseOxmlElement|.
+    """
+
+
+def tree_elm(shape_elm: BaseOxmlElement) -> BaseOxmlElement:
+    """The element that holds `shape_elm` as a direct child of its shape tree or group.
+
+    This is `shape_elm` itself, except for a shape that is the `mc:Choice` of an
+    `mc:AlternateContent` element (as a chartex chart is), where it is that alternate-content
+    element: moving, copying or removing the shape must act on the whole of it.
+    """
+    parent = shape_elm.getparent()
+    if parent is not None and parent.tag == qn("mc:Choice"):
+        alternateContent = parent.getparent()
+        if alternateContent is not None:
+            return alternateContent
+    return shape_elm
+
 class BaseShapeElement(BaseOxmlElement):
     """Provides common behavior for shape element classes like CT_Shape, CT_Picture, etc."""
 

@@ -7,6 +7,7 @@ import pytest
 from pptx.chart.chart import Chart
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.parts.chart import ChartPart
+from pptx.parts.chartex import ChartExPart
 from pptx.parts.diagram import DiagramDataPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
 from pptx.parts.slide import SlidePart
@@ -15,6 +16,7 @@ from pptx.shapes.shapetree import SlideShapes
 from pptx.smartart import SmartArt
 from pptx.spec import (
     GRAPHIC_DATA_URI_CHART,
+    GRAPHIC_DATA_URI_CHARTEX,
     GRAPHIC_DATA_URI_DIAGRAM,
     GRAPHIC_DATA_URI_OLEOBJ,
     GRAPHIC_DATA_URI_TABLE,
@@ -79,6 +81,49 @@ class DescribeGraphicFrame:
     def it_knows_whether_it_contains_a_table(self, graphicData_uri, expected_value):
         graphicFrame = element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % graphicData_uri)
         assert GraphicFrame(graphicFrame, None).has_table is expected_value
+
+    @pytest.mark.parametrize(
+        "graphicData_uri, expected_value",
+        (
+            (GRAPHIC_DATA_URI_CHART, False),
+            (GRAPHIC_DATA_URI_CHARTEX, True),
+            (GRAPHIC_DATA_URI_DIAGRAM, False),
+        ),
+    )
+    def it_knows_whether_it_contains_a_chartex_chart(self, graphicData_uri, expected_value):
+        graphicFrame = element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % graphicData_uri)
+        graphic_frame = GraphicFrame(graphicFrame, None)
+
+        assert graphic_frame.has_chartex is expected_value
+        if graphicData_uri == GRAPHIC_DATA_URI_CHARTEX:
+            assert graphic_frame.has_chart is False
+
+    def it_provides_access_to_the_chartex_chart_it_contains(self, request):
+        chartex_part_ = instance_mock(request, ChartExPart)
+        slide_part_ = instance_mock(request, SlidePart)
+        slide_part_.related_part.return_value = chartex_part_
+        property_mock(request, GraphicFrame, "part", return_value=slide_part_)
+        graphic_frame = GraphicFrame(
+            element(
+                "p:graphicFrame/a:graphic/a:graphicData{uri=%s}/cx:chart{r:id=rId5}"
+                % GRAPHIC_DATA_URI_CHARTEX
+            ),
+            None,
+        )
+
+        chartex = graphic_frame.chartex
+
+        slide_part_.related_part.assert_called_once_with("rId5")
+        assert chartex is chartex_part_.chartex
+
+    def but_it_raises_on_chartex_when_it_does_not_contain_one(self):
+        graphic_frame = GraphicFrame(
+            element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % GRAPHIC_DATA_URI_CHART),
+            None,
+        )
+        with pytest.raises(ValueError) as e:
+            graphic_frame.chartex
+        assert str(e.value) == "shape does not contain a chartex chart"
 
     @pytest.mark.parametrize(
         "graphicData_uri, expected_value",
@@ -165,6 +210,7 @@ class DescribeGraphicFrame:
             (GRAPHIC_DATA_URI_OLEOBJ, "link", MSO_SHAPE_TYPE.LINKED_OLE_OBJECT),
             (GRAPHIC_DATA_URI_TABLE, None, MSO_SHAPE_TYPE.TABLE),
             (GRAPHIC_DATA_URI_DIAGRAM, None, MSO_SHAPE_TYPE.SMART_ART),
+            (GRAPHIC_DATA_URI_CHARTEX, None, MSO_SHAPE_TYPE.CHART),
             ("foobar", None, None),
         ),
     )
