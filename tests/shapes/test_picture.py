@@ -301,7 +301,8 @@ class DescribeAudio:
 
     def it_knows_its_media_type(self, media_type_fixture):
         audio = media_type_fixture
-        assert audio.media_type == PP_MEDIA_TYPE.SOUND
+        assert audio.media_type is PP_MEDIA_TYPE.SOUND
+        assert audio.media_type is not PP_MEDIA_TYPE.OTHER
 
     def it_provides_access_to_its_media_format(self, format_fixture):
         audio, MediaFormat_, pic, parent, media_format_ = format_fixture

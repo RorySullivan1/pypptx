@@ -93,6 +93,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - **SmartArt** — `GraphicFrame.has_smartart`, `MSO_SHAPE_TYPE.SMART_ART`; `GraphicFrame.smartart.nodes` / `iter_nodes()` give the node tree (`.text`, `.level` zero-based, `.children`, `.model_id`) from the diagram-data part; `node.text = ...` rewrites `dgm:t` and drops PowerPoint's cached drawing part so the diagram is laid out again on open. Diagram parts are written back byte for byte unless read. Creating SmartArt, adding/removing nodes, and changing layouts are not supported
 - **Placeholders** — typed placeholders (title, body, picture, chart, table) with insert operations
 - **Movies** — insert video with poster frame; **Audio** — insert MP3/WAV/M4A clips with a speaker icon via `SlideShapes.add_audio`; both movie and audio shapes support `trim_start`/`trim_end`/`fade_in`/`fade_out` playback settings (the `p14:media` extension)
+- **Alternate-content shapes** — 3D models, slide/section/summary zooms, equations and other shapes PowerPoint wraps in `mc:AlternateContent` are listed in `slide.shapes` as read-only `AlternateContentShape` objects (`content_kind`, fallback position/size); move, remove, duplicate and group act on the whole wrapper
 - **Callout shapes** — `MSO_SHAPE.LINE_CALLOUT_*` presets with adjustment handles
 - **Bulk operations** — `ShapeRange` API for alignment, distribution, and batch property updates without repeated XML walks
 

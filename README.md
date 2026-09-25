@@ -44,7 +44,7 @@ prs.save("hello.pptx")
 
 - **Presentations** — create blank, open existing (`.pptx` / `.pptm` / `.potx`), save to file or stream, core + custom document properties, notes page size, slide-show settings (loop, kiosk/browse, pen color, slide range), custom shows, table-style listing, embedded fonts (list and remove)
 - **Slides** — add, delete, duplicate, reorder, import across presentations, merge, computed slide numbers
-- **180+ shape types** — autoshapes, pictures, tables, connectors, group shapes, freeforms, placeholders, OLE objects, movies, audio clips, callouts
+- **180+ shape types** — autoshapes, pictures, tables, connectors, group shapes, freeforms, placeholders, OLE objects, movies, audio clips, callouts; 3D models, zooms and equations are listed read-only
 - **Shape control** — z-order, visibility, lock aspect ratio, group containment, hyperlinks, click actions
 - **Rich text formatting** — bold, italic, underline, color, size, shadow, strikethrough, caps, superscript/subscript, character spacing, kerning, bullets, tab stops, columns, RTL, vertical orientation
 - **Fill styles** — solid, gradient (linear, radial, rectangular, path), pattern, picture (stretched or tiled), background (no fill)
