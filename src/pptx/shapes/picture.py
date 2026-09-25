@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
 from pptx.dml.color import RGBColor
@@ -98,7 +99,121 @@ class _BasePicture(BaseShape):
         return self._pic.ln
 
 
-class Movie(_BasePicture):
+class _BaseMediaShape(_BasePicture):
+    """Base class for movie and audio shapes, based on the `p:pic` element.
+
+    Provides access to the trim and fade playback settings carried in the PowerPoint-2010
+    `p14:media` extension.
+    """
+
+    @property
+    def trim_start(self) -> timedelta | None:
+        """Duration trimmed from the start of the media. Read/write.
+
+        |None| if no trim-start is set. Assigning |None| or a zero-length `timedelta`
+        removes it.
+        """
+        return self._get_trim_value("st")
+
+    @trim_start.setter
+    def trim_start(self, value: timedelta | None) -> None:
+        self._set_trim_value("st", value)
+
+    @property
+    def trim_end(self) -> timedelta | None:
+        """Duration trimmed from the end of the media. Read/write.
+
+        |None| if no trim-end is set. Assigning |None| or a zero-length `timedelta` removes
+        it.
+        """
+        return self._get_trim_value("end")
+
+    @trim_end.setter
+    def trim_end(self, value: timedelta | None) -> None:
+        self._set_trim_value("end", value)
+
+    @property
+    def fade_in(self) -> timedelta | None:
+        """Duration of the fade-in effect at the start of playback. Read/write.
+
+        |None| if no fade-in is set. Assigning |None| or a zero-length `timedelta` removes
+        it.
+        """
+        return self._get_fade_value("in_")
+
+    @fade_in.setter
+    def fade_in(self, value: timedelta | None) -> None:
+        self._set_fade_value("in_", value)
+
+    @property
+    def fade_out(self) -> timedelta | None:
+        """Duration of the fade-out effect at the end of playback. Read/write.
+
+        |None| if no fade-out is set. Assigning |None| or a zero-length `timedelta` removes
+        it.
+        """
+        return self._get_fade_value("out")
+
+    @fade_out.setter
+    def fade_out(self, value: timedelta | None) -> None:
+        self._set_fade_value("out", value)
+
+    def _get_trim_value(self, attr_name: str) -> timedelta | None:
+        media = self._pic.p14_media
+        if media is None or media.trim is None:
+            return None
+        ms = getattr(media.trim, attr_name)
+        return None if ms is None else timedelta(milliseconds=ms)
+
+    def _set_trim_value(self, attr_name: str, value: timedelta | None) -> None:
+        ms = _ms_or_none(value)
+        media = self._pic.p14_media
+        if ms is None:
+            if media is None or media.trim is None:
+                return
+            setattr(media.trim, attr_name, None)
+            if media.trim.st is None and media.trim.end is None:
+                media._remove_trim()  # pyright: ignore[reportAttributeAccessIssue]
+            return
+        media = self._pic.get_or_add_p14_media()
+        trim = media.get_or_add_trim()  # pyright: ignore[reportAttributeAccessIssue]
+        setattr(trim, attr_name, ms)
+
+    def _get_fade_value(self, attr_name: str) -> timedelta | None:
+        media = self._pic.p14_media
+        if media is None or media.fade is None:
+            return None
+        ms = getattr(media.fade, attr_name)
+        return None if ms is None else timedelta(milliseconds=ms)
+
+    def _set_fade_value(self, attr_name: str, value: timedelta | None) -> None:
+        ms = _ms_or_none(value)
+        media = self._pic.p14_media
+        if ms is None:
+            if media is None or media.fade is None:
+                return
+            setattr(media.fade, attr_name, None)
+            if media.fade.in_ is None and media.fade.out is None:
+                media._remove_fade()  # pyright: ignore[reportAttributeAccessIssue]
+            return
+        media = self._pic.get_or_add_p14_media()
+        fade = media.get_or_add_fade()  # pyright: ignore[reportAttributeAccessIssue]
+        setattr(fade, attr_name, ms)
+
+
+def _ms_or_none(value: timedelta | None) -> int | None:
+    """Return `value` as an integer count of milliseconds, or |None|.
+
+    |None| is also returned for a zero-length `timedelta`, causing the corresponding XML
+    attribute to be removed rather than written as `"0"`.
+    """
+    if value is None:
+        return None
+    ms = round(value.total_seconds() * 1000)
+    return None if ms == 0 else ms
+
+
+class Movie(_BaseMediaShape):
     """A movie shape, one that places a video on a slide.
 
     Like |Picture|, a movie shape is based on the `p:pic` element. A movie is composed of a video
@@ -138,6 +253,39 @@ class Movie(_BasePicture):
 
         The return value is unconditionally `MSO_SHAPE_TYPE.MEDIA` in this
         case.
+        """
+        return MSO_SHAPE_TYPE.MEDIA
+
+
+class Audio(_BaseMediaShape):
+    """An audio shape, one that plays an audio clip on a slide.
+
+    Like |Picture|, an audio shape is based on the `p:pic` element, displayed as an icon
+    (the "speaker" icon by default) that is clicked to start playback.
+    """
+
+    @lazyproperty
+    def media_format(self) -> _MediaFormat:
+        """The |_MediaFormat| object for this audio clip.
+
+        The |_MediaFormat| object provides access to formatting properties for the audio
+        clip.
+        """
+        return _MediaFormat(self._pic, self)
+
+    @property
+    def media_type(self) -> PP_MEDIA_TYPE:
+        """Member of :ref:`PpMediaType` describing this shape.
+
+        The return value is unconditionally `PP_MEDIA_TYPE.SOUND` in this case.
+        """
+        return PP_MEDIA_TYPE.SOUND
+
+    @property
+    def shape_type(self) -> MSO_SHAPE_TYPE:
+        """Return member of :ref:`MsoShapeType` describing this shape.
+
+        The return value is unconditionally `MSO_SHAPE_TYPE.MEDIA` in this case.
         """
         return MSO_SHAPE_TYPE.MEDIA
 

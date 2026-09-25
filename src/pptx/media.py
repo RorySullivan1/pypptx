@@ -99,6 +99,117 @@ class Video:
         return hashlib.sha1(self._blob).hexdigest()
 
 
+class Audio:
+    """Immutable value object representing an audio clip such as MP3, WAV, or M4A."""
+
+    def __init__(self, blob: bytes, mime_type: str | None, filename: str | None):
+        super(Audio, self).__init__()
+        self._blob = blob
+        self._mime_type = mime_type
+        self._filename = filename
+
+    @classmethod
+    def from_blob(cls, blob: bytes, mime_type: str | None, filename: str | None = None):
+        """Return a new |Audio| object loaded from audio binary in *blob*."""
+        return cls(blob, mime_type, filename)
+
+    @classmethod
+    def from_path_or_file_like(cls, audio_file: str | IO[bytes], mime_type: str | None) -> Audio:
+        """Return a new |Audio| object containing audio in *audio_file*.
+
+        *audio_file* can be either a path (string) or a file-like (e.g. BytesIO) object. When
+        *mime_type* is |None|, the MIME type is inferred from the filename extension (falling
+        back to `'audio/mpeg'` when no extension is available or recognized).
+        """
+        if isinstance(audio_file, str):
+            # treat audio_file as a path
+            with open(audio_file, "rb") as f:
+                blob = f.read()
+            filename = os.path.basename(audio_file)
+        else:
+            # assume audio_file is a file-like object
+            blob = audio_file.read()
+            filename = None
+
+        if mime_type is None:
+            mime_type = _mime_type_from_filename(filename)
+
+        return cls.from_blob(blob, mime_type, filename)
+
+    @property
+    def blob(self):
+        """The bytestream of the media "file"."""
+        return self._blob
+
+    @property
+    def content_type(self):
+        """MIME-type of this media, e.g. `'audio/mpeg'`."""
+        return self._mime_type
+
+    @property
+    def ext(self):
+        """Return the file extension for this audio clip, e.g. 'mp3'.
+
+        The extension is that from the actual filename if known. Otherwise it is the
+        lowercase canonical extension for the audio's MIME type. 'aud' is used if the MIME
+        type is not recognized.
+        """
+        if self._filename:
+            return os.path.splitext(self._filename)[1].lstrip(".")
+        if self._mime_type is None:
+            return "aud"
+        return _AUDIO_CONTENT_TYPE_TO_EXT.get(self._mime_type, "aud")
+
+    @property
+    def filename(self) -> str:
+        """Return a filename.ext string appropriate to this audio clip.
+
+        The base filename from the original path is used if this audio was loaded from the
+        filesystem. If no filename is available, such as when the audio object is created
+        from an in-memory stream, the string 'audio.{ext}' is used where 'ext' is suitable
+        to the audio format, such as 'mp3'.
+        """
+        if self._filename is not None:
+            return self._filename
+        return "audio.%s" % self.ext
+
+    @lazyproperty
+    def sha1(self):
+        """The SHA1 hash digest for the binary "file" of this audio clip.
+
+        Example: `'1be010ea47803b00e140b852765cdf84f491da47'`
+        """
+        return hashlib.sha1(self._blob).hexdigest()
+
+
+_AUDIO_CONTENT_TYPE_TO_EXT = {
+    CT.M4A: "m4a",
+    CT.MP3: "mp3",
+    CT.WAV: "wav",
+    CT.X_M4A: "m4a",
+    CT.X_WAV: "wav",
+}
+
+_AUDIO_EXT_TO_CONTENT_TYPE = {
+    "m4a": CT.M4A,
+    "mp3": CT.MP3,
+    "wav": CT.WAV,
+}
+
+
+def _mime_type_from_filename(filename: str | None) -> str:
+    """Return the best-guess audio MIME type for *filename* based on its extension.
+
+    Falls back to `CT.MP3` ('audio/mpeg') when *filename* is |None| or has an extension
+    that is not recognized as an audio format.
+    """
+    if filename:
+        ext = os.path.splitext(filename)[1].lstrip(".").lower()
+        if ext in _AUDIO_EXT_TO_CONTENT_TYPE:
+            return _AUDIO_EXT_TO_CONTENT_TYPE[ext]
+    return CT.MP3
+
+
 SPEAKER_IMAGE_BYTES = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAHgAAAA3CAYAAADHao5rAAAACXBIWXMAAAsTAAALEwEAmpw"
     "YAAAKT2lDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjanVNnVFPpFj333vRCS4iAlEtvUh"

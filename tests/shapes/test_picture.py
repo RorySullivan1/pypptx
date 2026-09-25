@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 
 from pptx.dml.color import RGBColor
@@ -9,7 +11,7 @@ from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE, PP_MEDIA_TYPE
 from pptx.parts.image import Image
 from pptx.parts.slide import SlidePart
-from pptx.shapes.picture import Movie, Picture, _BasePicture, _MediaFormat
+from pptx.shapes.picture import Audio, Movie, Picture, _BasePicture, _MediaFormat
 from pptx.util import Pt
 
 from ..unitutil.cxml import element, xml
@@ -218,6 +220,120 @@ class DescribeMovie:
     @pytest.fixture
     def slide_part_(self, request):
         return instance_mock(request, SlidePart)
+
+
+class Describe_BaseMediaShape:
+    """Unit-test suite for `pptx.shapes.picture._BaseMediaShape` objects (via `Movie`)."""
+
+    @pytest.mark.parametrize(
+        "prop_name, other_prop_name",
+        [
+            ("trim_start", "trim_end"),
+            ("trim_end", "trim_start"),
+            ("fade_in", "fade_out"),
+            ("fade_out", "fade_in"),
+        ],
+    )
+    def it_has_no_trim_or_fade_settings_by_default(self, prop_name, other_prop_name):
+        movie = Movie(element("p:pic/p:nvPicPr/p:nvPr"), None)
+        assert getattr(movie, prop_name) is None
+        assert getattr(movie, other_prop_name) is None
+
+    @pytest.mark.parametrize(
+        "prop_name",
+        ["trim_start", "trim_end", "fade_in", "fade_out"],
+    )
+    def it_can_set_and_read_back_its_trim_and_fade_settings(self, prop_name):
+        movie = Movie(element("p:pic/p:nvPicPr/p:nvPr"), None)
+
+        setattr(movie, prop_name, timedelta(milliseconds=1500))
+
+        assert getattr(movie, prop_name) == timedelta(milliseconds=1500)
+
+    @pytest.mark.parametrize(
+        "prop_name",
+        ["trim_start", "trim_end", "fade_in", "fade_out"],
+    )
+    def it_can_remove_a_trim_or_fade_setting(self, prop_name):
+        movie = Movie(element("p:pic/p:nvPicPr/p:nvPr"), None)
+        setattr(movie, prop_name, timedelta(milliseconds=1500))
+
+        setattr(movie, prop_name, None)
+
+        assert getattr(movie, prop_name) is None
+        # -- the now-empty p14:trim/p14:fade element is cleaned up too --
+        assert movie._pic.p14_media is None or (
+            movie._pic.p14_media.trim is None and movie._pic.p14_media.fade is None
+        )
+
+    @pytest.mark.parametrize(
+        "prop_name",
+        ["trim_start", "trim_end", "fade_in", "fade_out"],
+    )
+    def it_treats_a_zero_length_timedelta_as_removal(self, prop_name):
+        movie = Movie(element("p:pic/p:nvPicPr/p:nvPr"), None)
+        setattr(movie, prop_name, timedelta(0))
+        assert getattr(movie, prop_name) is None
+
+    def it_can_set_trim_and_fade_independently(self):
+        movie = Movie(element("p:pic/p:nvPicPr/p:nvPr"), None)
+
+        movie.trim_start = timedelta(milliseconds=1500)
+        movie.trim_end = timedelta(milliseconds=2000)
+        movie.fade_in = timedelta(milliseconds=500)
+        movie.fade_out = timedelta(milliseconds=750)
+
+        assert movie.trim_start == timedelta(milliseconds=1500)
+        assert movie.trim_end == timedelta(milliseconds=2000)
+        assert movie.fade_in == timedelta(milliseconds=500)
+        assert movie.fade_out == timedelta(milliseconds=750)
+        p14_media = movie._pic.p14_media
+        assert p14_media.trim.st == 1500
+        assert p14_media.trim.end == 2000
+        assert p14_media.fade.in_ == 500
+        assert p14_media.fade.out == 750
+
+
+class DescribeAudio:
+    def it_knows_its_shape_type(self, shape_type_fixture):
+        audio = shape_type_fixture
+        assert audio.shape_type == MSO_SHAPE_TYPE.MEDIA
+
+    def it_knows_its_media_type(self, media_type_fixture):
+        audio = media_type_fixture
+        assert audio.media_type == PP_MEDIA_TYPE.SOUND
+
+    def it_provides_access_to_its_media_format(self, format_fixture):
+        audio, MediaFormat_, pic, parent, media_format_ = format_fixture
+        media_format = audio.media_format
+        MediaFormat_.assert_called_once_with(pic, parent)
+        assert media_format is media_format_
+
+    # fixtures -------------------------------------------------------
+
+    @pytest.fixture
+    def format_fixture(self, _MediaFormat_, media_format_):
+        pic = element("p:pic")
+        parent = audio = Audio(pic, None)
+        return audio, _MediaFormat_, pic, parent, media_format_
+
+    @pytest.fixture
+    def media_type_fixture(self):
+        return Audio(None, None)
+
+    @pytest.fixture
+    def shape_type_fixture(self):
+        return Audio(None, None)
+
+    # fixture components ---------------------------------------------
+
+    @pytest.fixture
+    def _MediaFormat_(self, request, media_format_):
+        return class_mock(request, "pptx.shapes.picture._MediaFormat", return_value=media_format_)
+
+    @pytest.fixture
+    def media_format_(self, request):
+        return instance_mock(request, _MediaFormat)
 
 
 class DescribePicture:
