@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
+from pptx.chart.datatable import DataTable
 from pptx.chart.legend import Legend
 from pptx.chart.plotarea import PlotArea
 from pptx.chart.view3d import ChartSurface, View3D
@@ -220,6 +221,34 @@ class Chart(PartElementProxy):
         """Font object controlling text format defaults for this chart."""
         defRPr = self._chartSpace.get_or_add_txPr().p_lst[0].get_or_add_pPr().get_or_add_defRPr()
         return Font(defRPr)
+
+    @property
+    def data_table(self) -> DataTable | None:
+        """A |DataTable| object providing access to the properties of this chart's data
+        table, or |None| if it does not have one.
+
+        Assign |True| to |Chart.has_data_table| to add a data table to a chart that
+        doesn't already have one.
+        """
+        dTable = self._chartSpace.chart.plotArea.dTable
+        if dTable is None:
+            return None
+        return DataTable(dTable)
+
+    @property
+    def has_data_table(self) -> bool:
+        """Read/write boolean, |True| if the chart has a data table.
+
+        Assigning |True| causes a data table to be added below the plot area if one is not
+        already present, using PowerPoint's plain default settings (horizontal and vertical
+        borders and an outline are shown; legend keys are not). Assigning |False| removes
+        any existing data table.
+        """
+        return self._chartSpace.chart.plotArea.has_data_table
+
+    @has_data_table.setter
+    def has_data_table(self, value: bool) -> None:
+        self._chartSpace.chart.plotArea.has_data_table = bool(value)
 
     @property
     def has_legend(self) -> bool:

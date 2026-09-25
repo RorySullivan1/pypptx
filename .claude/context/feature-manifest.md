@@ -153,6 +153,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Drop lines, hi-lo lines, up-down bars, series lines on applicable plot types
 - Replace chart data; combo charts via `Chart.add_plot(plot_type, use_secondary_axis, grouping)`
 - Pie / doughnut — first-slice angle, hole size; of-pie split type/pos/second-pie-size; gap-width
+- Data table — `Chart.has_data_table`; `DataTable` (`horizontal_border`, `vertical_border`, `outline`, `show_keys`) (#70)
 
 ### Picture Format
 - Brightness — `Picture.brightness` (`a:lum` bright)

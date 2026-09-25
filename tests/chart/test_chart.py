@@ -7,7 +7,7 @@ from __future__ import annotations
 import pytest
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
-from pptx.chart.chart import Chart, ChartTitle, Legend, _Plots
+from pptx.chart.chart import Chart, ChartTitle, DataTable, Legend, _Plots
 from pptx.exc import ChartError
 from pptx.chart.data import ChartData
 from pptx.chart.plot import _BasePlot
@@ -277,6 +277,24 @@ class DescribeChart:
         _Plots_.assert_called_once_with(plotArea, chart)
         assert plots is plots_
 
+    def it_knows_whether_it_has_a_data_table(self, has_data_table_get_fixture):
+        chart, expected_value = has_data_table_get_fixture
+        assert chart.has_data_table == expected_value
+
+    def it_can_change_whether_it_has_a_data_table(self, has_data_table_set_fixture):
+        chart, new_value, expected_xml = has_data_table_set_fixture
+        chart.has_data_table = new_value
+        assert chart._chartSpace.xml == expected_xml
+
+    def it_provides_access_to_its_data_table(self, data_table_fixture):
+        chart, expected_value = data_table_fixture
+        data_table = chart.data_table
+        if expected_value is None:
+            assert data_table is None
+        else:
+            assert isinstance(data_table, DataTable)
+            assert data_table._element is expected_value
+
     def it_knows_whether_it_has_a_legend(self, has_legend_get_fixture):
         chart, expected_value = has_legend_get_fixture
         assert chart.has_legend == expected_value
@@ -369,6 +387,52 @@ class DescribeChart:
         chartSpace = element(chartSpace_cxml)
         expected_xml = xml(expected_cxml)
         return chartSpace, expected_xml
+
+    @pytest.fixture(
+        params=[
+            ("c:chartSpace/c:chart/c:plotArea", False),
+            ("c:chartSpace/c:chart/c:plotArea/c:dTable", True),
+        ]
+    )
+    def has_data_table_get_fixture(self, request):
+        chartSpace_cxml, expected_value = request.param
+        chart = Chart(element(chartSpace_cxml), None)
+        return chart, expected_value
+
+    @pytest.fixture(
+        params=[
+            (
+                "c:chartSpace/c:chart/c:plotArea/c:catAx",
+                True,
+                "c:chartSpace/c:chart/c:plotArea/(c:catAx,c:dTable/("
+                "c:showHorzBorder{val=1},c:showVertBorder{val=1},"
+                "c:showOutline{val=1},c:showKeys{val=0}))",
+            ),
+            (
+                "c:chartSpace/c:chart/c:plotArea/c:dTable",
+                False,
+                "c:chartSpace/c:chart/c:plotArea",
+            ),
+        ]
+    )
+    def has_data_table_set_fixture(self, request):
+        chartSpace_cxml, new_value, expected_chartSpace_cxml = request.param
+        chart = Chart(element(chartSpace_cxml), None)
+        expected_xml = xml(expected_chartSpace_cxml)
+        return chart, new_value, expected_xml
+
+    @pytest.fixture(
+        params=[
+            ("c:chartSpace/c:chart/c:plotArea", None),
+            ("c:chartSpace/c:chart/c:plotArea/c:dTable", "dTable"),
+        ]
+    )
+    def data_table_fixture(self, request):
+        chartSpace_cxml, expected = request.param
+        chartSpace = element(chartSpace_cxml)
+        chart = Chart(chartSpace, None)
+        expected_value = None if expected is None else chartSpace.chart.plotArea.dTable
+        return chart, expected_value
 
     @pytest.fixture(
         params=[
