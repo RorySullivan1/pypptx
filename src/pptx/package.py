@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import IO, Iterator
+from typing import IO, TYPE_CHECKING, Iterator
 
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import OpcPackage
@@ -13,6 +13,9 @@ from pptx.parts.custprops import CustomPropertiesPart
 from pptx.parts.image import Image, ImagePart
 from pptx.parts.media import MediaPart
 from pptx.util import lazyproperty
+
+if TYPE_CHECKING:
+    from pptx.media import Audio, Video
 
 
 class Package(OpcPackage):
@@ -61,7 +64,7 @@ class Package(OpcPackage):
         """Return |ImagePart| containing the image in `image_file`, reusing if present."""
         return self._image_parts.get_or_add_image_part(image_file)
 
-    def get_or_add_media_part(self, media: MediaPart) -> MediaPart:
+    def get_or_add_media_part(self, media: Video | Audio) -> MediaPart:
         """Return a |MediaPart| object containing the media in *media*.
 
         If a media part for this media bytestream ("file") is already present
@@ -212,7 +215,7 @@ class _MediaParts:
             media_parts.append(media_part)
             yield media_part
 
-    def get_or_add_media_part(self, media: MediaPart) -> MediaPart:
+    def get_or_add_media_part(self, media: Video | Audio) -> MediaPart:
         """Return a |MediaPart| object containing the media in *media*.
 
         If this package already contains a media part for the same

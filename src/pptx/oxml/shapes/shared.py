@@ -299,6 +299,7 @@ class CT_ApplicationNonVisualDrawingProps(BaseOxmlElement):
     """`p:nvPr` element."""
 
     get_or_add_ph: Callable[[], CT_Placeholder]
+    get_or_add_extLst: Callable[[], BaseOxmlElement]
 
     ph = ZeroOrOne(
         "p:ph",
@@ -311,6 +312,9 @@ class CT_ApplicationNonVisualDrawingProps(BaseOxmlElement):
             "p:custDataLst",
             "p:extLst",
         ),
+    )
+    extLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:extLst", successors=()
     )
 
 
