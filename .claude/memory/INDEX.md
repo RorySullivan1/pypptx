@@ -6,6 +6,7 @@
 - Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); cursor `.meta/version` = v0.2.0 shipped; next v0.2.1.
 - Epic #87 closed (PR #94): master text styles, theme style lists, `SlideMaster.apply_theme`.
 - Epic #79 closed (PR #96): freeform curves/arcs, line cap/join, picture fill, non-linear gradients, table row/col add/remove, cell text direction, autofit readouts.
+- Epic #66 (#67-#70): chartex charts (read all, add 6 types) + chart data table — PR open.
 - Epic #62 closed (PR #101): SmartArt detection, node-tree read, node text edit (drops cached drawing).
 - Epic #56 closed (PR #99): notes size, custom shows, slide-show settings (presProps), table-style listing, embedded fonts; `LazyXmlPart` keeps untouched parts byte-stable.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
@@ -24,6 +25,8 @@
   a test fails on duplicate `register_element_cls` tags — sessions/2026-09-25-1202-epic-56-presentation-parts.md
 - [2026-09-25] SmartArt text edits DROP the cached dsp:drawing part (not patch it); `MSO_SHAPE_TYPE.SMART_ART` is canonical,
   `IGX_GRAPHIC` an alias — sessions/2026-09-25-1400-epic-62-smartart.md
+- [2026-09-25] Chartex charts are a SIBLING API (`GraphicFrame.chartex`, `has_chart` False, `shape_type` CHART); the
+  shape is the `mc:Choice` graphicFrame and `tree_elm()` gives its wrapper — sessions/2026-09-25-1530-epic-66-chartex-dtable.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
@@ -31,6 +34,7 @@
 - Epic #56 human checks: custom show plays the right slides; loop/kiosk take effect; last-embedded-font removal opens cleanly.
 - v0.2.2 docstring audit: consider adopting the factory's prose tier (`prose_budget.py`, `prose-auditor`, `/prose-review`).
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
+- Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - `unverified` surfaces (verification-surface.md): type checker, Sphinx build, real-world corpus.
 
 ## Log              (append-only pointers)
@@ -40,3 +44,4 @@
 - 2026-09-25 1202 | Close epic #56 (package-level presentation parts) | sessions/2026-09-25-1202-epic-56-presentation-parts.md
 - 2026-09-25 1400 | Epic #62 SmartArt read + node text edit | sessions/2026-09-25-1400-epic-62-smartart.md
 - 2026-09-25 1430 | Merge PR #101; epic #62 + #63-#65 closed | sessions/2026-09-25-1400-epic-62-smartart.md
+- 2026-09-25 1530 | Epic #66 chartex + data table | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
