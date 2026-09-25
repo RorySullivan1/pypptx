@@ -49,7 +49,7 @@ prs.save("hello.pptx")
 - **Rich text formatting** — bold, italic, underline, color, size, shadow, strikethrough, caps, superscript/subscript, character spacing, kerning, bullets, tab stops, columns, RTL, vertical orientation
 - **Fill styles** — solid, gradient (linear, radial, rectangular, path), pattern, picture (stretched or tiled), background (no fill)
 - **Line formatting** — width, color, dash styles, compound styles, cap and join styles, arrowheads, transparency, pattern fill
-- **75+ chart types** — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie (plus 3D variants); combo charts with trendlines, error bars, secondary axes, drop / hi-lo / up-down lines, log scale, 3D view, data labels with leader lines
+- **75+ chart types** — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie (plus 3D variants); combo charts with trendlines, error bars, secondary axes, drop / hi-lo / up-down lines, log scale, 3D view, data labels with leader lines, data tables
 - **SmartArt** — detect SmartArt graphic frames, walk the node tree with text and levels, edit node text (PowerPoint re-lays out the diagram on open)
 - **Tables** — create, insert/delete rows and columns, merge/split cells, borders (including diagonal), cell fills, cell text direction, banding, table styles
 - **Visual effects** — outer/inner shadow with transparency, reflection, glow, soft edges

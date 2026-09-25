@@ -220,6 +220,47 @@ assert len({wb.partname for wb in workbooks}) == 2
 assert len({c.part.partname for c in charts}) == 2
 """)
 
+    def it_round_trips_a_chart_data_table(self):
+        _run_roundtrip_test("""\
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+chart_data = CategoryChartData()
+chart_data.categories = ["a", "b"]
+chart_data.add_series("S1", (1, 2))
+gframe = slide.shapes.add_chart(
+    XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(1), Inches(4), Inches(3), chart_data
+)
+chart = gframe.chart
+assert chart.has_data_table is False
+assert chart.data_table is None
+
+chart.has_data_table = True
+data_table = chart.data_table
+data_table.show_keys = True
+data_table.outline = False
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+chart2 = prs2.slides[0].shapes[0].chart
+assert chart2.has_data_table is True
+data_table2 = chart2.data_table
+assert data_table2 is not None
+assert data_table2.horizontal_border is True
+assert data_table2.vertical_border is True
+assert data_table2.outline is False
+assert data_table2.show_keys is True
+
+chart2.has_data_table = False
+assert chart2.has_data_table is False
+assert chart2.data_table is None
+""")
+
     def it_round_trips_hidden_shapes(self):
         _run_roundtrip_test("""\
 prs = Presentation()

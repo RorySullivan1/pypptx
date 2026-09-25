@@ -603,6 +603,7 @@ Missing descriptors on chart type OXML classes. All items are `ZeroOrOne` unless
 - [x] `CT_Chart` — add `c:plotVisOnly` descriptor (plot visible cells only)
 - [x] `CT_Chart` — add `c:showDLblsOverMax` descriptor (show labels over max)
 - [x] `CT_ChartSpace` — add `c:roundedCorners` descriptor (rounded chart border)
+- [x] `CT_PlotArea` — add `c:dTable` descriptor (`CT_DTable`: `showHorzBorder`, `showVertBorder`, `showOutline`, `showKeys`, `spPr`), correctly sequenced after axes and before `spPr`/`extLst`; `Chart.has_data_table`, `Chart.data_table` → `DataTable` proxy (#70)
 
 ### 18.11 OXML Foundation — Data Label Descriptor Gaps
 

@@ -126,6 +126,16 @@ register_element_cls("c:plotArea", CT_PlotArea)
 register_element_cls("c:style", CT_Style)
 
 
+from pptx.oxml.chart.datatable import CT_DTable  # noqa: E402
+from pptx.oxml.chart.shared import CT_Boolean as _CT_Boolean  # noqa: E402
+
+register_element_cls("c:dTable", CT_DTable)
+register_element_cls("c:showHorzBorder", _CT_Boolean)
+register_element_cls("c:showVertBorder", _CT_Boolean)
+register_element_cls("c:showOutline", _CT_Boolean)
+register_element_cls("c:showKeys", _CT_Boolean)
+
+
 from pptx.oxml.chart.datalabel import CT_DLbl, CT_DLblPos, CT_DLbls  # noqa: E402
 
 register_element_cls("c:dLbl", CT_DLbl)

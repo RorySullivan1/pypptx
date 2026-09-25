@@ -7,6 +7,7 @@ from typing import cast
 from lxml import etree
 
 from pptx.oxml import parse_xml
+from pptx.oxml.chart.datatable import CT_DTable
 from pptx.oxml.chart.shared import CT_Title
 from pptx.oxml.ns import nsdecls, nsmap, qn
 from pptx.oxml.simpletypes import ST_DispBlanksAs, ST_Style, XsdString
@@ -202,9 +203,31 @@ class CT_PlotArea(BaseOxmlElement):
         "c:scatterChart", "c:stockChart", "c:surfaceChart", "c:surface3DChart",
         "c:catAx", "c:dateAx", "c:valAx", "c:serAx", "c:spPr", "c:extLst",
     ))
-    catAx = ZeroOrMore("c:catAx")
-    valAx = ZeroOrMore("c:valAx")
+    catAx = ZeroOrMore("c:catAx", successors=("c:dTable", "c:spPr", "c:extLst"))
+    valAx = ZeroOrMore("c:valAx", successors=("c:dTable", "c:spPr", "c:extLst"))
+    dTable = ZeroOrOne("c:dTable", successors=("c:spPr", "c:extLst"))
     spPr = ZeroOrOne("c:spPr", successors=("c:extLst",))
+
+    @property
+    def has_data_table(self) -> bool:
+        """True if this plot area has a data table defined, False otherwise."""
+        return self.dTable is not None
+
+    @has_data_table.setter
+    def has_data_table(self, value: bool) -> None:
+        """Add, remove, or leave alone the `c:dTable` child depending on current state and
+        *value*. If *value* is |True| and no `c:dTable` element is present, a new one is
+        added, populated with PowerPoint's plain default settings. When |False|, any
+        existing `c:dTable` element is removed.
+        """
+        if bool(value) is False:
+            self._remove_dTable()
+        else:
+            if self.dTable is None:
+                self._add_dTable()
+
+    def _new_dTable(self) -> CT_DTable:
+        return CT_DTable.new_dTable()
 
     def iter_sers(self):
         """
