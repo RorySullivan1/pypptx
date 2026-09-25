@@ -184,6 +184,9 @@ class XL_CHART_TYPE(BaseEnum):
     BAR_STACKED_100 = (59, "100% Stacked Bar.")
     """100% Stacked Bar."""
 
+    BOX_WHISKER = (121, "Box and Whisker (chartex).")
+    """Box and Whisker (chartex)."""
+
     BUBBLE = (15, "Bubble.")
     """Bubble."""
 
@@ -247,6 +250,12 @@ class XL_CHART_TYPE(BaseEnum):
     DOUGHNUT_EXPLODED = (80, "Exploded Doughnut.")
     """Exploded Doughnut."""
 
+    FUNNEL = (123, "Funnel (chartex).")
+    """Funnel (chartex)."""
+
+    HISTOGRAM = (118, "Histogram (chartex).")
+    """Histogram (chartex)."""
+
     LINE = (4, "Line.")
     """Line."""
 
@@ -264,6 +273,9 @@ class XL_CHART_TYPE(BaseEnum):
 
     LINE_STACKED_100 = (64, "100% Stacked Line.")
     """100% Stacked Line."""
+
+    PARETO = (122, "Pareto (chartex; histogram plus cumulative-percentage line).")
+    """Pareto (chartex; histogram plus cumulative-percentage line)."""
 
     PIE = (5, "Pie.")
     """Pie."""
@@ -304,6 +316,9 @@ class XL_CHART_TYPE(BaseEnum):
     RADAR_MARKERS = (81, "Radar with Data Markers.")
     """Radar with Data Markers."""
 
+    REGION_MAP = (140, "Region Map (chartex; read-only).")
+    """Region Map (chartex; read-only)."""
+
     STOCK_HLC = (88, "High-Low-Close.")
     """High-Low-Close."""
 
@@ -316,6 +331,9 @@ class XL_CHART_TYPE(BaseEnum):
     STOCK_VOHLC = (91, "Volume-Open-High-Low-Close.")
     """Volume-Open-High-Low-Close."""
 
+    SUNBURST = (120, "Sunburst (chartex).")
+    """Sunburst (chartex)."""
+
     SURFACE = (83, "3D Surface.")
     """3D Surface."""
 
@@ -327,6 +345,12 @@ class XL_CHART_TYPE(BaseEnum):
 
     SURFACE_WIREFRAME = (84, "3D Surface (wireframe).")
     """3D Surface (wireframe)."""
+
+    TREEMAP = (117, "Treemap (chartex).")
+    """Treemap (chartex)."""
+
+    WATERFALL = (119, "Waterfall (chartex).")
+    """Waterfall (chartex)."""
 
     XY_SCATTER = (-4169, "Scatter.")
     """Scatter."""

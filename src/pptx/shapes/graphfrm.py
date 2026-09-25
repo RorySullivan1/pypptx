@@ -15,6 +15,7 @@ from pptx.shared import ParentedElementProxy
 from pptx.smartart import SmartArt
 from pptx.spec import (
     GRAPHIC_DATA_URI_CHART,
+    GRAPHIC_DATA_URI_CHARTEX,
     GRAPHIC_DATA_URI_DIAGRAM,
     GRAPHIC_DATA_URI_OLEOBJ,
     GRAPHIC_DATA_URI_TABLE,
@@ -24,9 +25,11 @@ from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.chart.chart import Chart
+    from pptx.chart.chartex import ChartEx
     from pptx.dml.effect import ShadowFormat
     from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectData, CT_GraphicalObjectFrame
     from pptx.parts.chart import ChartPart
+    from pptx.parts.chartex import ChartExPart
     from pptx.parts.diagram import DiagramDataPart
     from pptx.parts.slide import BaseSlidePart
     from pptx.types import ProvidesPart
@@ -61,12 +64,41 @@ class GraphicFrame(BaseShape):
         return cast("ChartPart", self.part.related_part(chart_rId))
 
     @property
+    def chartex(self) -> ChartEx:
+        """The |ChartEx| object for the chartex chart (waterfall, treemap, ...) in this frame.
+
+        Raises |ShapeError| if this graphic frame does not contain a chartex chart.
+        """
+        return self.chartex_part.chartex
+
+    @property
+    def chartex_part(self) -> ChartExPart:
+        """The |ChartExPart| holding the chartex chart in this graphic frame.
+
+        Raises |ShapeError| if this graphic frame does not contain a chartex chart.
+        """
+        rId = self._graphicFrame.chartex_rId
+        if not self.has_chartex or rId is None:
+            raise ShapeError("shape does not contain a chartex chart")
+        return cast("ChartExPart", self.part.related_part(rId))
+
+    @property
     def has_chart(self) -> bool:
         """|True| if this graphic frame contains a chart object. |False| otherwise.
 
         When |True|, the chart object can be accessed using the `.chart` property.
         """
         return self._graphicFrame.graphicData_uri == GRAPHIC_DATA_URI_CHART
+
+    @property
+    def has_chartex(self) -> bool:
+        """|True| if this graphic frame contains a chartex chart, |False| otherwise.
+
+        Chartex charts are the Office 2016+ types: waterfall, histogram, Pareto, box & whisker,
+        treemap, sunburst, funnel and region map. They are read through `.chartex`, not `.chart`,
+        so `has_chart` is |False| for them.
+        """
+        return self._graphicFrame.graphicData_uri == GRAPHIC_DATA_URI_CHARTEX
 
     @property
     def has_smartart(self) -> bool:
@@ -112,12 +144,13 @@ class GraphicFrame(BaseShape):
 
         Possible values are `MSO_SHAPE_TYPE.CHART`, `MSO_SHAPE_TYPE.TABLE`,
         `MSO_SHAPE_TYPE.SMART_ART`, `MSO_SHAPE_TYPE.EMBEDDED_OLE_OBJECT`,
-        `MSO_SHAPE_TYPE.LINKED_OLE_OBJECT`.
+        `MSO_SHAPE_TYPE.LINKED_OLE_OBJECT`. A chartex chart (see `has_chartex`) is also
+        `MSO_SHAPE_TYPE.CHART`.
 
         This value is `None` when none of these five types apply.
         """
         graphicData_uri = self._graphicFrame.graphicData_uri
-        if graphicData_uri == GRAPHIC_DATA_URI_CHART:
+        if graphicData_uri in (GRAPHIC_DATA_URI_CHART, GRAPHIC_DATA_URI_CHARTEX):
             return MSO_SHAPE_TYPE.CHART
         elif graphicData_uri == GRAPHIC_DATA_URI_DIAGRAM:
             return MSO_SHAPE_TYPE.SMART_ART

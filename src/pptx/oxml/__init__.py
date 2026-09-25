@@ -823,6 +823,39 @@ register_element_cls("p:txBody", CT_TextBody)
 register_element_cls("p188:txBody", CT_TextBody)
 
 
+from pptx.oxml.chart.chartex import (  # noqa: E402
+    CT_ChartExChart,
+    CT_ChartExData,
+    CT_ChartExDataItem,
+    CT_ChartExDimension,
+    CT_ChartExExternalData,
+    CT_ChartExLevel,
+    CT_ChartExPlotArea,
+    CT_ChartExPlotAreaRegion,
+    CT_ChartExPoint,
+    CT_ChartExSeries,
+    CT_ChartExSpace,
+)
+
+register_element_cls("cx:chart", CT_ChartExChart)
+register_element_cls("cx:chartData", CT_ChartExData)
+register_element_cls("cx:chartSpace", CT_ChartExSpace)
+register_element_cls("cx:data", CT_ChartExDataItem)
+register_element_cls("cx:externalData", CT_ChartExExternalData)
+register_element_cls("cx:lvl", CT_ChartExLevel)
+register_element_cls("cx:numDim", CT_ChartExDimension)
+register_element_cls("cx:plotArea", CT_ChartExPlotArea)
+register_element_cls("cx:plotAreaRegion", CT_ChartExPlotAreaRegion)
+register_element_cls("cx:pt", CT_ChartExPoint)
+register_element_cls("cx:series", CT_ChartExSeries)
+register_element_cls("cx:strDim", CT_ChartExDimension)
+
+from pptx.oxml.shapes.shared import CT_MarkupCompatibilityElement  # noqa: E402
+
+register_element_cls("mc:AlternateContent", CT_MarkupCompatibilityElement)
+register_element_cls("mc:Choice", CT_MarkupCompatibilityElement)
+register_element_cls("mc:Fallback", CT_MarkupCompatibilityElement)
+
 from pptx.oxml.diagram import (  # noqa: E402
     CT_CxnList,
     CT_Cxn,

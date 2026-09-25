@@ -13,6 +13,7 @@ from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
 from pptx.oxml.shapes.picture import CT_Picture
 from pptx.oxml.shapes.shared import BaseShapeElement
 from pptx.oxml.xmlchemy import BaseOxmlElement, OneAndOnlyOne, ZeroOrOne
+from pptx.spec import GRAPHIC_DATA_URI_CHARTEX
 from pptx.util import Emu
 
 if TYPE_CHECKING:
@@ -146,6 +147,15 @@ class CT_GroupShape(BaseShapeElement):
         for elm in self.iterchildren():
             if elm.tag in self._shape_tags:
                 yield elm
+            elif elm.tag == qn("mc:AlternateContent"):
+                # -- a chartex chart is written as the `mc:Choice` of an alternate-content
+                # -- element; the graphic frame in that choice is the shape --
+                frames = elm.xpath(
+                    "./mc:Choice/p:graphicFrame[a:graphic/a:graphicData/@uri='%s']"
+                    % GRAPHIC_DATA_URI_CHARTEX
+                )
+                if frames:
+                    yield frames[0]
 
     @property
     def max_shape_id(self) -> int:

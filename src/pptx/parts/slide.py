@@ -21,7 +21,7 @@ from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
-    from pptx.chart.data import ChartData
+    from pptx.chart.data import CategoryChartData, ChartData
     from pptx.enum.chart import XL_CHART_TYPE
     from pptx.media import Video
     from pptx.opc.package import Package
@@ -183,6 +183,18 @@ class SlidePart(BaseSlidePart):
         part by `rId`.
         """
         return self.relate_to(ChartPart.new(chart_type, chart_data, self._package), RT.CHART)
+
+    def add_chartex_part(
+        self, chart_type: XL_CHART_TYPE, chart_data: CategoryChartData
+    ) -> str:
+        """Return str rId of a new |ChartExPart| containing a chartex chart of `chart_type`.
+
+        The chart depicts `chart_data` and is related to the slide contained in this part by
+        `rId`.
+        """
+        from pptx.parts.chartex import ChartExPart
+
+        return self.relate_to(ChartExPart.new(chart_type, chart_data, self._package), RT.CHART_EX)
 
     def add_embedded_ole_object_part(
         self, prog_id: PROG_ID | str, ole_object_file: str | IO[bytes]

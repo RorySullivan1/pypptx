@@ -142,7 +142,9 @@ class BaseShape:
         """
         from pptx.oxml.ns import qn
 
-        parent_elm = self._element.getparent()
+        from pptx.oxml.shapes.shared import tree_elm
+
+        parent_elm = tree_elm(self._element).getparent()
         return parent_elm is not None and parent_elm.tag == qn("p:grpSp")
 
     @property
@@ -155,7 +157,9 @@ class BaseShape:
             raise ShapeError("shape is not contained in a group")
         from pptx.shapes.group import GroupShape
 
-        grpSp_elm = self._element.getparent()
+        from pptx.oxml.shapes.shared import tree_elm
+
+        grpSp_elm = tree_elm(self._element).getparent()
         return GroupShape(grpSp_elm, self._parent)
 
     @property

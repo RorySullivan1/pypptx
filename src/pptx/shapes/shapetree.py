@@ -7,6 +7,7 @@ import os
 from copy import deepcopy
 from typing import IO, TYPE_CHECKING, Callable, Iterable, Iterator, cast
 
+from pptx.chart.chartexwriter import chartex_type, is_chartex_type
 from pptx.enum.shapes import PP_PLACEHOLDER, PROG_ID
 from pptx.media import SPEAKER_IMAGE_BYTES, Video
 from pptx.opc.constants import CONTENT_TYPE as CT
@@ -14,6 +15,7 @@ from pptx.oxml.ns import qn
 from pptx.oxml.shapes.autoshape import CT_Shape
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
 from pptx.oxml.shapes.picture import CT_Picture
+from pptx.oxml.shapes.shared import tree_elm
 from pptx.oxml.simpletypes import ST_Direction
 from pptx.shapes.autoshape import AutoShapeType, Shape
 from pptx.shapes.base import BaseShape
@@ -38,7 +40,7 @@ from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
     from pptx.chart.chart import Chart
-    from pptx.chart.data import ChartData
+    from pptx.chart.data import CategoryChartData, ChartData
     from pptx.enum.chart import XL_CHART_TYPE
     from pptx.enum.shapes import MSO_CONNECTOR_TYPE, MSO_SHAPE
     from pptx.oxml.shapes import ShapeElement
@@ -328,8 +330,12 @@ class _BaseGroupShapes(_BaseShapes):
         that graphic frame shape. The chart object may be accessed using the :attr:`chart`
         property of the returned |GraphicFrame| object.
         """
-        rId = self.part.add_chart_part(chart_type, chart_data)
-        graphicFrame = self._add_chart_graphicFrame(rId, x, y, cx, cy)
+        if is_chartex_type(chart_type):
+            rId = self.part.add_chartex_part(chart_type, cast("CategoryChartData", chart_data))
+            graphicFrame = self._add_chartex_graphicFrame(chart_type, rId, x, y, cx, cy)
+        else:
+            rId = self.part.add_chart_part(chart_type, chart_data)
+            graphicFrame = self._add_chart_graphicFrame(rId, x, y, cx, cy)
         self._invalidate_shape_cache()
         self._recalculate_extents()
         return cast("Chart", self._shape_factory(graphicFrame))
@@ -365,7 +371,7 @@ class _BaseGroupShapes(_BaseShapes):
         grpSp = self._element.add_grpSp()
         for shape in shapes:
             grpSp.insert_element_before(
-                shape._element, "p:extLst"  # pyright: ignore[reportPrivateUsage]
+                tree_elm(shape._element), "p:extLst"  # pyright: ignore[reportPrivateUsage]
             )
         if shapes:
             grpSp.recalculate_extents()
@@ -511,14 +517,14 @@ class _BaseGroupShapes(_BaseShapes):
 
     def move_shape_to_front(self, shape: BaseShape) -> None:
         """Move `shape` to the front (top) of the z-order."""
-        self._grpSp.append(shape.element)
+        self._grpSp.append(tree_elm(shape.element))
         self._invalidate_shape_cache()
 
     def move_shape_to_back(self, shape: BaseShape) -> None:
         """Move `shape` to the back (bottom) of the z-order."""
         first_shape = next(self._element.iter_shape_elms(), None)
         if first_shape is not None and first_shape is not shape.element:
-            first_shape.addprevious(shape.element)
+            tree_elm(first_shape).addprevious(tree_elm(shape.element))
         self._invalidate_shape_cache()
 
     def duplicate_shape(self, shape: BaseShape) -> BaseShape:
@@ -528,21 +534,32 @@ class _BaseGroupShapes(_BaseShapes):
         Because the duplicate lives on the same slide, any relationship references
         (images, charts, hyperlinks) in the cloned XML remain valid without remapping.
         """
-        new_element = deepcopy(shape.element)
+        outer_elm = tree_elm(shape.element)
+        new_outer = deepcopy(outer_elm)
+        # -- for a chartex chart the copy is the whole `mc:AlternateContent`; the shape is the
+        # -- graphic frame in its `mc:Choice`, and its fallback shape shares that shape's id --
+        new_element = (
+            new_outer
+            if outer_elm is shape.element
+            else new_outer.xpath("./mc:Choice/p:graphicFrame")[0]
+        )
 
         # --- assign new shape ID and update name ---
         new_id = self._next_shape_id
         cNvPr = new_element._nvXxPr.cNvPr
         old_name = cNvPr.name
-        cNvPr.id = new_id
         # Update trailing number in name if present (e.g. "TextBox 3" -> "TextBox 4")
         parts = old_name.rsplit(" ", 1)
         if len(parts) == 2 and parts[1].isdigit():
-            cNvPr.name = "%s %d" % (parts[0], new_id - 1)
+            new_name = "%s %d" % (parts[0], new_id - 1)
         else:
-            cNvPr.name = "%s %d" % (old_name, new_id - 1)
+            new_name = "%s %d" % (old_name, new_id - 1)
+        cNvPrs = [cNvPr] if new_outer is new_element else new_outer.xpath(".//p:cNvPr")
+        for each_cNvPr in cNvPrs:
+            each_cNvPr.id = new_id
+            each_cNvPr.name = new_name
 
-        self._grpSp.append(new_element)
+        self._grpSp.append(new_outer)
         self._invalidate_shape_cache()
         self._recalculate_extents()
         return self._shape_factory(new_element)
@@ -552,7 +569,7 @@ class _BaseGroupShapes(_BaseShapes):
 
         The shape element is removed from the XML and the shape is no longer accessible.
         """
-        self._grpSp.remove(shape.element)
+        self._grpSp.remove(tree_elm(shape.element))
         self._invalidate_shape_cache()
 
     def _add_chart_graphicFrame(
@@ -570,6 +587,23 @@ class _BaseGroupShapes(_BaseShapes):
         )
         self._spTree.append(graphicFrame)
         return graphicFrame
+
+    def _add_chartex_graphicFrame(
+        self, chart_type: XL_CHART_TYPE, rId: str, x: Length, y: Length, cx: Length, cy: Length
+    ) -> CT_GraphicalObjectFrame:
+        """Return the new chartex `p:graphicFrame`, appended to this shape tree in its
+        `mc:AlternateContent` wrapper.
+
+        The graphic frame has the specified position and size and refers to the chartex part
+        identified by `rId`.
+        """
+        shape_id = self._next_shape_id
+        name = "Chart %d" % (shape_id - 1)
+        alternateContent = CT_GraphicalObjectFrame.new_chartex_alternateContent(
+            shape_id, name, rId, x, y, cx, cy, chartex_type(chart_type).requires_ns
+        )
+        self._spTree.append(alternateContent)
+        return cast(CT_GraphicalObjectFrame, alternateContent.xpath("./mc:Choice/p:graphicFrame")[0])
 
     def _add_cxnSp(
         self,
