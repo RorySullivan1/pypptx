@@ -734,6 +734,25 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 
 ---
 
+## 26. Python API — Audio Shapes & Media Trim/Fade (DONE)
+
+- [x] `SlideShapes.add_audio(audio_file, left, top, icon_file=None, mime_type=None)` inserts an MP3/WAV/M4A clip as an icon shape, mirroring `add_movie` (`a:audioFile` inside `p:nvPr`, `RT.AUDIO`/`RT.MEDIA` relationships, `p:audio`/`p:cMediaNode` timing node); default speaker icon (`pptx.media.SPEAKER_IMAGE_BYTES`) sized 487363 EMU square when `icon_file` is omitted; MIME type inferred from filename extension when not specified (#76)
+- [x] New content types registered to `MediaPart`: `CT.MP3` (`audio/mpeg`), `CT.WAV`/`CT.X_WAV` (`audio/wav`, `audio/x-wav`), `CT.M4A`/`CT.X_M4A` (`audio/mp4`, `audio/x-m4a`) — `opc/constants.py`, `__init__.py` content-type map (#76)
+- [x] `pptx.shapes.picture.Audio` proxy (`MSO_SHAPE_TYPE.MEDIA`, `PP_MEDIA_TYPE.SOUND`); `pptx.media.Audio` value object parallel to `Video` (#76)
+- [x] `p14:media`/`p14:trim`/`p14:fade` oxml element classes (`oxml/shapes/picture.py`, registered by tag) for the PowerPoint-2010 media extension (`p:nvPicPr/p:nvPr/p:extLst/p:ext[@uri="{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}"]/p14:media`); `p14:trim{st,end}` and `p14:fade{in,out}` in milliseconds, child order trim/fade/bmkLst/extLst (#77)
+- [x] `trim_start`/`trim_end`/`fade_in`/`fade_out` read/write `datetime.timedelta | None` properties on `Movie` and `Audio` (shared `_BaseMediaShape` base in `shapes/picture.py`); `None` or a zero-length `timedelta` removes the attribute, and the enclosing `p14:trim`/`p14:fade` element is dropped once both its attributes are gone (#77)
+- [ ] Deferred — `p14:bmkLst` bookmarks, playback options beyond play-on-click
+- [x] `PP_MEDIA_TYPE.SOUND` is 2 (`ppMediaTypeSound`); it was 1 and so an alias of `OTHER`
+
+## 27. Python API — Shapes Wrapped in `mc:AlternateContent` (DONE)
+
+- [x] `CT_GroupShape.iter_shape_elms` yields one element per spTree-level `mc:AlternateContent`: the chartex graphic frame (see 18.15), else the shape in its `mc:Fallback`, else the shape in its `mc:Choice`; a wrapper holding no shape is skipped (#78)
+- [x] `AlternateContentShape` (read-only) — `content_kind` (`model3d` / `zoom` / `equation` / `unknown`, from the choice's `Requires` namespaces, `a:graphicData/@uri` and Office Math content), `has_fallback`, `alternate_content_element`; name/id/geometry from the represented shape; `MSO_SHAPE_TYPE.MODEL_3D` (30) (#78)
+- [x] `oxml.shapes.shared.tree_elm()` also recognizes `mc:Fallback`, so move/remove/duplicate/group act on the whole wrapper (#78)
+- [ ] Deferred — editing the choice content; authoring 3D models, zooms, equations or ink
+
+---
+
 ## Out of Scope
 
 The following are **not planned** as they require capabilities beyond XML file manipulation:

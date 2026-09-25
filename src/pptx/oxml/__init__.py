@@ -599,11 +599,20 @@ register_element_cls("p:nvGrpSpPr", CT_GroupShapeNonVisual)
 register_element_cls("p:spTree", CT_GroupShape)
 
 
-from pptx.oxml.shapes.picture import CT_Picture, CT_PictureNonVisual  # noqa: E402
+from pptx.oxml.shapes.picture import (  # noqa: E402
+    CT_Media,
+    CT_MediaFade,
+    CT_MediaTrim,
+    CT_Picture,
+    CT_PictureNonVisual,
+)
 
 register_element_cls("p:blipFill", CT_BlipFillProperties)
 register_element_cls("p:nvPicPr", CT_PictureNonVisual)
 register_element_cls("p:pic", CT_Picture)
+register_element_cls("p14:media", CT_Media)
+register_element_cls("p14:trim", CT_MediaTrim)
+register_element_cls("p14:fade", CT_MediaFade)
 
 
 from pptx.oxml.shapes.shared import (  # noqa: E402
@@ -736,6 +745,7 @@ from pptx.oxml.slide import (  # noqa: E402
     CT_SlideMasterTextStyles,
     CT_SlideTiming,
     CT_TimeNodeList,
+    CT_TLMediaNodeAudio,
     CT_TLMediaNodeVideo,
 )
 
@@ -753,6 +763,7 @@ register_element_cls("p:sldLayoutIdLst", CT_SlideLayoutIdList)
 register_element_cls("p:sldMaster", CT_SlideMaster)
 register_element_cls("p:txStyles", CT_SlideMasterTextStyles)
 register_element_cls("p:timing", CT_SlideTiming)
+register_element_cls("p:audio", CT_TLMediaNodeAudio)
 register_element_cls("p:video", CT_TLMediaNodeVideo)
 
 

@@ -8,11 +8,27 @@ from xml.sax.saxutils import escape
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.shapes.shared import BaseShapeElement
-from pptx.oxml.xmlchemy import BaseOxmlElement, OneAndOnlyOne
+from pptx.oxml.simpletypes import ST_RelationshipId, XsdUnsignedInt
+from pptx.oxml.xmlchemy import (
+    BaseOxmlElement,
+    OneAndOnlyOne,
+    OptionalAttribute,
+    OxmlElement,
+    ZeroOrOne,
+)
 
 if TYPE_CHECKING:
-    from pptx.oxml.shapes.shared import CT_ShapeProperties
+    from pptx.oxml.shapes.shared import (
+        CT_ApplicationNonVisualDrawingProps,
+        CT_ShapeProperties,
+    )
     from pptx.util import Length
+
+
+# -- `p:ext/@uri` of the `p14:media` extension on `p:nvPicPr/p:nvPr/p:extLst`, used for the
+# -- PowerPoint-2010 legacy media-embedding extension, also carrying trim/fade playback
+# -- settings for movie and audio shapes.
+P14_MEDIA_EXT_URI = "{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}"
 
 
 class CT_Picture(BaseShapeElement):
@@ -21,7 +37,9 @@ class CT_Picture(BaseShapeElement):
     Represents a picture shape (an image placement on a slide).
     """
 
-    nvPicPr = OneAndOnlyOne("p:nvPicPr")
+    nvPicPr: CT_PictureNonVisual = OneAndOnlyOne(  # pyright: ignore[reportAssignmentType]
+        "p:nvPicPr"
+    )
     blipFill = OneAndOnlyOne("p:blipFill")
     spPr: CT_ShapeProperties = OneAndOnlyOne("p:spPr")  # pyright: ignore[reportAssignmentType]
 
@@ -101,6 +119,64 @@ class CT_Picture(BaseShapeElement):
                 )
             ),
         )
+
+    @classmethod
+    def new_audio_pic(
+        cls,
+        shape_id: int,
+        shape_name: str,
+        audio_rId: str,
+        media_rId: str,
+        icon_rId: str,
+        x: Length,
+        y: Length,
+        cx: Length,
+        cy: Length,
+    ) -> CT_Picture:
+        """Return a new `p:pic` populated with the specified audio clip."""
+        return cast(
+            CT_Picture,
+            parse_xml(
+                cls._pic_audio_tmpl()
+                % (
+                    shape_id,
+                    shape_name,
+                    audio_rId,
+                    media_rId,
+                    icon_rId,
+                    x,
+                    y,
+                    cx,
+                    cy,
+                )
+            ),
+        )
+
+    @property
+    def p14_media(self) -> CT_Media | None:
+        """The `p14:media` element for this picture, or |None| if not present.
+
+        This is the PowerPoint-2010 extension used for legacy media embedding as well as
+        trim and fade playback settings, found at
+        `p:nvPicPr/p:nvPr/p:extLst/p:ext[@uri=P14_MEDIA_EXT_URI]/p14:media`.
+        """
+        media = self.xpath(
+            "./p:nvPicPr/p:nvPr/p:extLst/p:ext[@uri='%s']/p14:media" % P14_MEDIA_EXT_URI
+        )
+        return cast("CT_Media", media[0]) if media else None
+
+    def get_or_add_p14_media(self) -> CT_Media:
+        """Return the `p14:media` element, adding the `p:ext` wrapper if not present."""
+        p14_media = self.p14_media
+        if p14_media is not None:
+            return p14_media
+        extLst = self.nvPicPr.nvPr.get_or_add_extLst()
+        ext = OxmlElement("p:ext")
+        ext.set("uri", P14_MEDIA_EXT_URI)
+        media = OxmlElement("p14:media")
+        ext.append(media)
+        extLst.append(ext)
+        return cast("CT_Media", media)
 
     @property
     def srcRect_b(self):
@@ -250,6 +326,45 @@ class CT_Picture(BaseShapeElement):
             "</p:pic>" % nsdecls("a", "p", "r")
         )
 
+    @classmethod
+    def _pic_audio_tmpl(cls):
+        return (
+            "<p:pic %s>\n"
+            "  <p:nvPicPr>\n"
+            '    <p:cNvPr id="%%d" name="%%s">\n'
+            '      <a:hlinkClick r:id="" action="ppaction://media"/>\n'
+            "    </p:cNvPr>\n"
+            "    <p:cNvPicPr>\n"
+            '      <a:picLocks noChangeAspect="1"/>\n'
+            "    </p:cNvPicPr>\n"
+            "    <p:nvPr>\n"
+            '      <a:audioFile r:link="%%s"/>\n'
+            "      <p:extLst>\n"
+            '        <p:ext uri="{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}">\n'
+            '          <p14:media xmlns:p14="http://schemas.microsoft.com/of'
+            'fice/powerpoint/2010/main" r:embed="%%s"/>\n'
+            "        </p:ext>\n"
+            "      </p:extLst>\n"
+            "    </p:nvPr>\n"
+            "  </p:nvPicPr>\n"
+            "  <p:blipFill>\n"
+            '    <a:blip r:embed="%%s"/>\n'
+            "    <a:stretch>\n"
+            "      <a:fillRect/>\n"
+            "    </a:stretch>\n"
+            "  </p:blipFill>\n"
+            "  <p:spPr>\n"
+            "    <a:xfrm>\n"
+            '      <a:off x="%%d" y="%%d"/>\n'
+            '      <a:ext cx="%%d" cy="%%d"/>\n'
+            "    </a:xfrm>\n"
+            '    <a:prstGeom prst="rect">\n'
+            "      <a:avLst/>\n"
+            "    </a:prstGeom>\n"
+            "  </p:spPr>\n"
+            "</p:pic>" % nsdecls("a", "p", "r")
+        )
+
     def _srcRect_x(self, attr_name):
         """
         Value of `p:blipFill/a:srcRect/@{attr_name}` or 0.0 if not present.
@@ -267,4 +382,53 @@ class CT_PictureNonVisual(BaseOxmlElement):
     """
 
     cNvPr = OneAndOnlyOne("p:cNvPr")
-    nvPr = OneAndOnlyOne("p:nvPr")
+    nvPr: CT_ApplicationNonVisualDrawingProps = OneAndOnlyOne(  # pyright: ignore[reportAssignmentType]
+        "p:nvPr"
+    )
+
+
+class CT_Media(BaseOxmlElement):
+    """`p14:media` element.
+
+    Appears at `p:nvPicPr/p:nvPr/p:extLst/p:ext[@uri=P14_MEDIA_EXT_URI]/p14:media` for a
+    movie or audio shape. This PowerPoint-2010 extension is used for legacy media embedding
+    (`r:embed` or `r:link`) and also carries the optional trim and fade playback settings.
+    """
+
+    _tag_seq = ("p14:trim", "p14:fade", "p14:bmkLst", "p14:extLst")
+    trim: CT_MediaTrim | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p14:trim", successors=_tag_seq[1:]
+    )
+    fade: CT_MediaFade | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p14:fade", successors=_tag_seq[2:]
+    )
+    del _tag_seq
+
+    embed: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "r:embed", ST_RelationshipId
+    )
+    link: str | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "r:link", ST_RelationshipId
+    )
+
+
+class CT_MediaTrim(BaseOxmlElement):
+    """`p14:trim` element, specifying start/end trim points, in milliseconds."""
+
+    st: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "st", XsdUnsignedInt
+    )
+    end: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "end", XsdUnsignedInt
+    )
+
+
+class CT_MediaFade(BaseOxmlElement):
+    """`p14:fade` element, specifying fade-in/fade-out durations, in milliseconds."""
+
+    in_: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "in", XsdUnsignedInt
+    )
+    out: int | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
+        "out", XsdUnsignedInt
+    )

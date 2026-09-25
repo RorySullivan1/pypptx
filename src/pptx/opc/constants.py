@@ -22,7 +22,9 @@ class CONTENT_TYPE:
     GIF = "image/gif"
     INK = "application/inkml+xml"
     JPEG = "image/jpeg"
+    M4A = "audio/mp4"
     MOV = "video/quicktime"
+    MP3 = "audio/mpeg"
     MP4 = "video/mp4"
     MPG = "video/mpeg"
     MS_PHOTO = "image/vnd.ms-photo"
@@ -146,6 +148,7 @@ class CONTENT_TYPE:
     SWF = "application/x-shockwave-flash"
     TIFF = "image/tiff"
     VIDEO = "video/unknown"
+    WAV = "audio/wav"
     WML_COMMENTS = "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"
     WML_DOCUMENT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     WML_DOCUMENT_GLOSSARY = (
@@ -173,7 +176,9 @@ class CONTENT_TYPE:
     X_EMF = "image/x-emf"
     X_FONTDATA = "application/x-fontdata"
     X_FONT_TTF = "application/x-font-ttf"
+    X_M4A = "audio/x-m4a"
     X_MS_VIDEO = "video/x-msvideo"
+    X_WAV = "audio/x-wav"
     X_WMF = "image/x-wmf"
 
 

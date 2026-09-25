@@ -1281,6 +1281,81 @@ assert funnel.series[0].name == "Flow"
 assert all(shape.chartex_part.xlsx_part is not None for shape in shapes)
 """)
 
+    def it_round_trips_movie_trim_and_fade_settings(self):
+        _run_roundtrip_test("""\\
+from datetime import timedelta
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+movie = slide.shapes.add_movie(
+    BytesIO(b"dummy-mp4-bytes"),
+    Inches(1), Inches(1), Inches(4), Inches(3),
+    mime_type="video/mp4",
+)
+movie.trim_start = timedelta(seconds=1)
+movie.trim_end = timedelta(seconds=2)
+movie.fade_in = timedelta(milliseconds=250)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+movie2 = prs2.slides[0].shapes[0]
+assert movie2.trim_start == timedelta(seconds=1)
+assert movie2.trim_end == timedelta(seconds=2)
+assert movie2.fade_in == timedelta(milliseconds=250)
+assert movie2.fade_out is None
+
+# -- removing a setting drops the corresponding element/attribute --
+movie2.trim_start = None
+movie2.trim_end = None
+assert movie2.trim_start is None
+assert movie2.trim_end is None
+assert movie2.fade_in == timedelta(milliseconds=250)
+""")
+
+    def it_round_trips_an_audio_shape(self):
+        _run_roundtrip_test("""\\
+import wave
+from datetime import timedelta
+
+from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_MEDIA_TYPE
+from pptx.shapes.picture import Audio
+
+wav_stream = BytesIO()
+with wave.open(wav_stream, "wb") as wf:
+    wf.setnchannels(1)
+    wf.setsampwidth(2)
+    wf.setframerate(8000)
+    wf.writeframes(b"\\\\x00\\\\x00" * 800)
+wav_stream.seek(0)
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+audio = slide.shapes.add_audio(wav_stream, Inches(1), Inches(1), mime_type="audio/wav")
+audio.trim_start = timedelta(milliseconds=1500)
+audio.trim_end = timedelta(milliseconds=2000)
+audio.fade_in = timedelta(milliseconds=500)
+audio.fade_out = timedelta(milliseconds=750)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+shapes2 = [s for s in prs2.slides[0].shapes if not s.is_placeholder]
+assert len(shapes2) == 1
+audio2 = shapes2[0]
+assert isinstance(audio2, Audio)
+assert audio2.shape_type == MSO_SHAPE_TYPE.MEDIA
+assert audio2.media_type == PP_MEDIA_TYPE.SOUND
+assert audio2.trim_start == timedelta(milliseconds=1500)
+assert audio2.trim_end == timedelta(milliseconds=2000)
+assert audio2.fade_in == timedelta(milliseconds=500)
+assert audio2.fade_out == timedelta(milliseconds=750)
+""")
+
     def it_writes_untouched_chartex_parts_bytes_unchanged(self):
         _run_roundtrip_test("""\\
 import zipfile
@@ -1298,4 +1373,24 @@ with zipfile.ZipFile(stream) as z:
     slide_xml = z.read("ppt/slides/slide1.xml").decode()
 assert slide_xml.count("<mc:AlternateContent") == 3
 assert slide_xml.count("<mc:Fallback>") == 3
+""")
+
+    def it_round_trips_alternate_content_shapes_unchanged(self):
+        _run_roundtrip_test("""\\
+from tests.unitutil.altcontent import altcontent_pptx
+
+prs = Presentation(altcontent_pptx())
+shapes = prs.slides[0].shapes
+assert len(shapes) == 5
+kinds = [getattr(shape, "content_kind", None) for shape in shapes]
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+shapes2 = Presentation(stream).slides[0].shapes
+
+assert len(shapes2) == 5
+assert [getattr(shape, "content_kind", None) for shape in shapes2] == kinds
+assert [shape.shape_id for shape in shapes2] == [10, 11, 12, 13, 14]
+assert len(shapes2._spTree.xpath("./mc:AlternateContent/mc:Fallback")) == 3
 """)

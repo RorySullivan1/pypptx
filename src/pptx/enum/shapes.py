@@ -825,6 +825,9 @@ class MSO_SHAPE_TYPE(BaseEnum):
     MEDIA = (16, "Media")
     """Media"""
 
+    MODEL_3D = (30, "3D model")
+    """3D model"""
+
     OLE_CONTROL_OBJECT = (12, "OLE control object")
     """OLE control object"""
 
@@ -877,7 +880,7 @@ class PP_MEDIA_TYPE(BaseEnum):
     OTHER = (1, "Other media types")
     """Other media types"""
 
-    SOUND = (1, "Audio media such as MP3.")
+    SOUND = (2, "Audio media such as MP3.")
     """Audio media such as MP3."""
 
     MIXED = (

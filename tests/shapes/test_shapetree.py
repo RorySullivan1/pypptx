@@ -12,6 +12,7 @@ from pptx.chart.data import ChartData
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE, MSO_CONNECTOR, PP_PLACEHOLDER, PROG_ID
 from pptx.media import SPEAKER_IMAGE_BYTES, Video
+from pptx.media import Audio as AudioMedia
 from pptx.oxml import parse_xml
 from pptx.oxml.shapes.groupshape import CT_GroupShape
 from pptx.oxml.shapes.picture import CT_Picture
@@ -24,7 +25,7 @@ from pptx.shapes.connector import Connector
 from pptx.shapes.freeform import FreeformBuilder
 from pptx.shapes.graphfrm import GraphicFrame
 from pptx.shapes.group import GroupShape
-from pptx.shapes.picture import Movie, Picture
+from pptx.shapes.picture import Audio, Movie, Picture
 from pptx.shapes.placeholder import (
     LayoutPlaceholder,
     MasterPlaceholder,
@@ -46,6 +47,7 @@ from pptx.shapes.shapetree import (
     SlideShapes,
     _BaseGroupShapes,
     _BaseShapes,
+    _AudioPicElementCreator,
     _LayoutShapeFactory,
     _MasterShapeFactory,
     _MoviePicElementCreator,
@@ -86,6 +88,7 @@ class DescribeBaseShapeFactory:
             ("p:sp", Shape),
             ("p:pic", Picture),
             ("p:pic/p:nvPicPr/p:nvPr/a:videoFile", Movie),
+            ("p:pic/p:nvPicPr/p:nvPr/a:audioFile", Audio),
             ("p:graphicFrame", GraphicFrame),
             ("p:grpSp", GroupShape),
             ("p:cxnSp", Connector),
@@ -1411,6 +1414,22 @@ class DescribeSlideShapes:
         _shape_factory_.assert_called_once_with(shapes, movie_pic)
         assert movie is movie_
 
+    def it_can_add_an_audio(self, audio_fixture):
+        shapes, audio_file, x, y = audio_fixture[:4]
+        icon_file, mime_type = audio_fixture[4:6]
+        shape_id_, _AudioPicElementCreator_, audio_pic = audio_fixture[6:9]
+        _add_audio_timing_, _shape_factory_, audio_ = audio_fixture[9:]
+
+        audio = shapes.add_audio(audio_file, x, y, icon_file, mime_type)
+
+        _AudioPicElementCreator_.new_audio_pic.assert_called_once_with(
+            shapes, shape_id_, audio_file, x, y, icon_file, mime_type
+        )
+        assert shapes._spTree[-1] is audio_pic
+        _add_audio_timing_.assert_called_once_with(shapes, audio_pic)
+        _shape_factory_.assert_called_once_with(shapes, audio_pic)
+        assert audio is audio_
+
     def it_can_add_a_table(self, table_fixture):
         shapes, rows, cols, x, y, cx, cy, table_, expected_xml = table_fixture
 
@@ -1431,7 +1450,23 @@ class DescribeSlideShapes:
         shapes._add_video_timing(pic)
         assert sld.xml == expected_xml
 
+    def it_adds_an_audio_timing_to_help(self, add_audio_timing_fixture):
+        shapes, pic, sld, expected_xml = add_audio_timing_fixture
+        shapes._add_audio_timing(pic)
+        assert sld.xml == expected_xml
+
     # fixtures -------------------------------------------------------
+
+    @pytest.fixture(params=[(0, 1)])
+    def add_audio_timing_fixture(self, request):
+        before_idx, after_idx = request.param
+        snippets = snippet_seq("audio_timing")
+        sld = parse_xml(snippets[before_idx])
+        spTree = sld.xpath(".//p:spTree")[0]
+        shapes = SlideShapes(spTree, None)
+        pic = element("p:pic/p:nvPicPr/p:cNvPr{id=42}")
+        expected_xml = snippets[after_idx]
+        return shapes, pic, sld, expected_xml
 
     @pytest.fixture(
         params=[
@@ -1497,6 +1532,37 @@ class DescribeSlideShapes:
         )
 
     @pytest.fixture
+    def audio_fixture(
+        self,
+        _AudioPicElementCreator_,
+        _add_audio_timing_,
+        _shape_factory_,
+        audio_,
+        _next_shape_id_prop_,
+    ):
+        shapes = SlideShapes(element("p:spTree"), None)
+        audio_file, x, y = "foobar.mp3", 1, 2
+        icon_file, mime_type = "foobar.png", "audio/mpeg"
+        audio_pic = element("p:pic")
+        _AudioPicElementCreator_.new_audio_pic.return_value = audio_pic
+        _shape_factory_.return_value = audio_
+        shape_id_ = _next_shape_id_prop_.return_value
+        return (
+            shapes,
+            audio_file,
+            x,
+            y,
+            icon_file,
+            mime_type,
+            shape_id_,
+            _AudioPicElementCreator_,
+            audio_pic,
+            _add_audio_timing_,
+            _shape_factory_,
+            audio_,
+        )
+
+    @pytest.fixture
     def table_fixture(self, table_, _shape_factory_):
         shapes = SlideShapes(element("p:spTree"), None)
         rows, cols, x, y, cx, cy = 1, 2, 10, 11, 12, 13
@@ -1549,6 +1615,10 @@ class DescribeSlideShapes:
         return method_mock(request, SlideShapes, "_add_video_timing", autospec=True)
 
     @pytest.fixture
+    def _add_audio_timing_(self, request):
+        return method_mock(request, SlideShapes, "_add_audio_timing", autospec=True)
+
+    @pytest.fixture
     def clone_placeholder_(self, request):
         return method_mock(request, SlideShapes, "clone_placeholder", autospec=True)
 
@@ -1557,8 +1627,16 @@ class DescribeSlideShapes:
         return instance_mock(request, Movie)
 
     @pytest.fixture
+    def audio_(self, request):
+        return instance_mock(request, Audio)
+
+    @pytest.fixture
     def _MoviePicElementCreator_(self, request):
         return class_mock(request, "pptx.shapes.shapetree._MoviePicElementCreator", autospec=True)
+
+    @pytest.fixture
+    def _AudioPicElementCreator_(self, request):
+        return class_mock(request, "pptx.shapes.shapetree._AudioPicElementCreator", autospec=True)
 
     @pytest.fixture
     def _next_shape_id_prop_(self, request, shape_id_):
@@ -2214,6 +2292,288 @@ class Describe_MoviePicElementCreator:
     @pytest.fixture
     def _video_part_rIds_prop_(self, request):
         return property_mock(request, _MoviePicElementCreator, "_video_part_rIds")
+
+
+class Describe_AudioPicElementCreator:
+    def it_creates_a_new_audio_pic_element(self, audio_pic_fixture):
+        shapes_, shape_id, audio_file, x, y = audio_pic_fixture[:5]
+        icon_file, mime_type = audio_pic_fixture[5:7]
+        _AudioPicElementCreator_init_, _pic_prop_, pic_ = audio_pic_fixture[7:]
+
+        pic = _AudioPicElementCreator.new_audio_pic(
+            shapes_, shape_id, audio_file, x, y, icon_file, mime_type
+        )
+
+        _AudioPicElementCreator_init_.assert_called_once_with(
+            ANY, shapes_, shape_id, audio_file, x, y, icon_file, mime_type
+        )
+        _pic_prop_.assert_called_once_with()
+        assert pic is pic_
+
+    def it_creates_a_pic_element(self, pic_fixture):
+        audio_pic_element_creator, new_audio_pic_, shape_id = pic_fixture[:3]
+        shape_name, audio_rId, media_rId, icon_rId = pic_fixture[3:7]
+        x, y, pic_ = pic_fixture[7:]
+
+        pic = audio_pic_element_creator._pic
+
+        new_audio_pic_.assert_called_once_with(
+            shape_id, shape_name, audio_rId, media_rId, icon_rId, x, y, Emu(487363), Emu(487363)
+        )
+        assert pic is pic_
+
+    def it_knows_the_shape_name_to_help(self, shape_name_fixture):
+        audio_pic_element_creator, filename = shape_name_fixture
+        shape_name = audio_pic_element_creator._shape_name
+        assert shape_name == filename
+
+    def it_constructs_the_audio_to_help(self, audio_media_fixture):
+        audio_pic_element_creator, audio_file = audio_media_fixture[:2]
+        mime_type, audio_media_ = audio_media_fixture[2:]
+        audio = audio_pic_element_creator._audio
+        AudioMedia.from_path_or_file_like.assert_called_once_with(audio_file, mime_type)
+        assert audio is audio_media_
+
+    def it_knows_the_media_rId_to_help(self, media_rId_fixture):
+        audio_pic_element_creator, expected_value = media_rId_fixture
+        assert audio_pic_element_creator._media_rId == expected_value
+
+    def it_knows_the_audio_rId_to_help(self, audio_rId_fixture):
+        audio_pic_element_creator, expected_value = audio_rId_fixture
+        assert audio_pic_element_creator._audio_rId == expected_value
+
+    def it_adds_the_icon_image_to_help(self, icon_rId_fixture):
+        audio_pic_element_creator, slide_part_ = icon_rId_fixture[:2]
+        icon_image_file, expected_value = icon_rId_fixture[2:]
+
+        icon_rId = audio_pic_element_creator._icon_rId
+
+        slide_part_.get_or_add_image_part.assert_called_once_with(icon_image_file)
+        assert icon_rId == expected_value
+
+    def it_gets_the_icon_image_from_the_specified_path_to_help(
+        self, request: pytest.FixtureRequest
+    ):
+        BytesIO_ = class_mock(request, "pptx.shapes.shapetree.io.BytesIO")
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, "icon.png", None  # type: ignore
+        )
+
+        image_file = audio_pic_element_creator._icon_image_file
+
+        BytesIO_.assert_not_called()
+        assert image_file == "icon.png"
+
+    def but_it_gets_the_icon_image_from_the_default_bytes_when_None_specified(
+        self, request: pytest.FixtureRequest
+    ):
+        stream_ = instance_mock(request, io.BytesIO)
+        BytesIO_ = class_mock(request, "pptx.shapes.shapetree.io.BytesIO", return_value=stream_)
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, None, None  # type: ignore
+        )
+
+        image_file = audio_pic_element_creator._icon_image_file
+
+        BytesIO_.assert_called_once_with(SPEAKER_IMAGE_BYTES)
+        assert image_file == stream_
+
+    def it_gets_the_audio_part_rIds_to_help(self, part_rIds_fixture):
+        audio_pic_element_creator, slide_part_ = part_rIds_fixture[:2]
+        audio_media_, media_rId, audio_rId = part_rIds_fixture[2:]
+
+        result = audio_pic_element_creator._audio_part_rIds
+
+        slide_part_.get_or_add_audio_media_part.assert_called_once_with(audio_media_)
+        assert result == (media_rId, audio_rId)
+
+    def it_gets_the_slide_part_to_help(self, slide_part_fixture):
+        audio_pic_element_creator, slide_part_ = slide_part_fixture
+        slide_part = audio_pic_element_creator._slide_part
+        assert slide_part is slide_part_
+
+    # fixtures -------------------------------------------------------
+
+    @pytest.fixture
+    def audio_pic_fixture(self, shapes_, _AudioPicElementCreator_init_, _pic_prop_, pic_):
+        shape_id, audio_file, x, y = 42, "audio.mp3", 1, 2
+        icon_file, mime_type = "icon.png", "audio/mpeg"
+        return (
+            shapes_,
+            shape_id,
+            audio_file,
+            x,
+            y,
+            icon_file,
+            mime_type,
+            _AudioPicElementCreator_init_,
+            _pic_prop_,
+            pic_,
+        )
+
+    @pytest.fixture
+    def media_rId_fixture(self, _audio_part_rIds_prop_):
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, None, None
+        )
+        expected_value = "rId24"
+        _audio_part_rIds_prop_.return_value = (expected_value, "rId666")
+        return audio_pic_element_creator, expected_value
+
+    @pytest.fixture
+    def part_rIds_fixture(self, slide_part_, audio_media_, _slide_part_prop_, _audio_prop_):
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, None, None
+        )
+        media_rId, audio_rId = "rId42", "rId24"
+        _slide_part_prop_.return_value = slide_part_
+        slide_part_.get_or_add_audio_media_part.return_value = (media_rId, audio_rId)
+        _audio_prop_.return_value = audio_media_
+        return (audio_pic_element_creator, slide_part_, audio_media_, media_rId, audio_rId)
+
+    @pytest.fixture
+    def icon_rId_fixture(self, _slide_part_prop_, slide_part_, _icon_image_file_prop_):
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, None, None
+        )
+        icon_image_file, expected_value = "icon.png", "rId42"
+        _slide_part_prop_.return_value = slide_part_
+        _icon_image_file_prop_.return_value = icon_image_file
+        slide_part_.get_or_add_image_part.return_value = (None, expected_value)
+        return (audio_pic_element_creator, slide_part_, icon_image_file, expected_value)
+
+    @pytest.fixture
+    def pic_fixture(
+        self,
+        new_audio_pic_,
+        pic_,
+        _shape_name_prop_,
+        _audio_rId_prop_,
+        _media_rId_prop_,
+        _icon_rId_prop_,
+    ):
+        shape_id, x, y = 42, 1, 2
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, shape_id, None, x, y, None, None
+        )
+        _shape_name_prop_.return_value = shape_name = "audio.mp3"
+        _audio_rId_prop_.return_value = audio_rId = "rId1"
+        _media_rId_prop_.return_value = media_rId = "rId2"
+        _icon_rId_prop_.return_value = icon_rId = "rId3"
+        new_audio_pic_.return_value = pic_
+        return (
+            audio_pic_element_creator,
+            new_audio_pic_,
+            shape_id,
+            shape_name,
+            audio_rId,
+            media_rId,
+            icon_rId,
+            x,
+            y,
+            pic_,
+        )
+
+    @pytest.fixture
+    def shape_name_fixture(self, _audio_prop_, audio_media_):
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, None, None
+        )
+        _audio_prop_.return_value = audio_media_
+        audio_media_.filename = filename = "audio.mp3"
+        return audio_pic_element_creator, filename
+
+    @pytest.fixture
+    def slide_part_fixture(self, shapes_, slide_part_):
+        audio_pic_element_creator = _AudioPicElementCreator(
+            shapes_, None, None, None, None, None, None
+        )
+        shapes_.part = slide_part_
+        return audio_pic_element_creator, slide_part_
+
+    @pytest.fixture
+    def audio_rId_fixture(self, _audio_part_rIds_prop_):
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, None, None, None, None, None
+        )
+        expected_value = "rId42"
+        _audio_part_rIds_prop_.return_value = ("rId666", expected_value)
+        return audio_pic_element_creator, expected_value
+
+    @pytest.fixture
+    def audio_media_fixture(self, audio_media_, from_path_or_file_like_):
+        audio_file, mime_type = "audio.mp3", "audio/mpeg"
+        audio_pic_element_creator = _AudioPicElementCreator(
+            None, None, audio_file, None, None, None, mime_type
+        )
+        from_path_or_file_like_.return_value = audio_media_
+        return audio_pic_element_creator, audio_file, mime_type, audio_media_
+
+    # fixture components ---------------------------------------------
+
+    @pytest.fixture
+    def from_path_or_file_like_(self, request):
+        return method_mock(request, AudioMedia, "from_path_or_file_like", autospec=False)
+
+    @pytest.fixture
+    def _media_rId_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_media_rId")
+
+    @pytest.fixture
+    def _AudioPicElementCreator_init_(self, request):
+        return initializer_mock(request, _AudioPicElementCreator, autospec=True)
+
+    @pytest.fixture
+    def new_audio_pic_(self, request):
+        return method_mock(request, CT_Picture, "new_audio_pic", autospec=False)
+
+    @pytest.fixture
+    def pic_(self):
+        return element("p:pic")
+
+    @pytest.fixture
+    def _pic_prop_(self, request, pic_):
+        return property_mock(request, _AudioPicElementCreator, "_pic", return_value=pic_)
+
+    @pytest.fixture
+    def _icon_image_file_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_icon_image_file")
+
+    @pytest.fixture
+    def _icon_rId_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_icon_rId")
+
+    @pytest.fixture
+    def _shape_name_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_shape_name")
+
+    @pytest.fixture
+    def shapes_(self, request):
+        return instance_mock(request, _BaseShapes)
+
+    @pytest.fixture
+    def slide_part_(self, request):
+        return instance_mock(request, SlidePart)
+
+    @pytest.fixture
+    def _slide_part_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_slide_part")
+
+    @pytest.fixture
+    def audio_media_(self, request):
+        return instance_mock(request, AudioMedia)
+
+    @pytest.fixture
+    def _audio_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_audio")
+
+    @pytest.fixture
+    def _audio_rId_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_audio_rId")
+
+    @pytest.fixture
+    def _audio_part_rIds_prop_(self, request):
+        return property_mock(request, _AudioPicElementCreator, "_audio_part_rIds")
 
 
 class Describe_OleObjectElementCreator:

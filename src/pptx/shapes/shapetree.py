@@ -10,20 +10,22 @@ from typing import IO, TYPE_CHECKING, Callable, Iterable, Iterator, cast
 from pptx.chart.chartexwriter import chartex_type, is_chartex_type
 from pptx.enum.shapes import PP_PLACEHOLDER, PROG_ID
 from pptx.media import SPEAKER_IMAGE_BYTES, Video
+from pptx.media import Audio as _AudioMedia
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.oxml.ns import qn
 from pptx.oxml.shapes.autoshape import CT_Shape
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
 from pptx.oxml.shapes.picture import CT_Picture
-from pptx.oxml.shapes.shared import tree_elm
+from pptx.oxml.shapes.shared import alternate_content_of, tree_elm
 from pptx.oxml.simpletypes import ST_Direction
+from pptx.shapes.altcontent import AlternateContentShape
 from pptx.shapes.autoshape import AutoShapeType, Shape
 from pptx.shapes.base import BaseShape
 from pptx.shapes.connector import Connector
 from pptx.shapes.freeform import FreeformBuilder
 from pptx.shapes.graphfrm import GraphicFrame
 from pptx.shapes.group import GroupShape
-from pptx.shapes.picture import Movie, Picture
+from pptx.shapes.picture import Audio, Movie, Picture
 from pptx.shapes.placeholder import (
     ChartPlaceholder,
     LayoutPlaceholder,
@@ -536,13 +538,13 @@ class _BaseGroupShapes(_BaseShapes):
         """
         outer_elm = tree_elm(shape.element)
         new_outer = deepcopy(outer_elm)
-        # -- for a chartex chart the copy is the whole `mc:AlternateContent`; the shape is the
-        # -- graphic frame in its `mc:Choice`, and its fallback shape shares that shape's id --
-        new_element = (
-            new_outer
-            if outer_elm is shape.element
-            else new_outer.xpath("./mc:Choice/p:graphicFrame")[0]
-        )
+        # -- for a shape wrapped in `mc:AlternateContent` (chartex chart, 3D model, ...) the copy
+        # -- is the whole wrapper; the shape is the element at the same place in the copy, and
+        # -- every shape in the wrapper takes the new id --
+        new_element = new_outer
+        if outer_elm is not shape.element:
+            container = shape.element.getparent()
+            new_element = new_outer[outer_elm.index(container)][container.index(shape.element)]
 
         # --- assign new shape ID and update name ---
         new_id = self._next_shape_id
@@ -750,6 +752,41 @@ class SlideShapes(_BaseGroupShapes):
         self._invalidate_shape_cache()
         return cast(GraphicFrame, self._shape_factory(movie_pic))
 
+    def add_audio(
+        self,
+        audio_file: str | IO[bytes],
+        left: Length,
+        top: Length,
+        icon_file: str | IO[bytes] | None = None,
+        mime_type: str | None = None,
+    ) -> Audio:
+        """Return newly added audio shape playing the audio clip in `audio_file`.
+
+        **EXPERIMENTAL.** This method has important limitations:
+
+        * `audio_file` can be an MP3, WAV, or M4A file, either as a str path or a file-like
+          object. When `mime_type` is not specified, it is inferred from the file extension
+          (falling back to `'audio/mpeg'` when the extension is missing or unrecognized).
+        * The shape is displayed as an icon (the default "media loudspeaker" image unless
+          `icon_file` is provided) sized to a fixed default suitable for that icon; there is
+          no auto-scaling such as that provided by :meth:`add_picture`.
+
+        The returned shape is positioned with its top-left corner at (`left`, `top`).
+        """
+        audio_pic = _AudioPicElementCreator.new_audio_pic(
+            self,
+            self._next_shape_id,
+            audio_file,
+            left,
+            top,
+            icon_file,
+            mime_type,
+        )
+        self._spTree.append(audio_pic)
+        self._add_audio_timing(audio_pic)
+        self._invalidate_shape_cache()
+        return cast(Audio, self._shape_factory(audio_pic))
+
     def add_table(
         self, rows: int, cols: int, left: Length, top: Length, width: Length, height: Length
     ) -> GraphicFrame:
@@ -807,6 +844,16 @@ class SlideShapes(_BaseGroupShapes):
         sld = self._spTree.xpath("/p:sld")[0]
         childTnLst = sld.get_or_add_childTnLst()
         childTnLst.add_video(pic.shape_id)
+
+    def _add_audio_timing(self, pic: CT_Picture) -> None:
+        """Add a `p:audio` element under `p:sld/p:timing`.
+
+        The element will refer to the specified `pic` element by its shape id, and cause the
+        audio play controls to appear for that audio clip.
+        """
+        sld = self._spTree.xpath("/p:sld")[0]
+        childTnLst = sld.get_or_add_childTnLst()
+        childTnLst.add_audio(pic.shape_id)
 
     def _shape_factory(self, shape_elm: ShapeElement) -> BaseShape:
         """Return an instance of the appropriate shape proxy class for `shape_elm`."""
@@ -969,10 +1016,20 @@ def BaseShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShape
     """Return an instance of the appropriate shape proxy class for `shape_elm`."""
     tag = shape_elm.tag
 
+    # -- a shape wrapped in mc:AlternateContent (3D model, zoom, equation) is read-only; a
+    # -- chartex chart, also wrapped, is a graphic frame --
+    if alternate_content_of(shape_elm) is not None and not (
+        tag == qn("p:graphicFrame") and shape_elm.xpath("./a:graphic/a:graphicData/cx:chart")
+    ):
+        return AlternateContentShape(shape_elm, parent)
+
     if isinstance(shape_elm, CT_Picture):
         videoFiles = shape_elm.xpath("./p:nvPicPr/p:nvPr/a:videoFile")
         if videoFiles:
             return Movie(shape_elm, parent)
+        audioFiles = shape_elm.xpath("./p:nvPicPr/p:nvPr/a:audioFile")
+        if audioFiles:
+            return Audio(shape_elm, parent)
         return Picture(shape_elm, parent)
 
     shape_cls = {
@@ -1027,7 +1084,7 @@ def _SlidePlaceholderFactory(shape_elm: ShapeElement, parent: ProvidesPart):
 
 def SlideShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShape:
     """Return appropriate shape object for `shape_elm` on a slide."""
-    if shape_elm.has_ph_elm:
+    if shape_elm.has_ph_elm and alternate_content_of(shape_elm) is None:
         return _SlidePlaceholderFactory(shape_elm, parent)
     return BaseShapeFactory(shape_elm, parent)
 
@@ -1160,6 +1217,146 @@ class _MoviePicElementCreator:
         and the other is the media rId.
         """
         return self._video_part_rIds[1]
+
+
+# -- default icon size for an audio shape, matching PowerPoint's own default (0.5in square) --
+_AUDIO_ICON_EMU = 487363
+
+
+class _AudioPicElementCreator:
+    """Functional service object for creating a new audio p:pic element.
+
+    It's entire external interface is its :meth:`new_audio_pic` class method that returns a new
+    `p:pic` element containing the specified audio clip. This class is not intended to be
+    constructed or an instance of it retained by the caller; it is a "one-shot" object, really a
+    function wrapped in a object such that its helper methods can be organized here.
+    """
+
+    def __init__(
+        self,
+        shapes: SlideShapes,
+        shape_id: int,
+        audio_file: str | IO[bytes],
+        x: Length,
+        y: Length,
+        icon_file: str | IO[bytes] | None,
+        mime_type: str | None,
+    ):
+        super(_AudioPicElementCreator, self).__init__()
+        self._shapes = shapes
+        self._shape_id = shape_id
+        self._audio_file = audio_file
+        self._x, self._y = x, y
+        self._icon_file = icon_file
+        self._mime_type = mime_type
+
+    @classmethod
+    def new_audio_pic(
+        cls,
+        shapes: SlideShapes,
+        shape_id: int,
+        audio_file: str | IO[bytes],
+        x: Length,
+        y: Length,
+        icon_file: str | IO[bytes] | None,
+        mime_type: str | None,
+    ) -> CT_Picture:
+        """Return a new `p:pic` element containing audio in `audio_file`.
+
+        If `mime_type` is None, it is inferred from the file extension of `audio_file`. If
+        `icon_file` is None, the default "media loudspeaker" image is used.
+        """
+        return cls(shapes, shape_id, audio_file, x, y, icon_file, mime_type)._pic
+
+    @property
+    def _cx(self) -> Length:
+        """Width of the audio icon."""
+        return Emu(_AUDIO_ICON_EMU)
+
+    @property
+    def _cy(self) -> Length:
+        """Height of the audio icon."""
+        return Emu(_AUDIO_ICON_EMU)
+
+    @property
+    def _media_rId(self) -> str:
+        """Return the rId of RT.MEDIA relationship to media part.
+
+        For historical reasons, there are two relationships to the same part; one is the audio
+        rId and the other is the media rId.
+        """
+        return self._audio_part_rIds[0]
+
+    @lazyproperty
+    def _pic(self) -> CT_Picture:
+        """Return the new `p:pic` element referencing the audio clip."""
+        return CT_Picture.new_audio_pic(
+            self._shape_id,
+            self._shape_name,
+            self._audio_rId,
+            self._media_rId,
+            self._icon_rId,
+            self._x,
+            self._y,
+            self._cx,
+            self._cy,
+        )
+
+    @lazyproperty
+    def _icon_image_file(self) -> str | IO[bytes]:
+        """Return the image file used to represent this audio clip as an icon.
+
+        If no icon file is provided, the default "media loudspeaker" image is used.
+        """
+        icon_file = self._icon_file
+        if icon_file is None:
+            return io.BytesIO(SPEAKER_IMAGE_BYTES)
+        return icon_file
+
+    @lazyproperty
+    def _icon_rId(self) -> str:
+        """Return the rId of relationship to the icon image.
+
+        The icon is the image used to represent the audio clip before it's played.
+        """
+        _, icon_rId = self._slide_part.get_or_add_image_part(self._icon_image_file)
+        return icon_rId
+
+    @property
+    def _shape_name(self) -> str:
+        """Return the appropriate shape name for the p:pic shape.
+
+        An audio shape is named with the base filename of the audio clip.
+        """
+        return self._audio.filename
+
+    @property
+    def _slide_part(self) -> SlidePart:
+        """Return SlidePart object for slide containing this audio shape."""
+        return self._shapes.part
+
+    @lazyproperty
+    def _audio(self) -> _AudioMedia:
+        """Return an |Audio| object containing the audio file."""
+        return _AudioMedia.from_path_or_file_like(self._audio_file, self._mime_type)
+
+    @lazyproperty
+    def _audio_part_rIds(self) -> tuple[str, str]:
+        """Return the rIds for relationships to media part for audio.
+
+        This is where the media part and its relationships to the slide are actually created.
+        """
+        media_rId, audio_rId = self._slide_part.get_or_add_audio_media_part(self._audio)
+        return media_rId, audio_rId
+
+    @property
+    def _audio_rId(self) -> str:
+        """Return the rId of RT.AUDIO relationship to media part.
+
+        For historical reasons, there are two relationships to the same part; one is the audio
+        rId and the other is the media rId.
+        """
+        return self._audio_part_rIds[1]
 
 
 class _OleObjectElementCreator:

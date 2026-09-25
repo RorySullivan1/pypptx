@@ -23,7 +23,7 @@ from pptx.util import lazyproperty
 if TYPE_CHECKING:
     from pptx.chart.data import CategoryChartData, ChartData
     from pptx.enum.chart import XL_CHART_TYPE
-    from pptx.media import Video
+    from pptx.media import Audio, Video
     from pptx.opc.package import Package
     from pptx.parts.image import Image, ImagePart
     from pptx.parts.presentation import PresentationPart
@@ -222,6 +222,19 @@ class SlidePart(BaseSlidePart):
         media_rId = self.relate_to(media_part, RT.MEDIA)
         video_rId = self.relate_to(media_part, RT.VIDEO)
         return media_rId, video_rId
+
+    def get_or_add_audio_media_part(self, audio: Audio) -> tuple[str, str]:
+        """Return rIds for media and audio relationships to media part.
+
+        A new |MediaPart| object is created if it does not already exist (such as would
+        occur if the same audio clip appeared more than once in a presentation). Two
+        relationships to the media part are created, one each with MEDIA and AUDIO
+        relationship types, mirroring the legacy dual-relationship strategy used for video.
+        """
+        media_part = self._package.get_or_add_media_part(audio)
+        media_rId = self.relate_to(media_part, RT.MEDIA)
+        audio_rId = self.relate_to(media_part, RT.AUDIO)
+        return media_rId, audio_rId
 
     @property
     def has_notes_slide(self) -> bool:
