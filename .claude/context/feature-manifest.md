@@ -139,7 +139,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Lighting rig — `Scene3D.light_rig` with `LightRig.rig_type`, `direction`
 
 ### Charts
-- 16 chart families (75+ enumerated `XL_CHART_TYPE` values) — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie, plus 3D variants (bar3D, line3D, pie3D, area3D, surface3D)
+- 16 classic chart families (75+ enumerated `XL_CHART_TYPE` values) — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie, plus 3D variants (bar3D, line3D, pie3D, area3D, surface3D)
 - Series formatting — markers, fill, line; pie/bar/bubble per-series properties (explosion, bar shape, bubble-3D)
 - Axes — value, category, date; primary + secondary; log scale; tick / label skip; label offset and rotation; display units; date axis time units; axis crossing
 - Legends — `Legend.format` (`ChartFormat` for box formatting); per-entry overrides
@@ -154,6 +154,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Replace chart data; combo charts via `Chart.add_plot(plot_type, use_secondary_axis, grouping)`
 - Pie / doughnut — first-slice angle, hole size; of-pie split type/pos/second-pie-size; gap-width
 - Data table — `Chart.has_data_table`; `DataTable` (`horizontal_border`, `vertical_border`, `outline`, `show_keys`) (#70)
+- Chartex (Office 2016+) charts — waterfall, histogram, box & whisker, treemap, sunburst and funnel can be added with `shapes.add_chart()` from `CategoryChartData` (treemap/sunburst take hierarchical categories); any chartex chart in a file, Pareto and region map included, is read via `GraphicFrame.chartex` (`chart_type`, per-series `name`/`values`/`categories`/`category_paths`). Chartex data is read-only once created; chartex styling is not supported
 
 ### Picture Format
 - Brightness — `Picture.brightness` (`a:lum` bright)

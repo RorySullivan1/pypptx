@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.xmlchemy import BaseOxmlElement, ZeroOrOne
+
+if TYPE_CHECKING:
+    from pptx.oxml.chart.shared import CT_Boolean
 
 
 class CT_DTable(BaseOxmlElement):
@@ -26,10 +29,18 @@ class CT_DTable(BaseOxmlElement):
         "c:txPr",
         "c:extLst",
     )
-    showHorzBorder = ZeroOrOne("c:showHorzBorder", successors=_tag_seq[1:])
-    showVertBorder = ZeroOrOne("c:showVertBorder", successors=_tag_seq[2:])
-    showOutline = ZeroOrOne("c:showOutline", successors=_tag_seq[3:])
-    showKeys = ZeroOrOne("c:showKeys", successors=_tag_seq[4:])
+    showHorzBorder: CT_Boolean | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "c:showHorzBorder", successors=_tag_seq[1:]
+    )
+    showVertBorder: CT_Boolean | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "c:showVertBorder", successors=_tag_seq[2:]
+    )
+    showOutline: CT_Boolean | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "c:showOutline", successors=_tag_seq[3:]
+    )
+    showKeys: CT_Boolean | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "c:showKeys", successors=_tag_seq[4:]
+    )
     spPr = ZeroOrOne("c:spPr", successors=_tag_seq[5:])
     del _tag_seq
 

@@ -436,6 +436,11 @@ class DescribeBaseShape:
         shape = BaseShape(None, None)
         assert shape.has_chart is False
 
+    def it_knows_it_doesnt_contain_a_chartex_chart_or_smartart(self):
+        shape = BaseShape(None, None)
+        assert shape.has_chartex is False
+        assert shape.has_smartart is False
+
     def it_knows_it_doesnt_contain_a_table(self):
         shape = BaseShape(None, None)
         assert shape.has_table is False
