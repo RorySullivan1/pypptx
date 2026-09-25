@@ -6,7 +6,7 @@
 - Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); cursor `.meta/version` = v0.2.0 shipped; next v0.2.1.
 - Epic #87 closed (PR #94): master text styles, theme style lists, `SlideMaster.apply_theme`.
 - Epic #79 closed (PR #96): freeform curves/arcs, line cap/join, picture fill, non-linear gradients, table row/col add/remove, cell text direction, autofit readouts.
-- Epic #75 (#76-#78): add_audio, media trim/fade, AlternateContent shapes listed read-only — PR open.
+- Epic #75 closed (PR #105): add_audio, media trim/fade, AlternateContent shapes listed read-only.
 - Epic #66 closed (PR #103): chartex charts (read all, add 6 types) + chart data table.
 - Epic #62 closed (PR #101): SmartArt detection, node-tree read, node text edit (drops cached drawing).
 - Epic #56 closed (PR #99): notes size, custom shows, slide-show settings (presProps), table-style listing, embedded fonts; `LazyXmlPart` keeps untouched parts byte-stable.
@@ -51,3 +51,4 @@
 - 2026-09-25 1530 | Epic #66 chartex + data table | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
 - 2026-09-25 1520 | Merge PR #103; epic #66 + #67-#70 closed | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
 - 2026-09-25 1600 | Epic #75 audio, trim/fade, AlternateContent shapes | sessions/2026-09-25-1600-epic-75-media-altcontent.md
+- 2026-09-25 1610 | Merge PR #105; epic #75 + #76-#78 closed | sessions/2026-09-25-1600-epic-75-media-altcontent.md
