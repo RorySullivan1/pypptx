@@ -23,10 +23,11 @@ Scope and exclusions: `.claude/context/feature-manifest.md`.
 |---------|-------|---------------------------------------------------------|--------|
 | v0.1.0  | 01    | Initial alpha + enum expansion                          | shipped |
 | v0.2.0  | 02    | Documentation & MANIFEST resync                         | shipped |
-| v0.2.1  | 02    | Example scripts for under-demonstrated areas            | planned ← cursor |
-| v0.2.2  | 02    | Docstring audit & Sphinx scaffold                       | planned |
-| v0.3.0  | 03    | Stability & real-world round-trip                       | planned |
-| v0.4.0  | 03    | Transitions, animations (read), custom layouts          | planned |
-| v0.5.0  | 03    | Performance & developer experience                      | planned |
-| v0.6.0  | 03    | Cross-run text find/replace & text helpers              | planned |
+| v0.3.0  | 03    | Feature-gap epics: SmartArt, chartex, media, text styles… (recorded after the fact) | shipped |
+| v0.3.1  | 02    | Example scripts for under-demonstrated areas            | planned ← cursor |
+| v0.3.2  | 02    | Docstring audit & Sphinx scaffold                       | planned |
+| v0.4.0  | 03    | Stability & real-world round-trip                       | planned |
+| v0.5.0  | 03    | Transitions, animations (read), custom layouts          | planned |
+| v0.6.0  | 03    | Performance & developer experience (harness done)       | planned |
+| v0.7.0  | 03    | Cross-run text find/replace & text helpers              | planned |
 | v1.0.0  | 04    | API freeze, comprehensive docs, SemVer commitment       | planned (sketch) |

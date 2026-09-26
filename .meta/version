@@ -1,57 +1,42 @@
-# version: v0.2.0
+# version: v0.3.0
 status: shipped
-theme: Documentation & MANIFEST Resync
-branch: claude/update-docs-plan-release-wMobU
-previous: v0.1.0
-pr: https://github.com/RorySullivan1/pypptx/pull/53
+theme: Feature gaps — epics shipped ahead of the map
+branch: claude/epic-87-closeout-hfo5vj
+previous: v0.2.0
+prs: #94, #96, #99, #101, #103, #105, #107, #108, #109 (plus memory and housekeeping PRs in between)
 
 ## Objective
-Bring the project's user-facing and internal documentation back in sync with
-the actual implementation state. Through v0.1.0 the codebase shipped almost
-all of `internal_docs/TODO.md` sections 1–24, but `internal_docs/MANIFEST.md`
-and the public `README.md` still implied the v0.0.x feature surface. This
-milestone rewrites the doc-text only — no code, no examples, no docs site —
-so the rest of v0.2.x can build on truthful baselines.
+Record, as one release, the feature work that shipped between v0.2.0 and the
+2026-09-26 roadmap reconcile without a card of its own: six GitHub epics that
+closed schema-backed gaps, plus the first measured performance work from #51.
+Written after the fact — this card is history, not a plan.
 
-## Goals
-- Rewrite the "Implemented Features" and "Feature Gaps" sections of
-  `internal_docs/MANIFEST.md`. Promote everything `TODO.md` marks DONE
-  (sections 6–17, 18.1–18.14, 19, 20, 22, 23, 24) into Implemented Features.
-  Trim Feature Gaps to genuinely outstanding items: custom slide layouts,
-  transition/animation read access, cross-run text operations.
-- Bump the version line at the top of `MANIFEST.md` from `0.0.01` to
-  `0.1.0` so it tracks the package release.
-- Move WordArt / preset text warp and text-level 3D into "Known Limitations
-  — Decorative Effects (Out of Scope)" per `TODO.md` section 21.
-- Refresh the `README.md` feature list to name everything shipped — pattern
-  line fills, callouts, movies, z-order / visibility / lock-aspect, computed
-  slide numbers, custom document properties, shadow-color transparency,
-  expanded chart family list.
-- Reshape the `dev_map/` roadmap: split the original v0.2.0 plan into this
-  doc-text resync (now v0.2.0), the example-script gap (v0.2.1), and the
-  docstring + Sphinx work (v0.2.2). Update `dev_map/README.md` status table
-  to list the new sub-versions.
+## Goals (all shipped)
+- Epic #87 (PR #94) — master text styles, theme style lists, `SlideMaster.apply_theme`.
+- Epic #79 (PR #96) — freeform curves/arcs, line cap/join, picture fill, non-linear
+  gradients, table row/column add/remove, cell text direction, autofit readouts.
+- Epic #56 (PR #99) — notes size, custom shows, slide-show settings, table-style listing,
+  embedded fonts; `LazyXmlPart` keeps untouched parts byte-stable.
+- Epic #62 (PR #101) — SmartArt detection, node-tree read, node text edit.
+- Epic #66 (PR #103) — chartex charts (read all types; add waterfall, histogram, box &
+  whisker, treemap, sunburst, funnel) and the classic-chart data table.
+- Epic #75 (PR #105) — `add_audio`, movie/audio trim and fade, 3D models / zooms /
+  equations listed as read-only `AlternateContentShape`s.
+- Issue #51 (PRs #107–#109) — cached `qn()` and compiled XPath (~39% faster per deck),
+  `examples/batch_process.py`, and the `tests/perf/` harness.
+- Fix: `PP_MEDIA_TYPE.SOUND` is 2 (was an alias of `OTHER`).
 
 ## Dependencies
-- None on other versions. Lands on top of `v0.1.0`.
+- `v0.2.0` — the feature manifest and gap log these epics were planned against.
 
 ## Out of scope
-- New API surface. No public function/class additions in this milestone — if
-  a doc audit surfaces a real API gap, file it for `v0.3.0`.
-- New example scripts — deferred to `v0.2.1`.
-- Docstring audit and Sphinx scaffold — deferred to `v0.2.2`.
-- Changing internal architecture or refactoring code paths.
+- Everything the planned cards own: real-world corpus (v0.4.0), transitions/animations
+  and custom layouts (v0.5.0), the rest of the performance pass (v0.6.0), cross-run text
+  (v0.7.0), example scripts and docstrings (v0.3.1, v0.3.2).
 
 ## Objectives / acceptance
-- `pytest -q` remains green; no test count regression.
-- `grep -n "0.0.01" internal_docs/MANIFEST.md` returns no matches.
-- Spot-check: for every entry remaining in MANIFEST "Feature Gaps", a
-  targeted `grep` in `src/pptx/` for the named XML element or attribute
-  surfaces no meaningful implementation.
-- For every commit in `git log v0.1.0..HEAD -- src/pptx/`, the headline
-  feature is either reflected in MANIFEST "Implemented Features" or
-  explicitly out of scope.
-- `README.md` feature list and MANIFEST "Implemented Features" name the
-  same capabilities — no item appears in one but not the other.
-- `dev_map/README.md` status table lists `v0.2.0`, `v0.2.1`, `v0.2.2` with
-  matching themes, and each milestone file follows `_TEMPLATE.md`.
+- Each epic's sub-issues closed by their PR; `pytest -q` green at each merge (3657 tests
+  at the last one).
+- Package version `0.3.0` in `pyproject.toml` and `pptx.__version__`.
+- Human-gated PowerPoint checks for these features are tracked in `.claude/memory/INDEX.md`
+  (Threads) and are **not** yet done; they are not a condition of this card.

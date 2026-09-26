@@ -222,7 +222,7 @@ These are inherent constraints of a file-format library that edits XML. They can
 - Text-level 3D scene, fill, and outline effects
 
 ### Text Range Model Limitations
-- VBA's `TextRange` provides `Characters()`, `Words()`, `Sentences()`, `Lines()`, `Find()`, `Replace()`, `InsertBefore()`, `InsertAfter()`. The `Lines()` method requires a rendering engine to know where visual line breaks occur. The string-search operations are theoretically possible but complicated by the run-splitting model where a single visual word may span multiple XML runs — planned for a future milestone (see `.meta/roadmap/stages/03-hardening-and-gaps/v0.6.0.md`).
+- VBA's `TextRange` provides `Characters()`, `Words()`, `Sentences()`, `Lines()`, `Find()`, `Replace()`, `InsertBefore()`, `InsertAfter()`. The `Lines()` method requires a rendering engine to know where visual line breaks occur. The string-search operations are theoretically possible but complicated by the run-splitting model where a single visual word may span multiple XML runs — planned for a future milestone (see `.meta/roadmap/stages/03-hardening-and-gaps/v0.7.0.md`).
 
 ---
 
@@ -234,10 +234,10 @@ These are features that **are representable in the OOXML schema** and are theref
 - Create new slide layout parts and link to a slide master
 - Define placeholder positions and types on custom layouts
 
-### Transitions & Animations (read-only target — see `.meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md`)
+### Transitions & Animations (read-only target — see `.meta/roadmap/stages/03-hardening-and-gaps/v0.5.0.md`)
 - Slide transition timing and effect parameters (`p:transition`)
 - Read access to the animation timing tree on a slide
 
-### Cross-run Text Operations (see `.meta/roadmap/stages/03-hardening-and-gaps/v0.6.0.md`)
+### Cross-run Text Operations (see `.meta/roadmap/stages/03-hardening-and-gaps/v0.7.0.md`)
 - Find / replace across runs within a paragraph
 - Run-aware string manipulation (`InsertBefore`, `InsertAfter`, `Characters`, `Words`)
