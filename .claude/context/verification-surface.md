@@ -45,9 +45,9 @@ the same workflow when a surface or check changes.
 | Library behaviour (`src/pptx/`) incl. round-trip | `pytest -q` (targeted first: `pytest -q tests/<area>/`) | `agent-runnable` | Pure Python; the suite includes save/load round-trips in `tests/test_roundtrip.py` | 2026-09-24 — 3019 passed on the real tree; `tests/test_util.py` went 2 failed after mutating `_EMUS_PER_INCH` |
 | Public API as used (`examples/`) | `cd examples && python <script>.py` — exit status is the verdict | `agent-runnable` | Scripts build and save a `.pptx` end to end; outputs are gitignored — delete them after | 2026-09-24 — `hello_world.py`, `add_table.py` exit 0; a bad layout index raised `SlideError` |
 | Output opens and renders correctly | open the saved `.pptx` in PowerPoint (or LibreOffice) and look | `human-gated` | No renderer is part of the project or reachable as a check; the human reports "opens without repair prompt / looks right" per file | — |
-| Real-world file compatibility | none yet — a PowerPoint-authored corpus arrives in v0.3.0 | `unverified` | Owner: v0.3.0 card; next: add the corpus + round-trip driver | — |
-| Type annotations (`py.typed`) | none — no mypy/pyright configured | `unverified` | Owner: v0.2.2 / v1.0.0 cards; next: configure a type checker in `pyproject.toml` | — |
-| API docs (Sphinx) | none — `docs/` does not exist yet | `unverified` | Owner: v0.2.2 card; next: `sphinx-build -W` once the scaffold lands | — |
+| Real-world file compatibility | none yet — a PowerPoint-authored corpus arrives in v0.4.0 | `unverified` | Owner: v0.4.0 card; next: add the corpus + round-trip driver | — |
+| Type annotations (`py.typed`) | none — no mypy/pyright configured | `unverified` | Owner: v0.3.2 / v1.0.0 cards; next: configure a type checker in `pyproject.toml` | — |
+| API docs (Sphinx) | none — `docs/` does not exist yet | `unverified` | Owner: v0.3.2 card; next: `sphinx-build -W` once the scaffold lands | — |
 | Asset shape (`.claude/`) | `asset_integrity.py` fed a git-commit hook payload — **advisory: reports, never vetoes; read the output** | `agent-runnable` | Pure file-shape analysis | 2026-09-24 — silent on the real tree; caught a deliberate `name:`/folder mismatch |
 
 **Reading `—` in *last-run*.** It means the tier is **claimed, not proved** — nobody has yet

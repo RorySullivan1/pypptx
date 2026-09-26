@@ -3,7 +3,8 @@
 ## State            (rewrite in place — current truth only, ≤ ~10 lines)
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
-- Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); cursor `.meta/version` = v0.2.0 shipped; next v0.2.1.
+- Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); package 0.3.0 = the epics below (card recorded after the fact);
+  cursor v0.3.1 (examples), then v0.3.2 (docstrings/Sphinx), v0.4.0 corpus … v0.7.0 cross-run text.
 - Epic #87 closed (PR #94): master text styles, theme style lists, `SlideMaster.apply_theme`.
 - Epic #79 closed (PR #96): freeform curves/arcs, line cap/join, picture fill, non-linear gradients, table row/col add/remove, cell text direction, autofit readouts.
 - Epic #75 closed (PR #105): add_audio, media trim/fade, AlternateContent shapes listed read-only.
@@ -16,7 +17,7 @@
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
   — sessions/2026-09-24-1505-adopt-claudebrain-assets.md
 - [2026-09-24] Adopted factory core + roadmap tier + Python/GitHub/docs families. EXCLUDED (not our stacks): VSTO, VBA,
-  Power Platform/SharePoint/Power BI, quant, branding→presentation, Outlook/print HTML. Prose tier deferred to v0.2.2 — same log
+  Power Platform/SharePoint/Power BI, quant, branding→presentation, Outlook/print HTML. Prose tier deferred to v0.3.2 (was v0.2.2) — same log
 - [2026-09-24] Keep pypptx's branch-per-version naming `vX.Y.Z` over `/version-set`'s `claude/<label>-<slug>` default (CLAUDE.md § Roadmap) — same log
 - [2026-09-24] Text-style levels are zero-based like `_Paragraph.level`; `phClr` → `MSO_THEME_COLOR.PLACEHOLDER` (17)
   — sessions/2026-09-24-1819-epic-87-text-styles-themes.md
@@ -32,12 +33,14 @@
   Fallback shape (else Choice) — sessions/2026-09-25-1600-epic-75-media-altcontent.md
 - [2026-09-25] Hot-path caching: `qn` is lru_cached; `BaseOxmlElement.xpath` evaluates per-thread cached compiled XPath
   (`xmlchemy.compiled_xpath`) — sessions/2026-09-25-1630-issue-51-perf-caches.md
+- [2026-09-26] Roadmap renumbered: shipped epics = v0.3.0; docs versions v0.2.1/v0.2.2 → v0.3.1/v0.3.2; stage-03 plans
+  v0.3.0–v0.6.0 → v0.4.0–v0.7.0 (package versions must increase) — .meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
 - Epic #79 human checks: picture/tiled fill, radial gradient, elliptical arc, table insert inside a merge.
 - Epic #56 human checks: custom show plays the right slides; loop/kiosk take effect; last-embedded-font removal opens cleanly.
-- v0.2.2 docstring audit: consider adopting the factory's prose tier (`prose_budget.py`, `prose-auditor`, `/prose-review`).
+- v0.3.2 docstring audit: consider adopting the factory's prose tier (`prose_budget.py`, `prose-auditor`, `/prose-review`).
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
 - Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
@@ -58,3 +61,4 @@
 - 2026-09-25 1610 | Merge PR #105; epic #75 + #76-#78 closed | sessions/2026-09-25-1600-epic-75-media-altcontent.md
 - 2026-09-25 1630 | Issue #51: profile + qn/XPath caches (−39%/deck) | sessions/2026-09-25-1630-issue-51-perf-caches.md
 - 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
+- 2026-09-26 | Roadmap reconcile + package 0.3.0 | .meta/roadmap/INDEX.md
