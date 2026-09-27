@@ -13,6 +13,11 @@
 - Added `.gitattributes` (`* text=auto eol=lf` + explicit `binary` list), renormalized the working
   tree, fixed one non-portable test. `pytest -q` → **3657 passed, 0 failed**.
 - Branch `claude/windows-eol-acceptance`, commit `ca1b627`, **PR #112** (open, not merged).
+- Then added `.github/workflows/tests.yml` (approved shape: explicit include matrix — ubuntu 3.9–3.13,
+  windows 3.13, macos 3.13; CRLF guard inside the Windows cell; all 15 examples inside the newest ubuntu
+  cell; no perf gate). **Its first run failed all 7 cells**: `pyparsing` was never in the `dev` extra, so
+  a clean `pip install -e ".[dev]"` collects nothing — it had always been present as some other package's
+  transitive dep. Declared `pyparsing>=3.0,<4`; run 36290638431 is **7/7 green**.
 
 ## Gotchas & dead ends
 - **Why byte-exactness bites here:** `tests/unitutil/file.py` loaders open `"rb"`; `snippet_seq()`
@@ -29,6 +34,11 @@
   needs that one command after pulling #112.
 - `git ls-files --eol` output is NOT whitespace-separable: the attr column contains spaces, the path
   follows a **tab**. Splitting on whitespace produced `OSError: Invalid argument` on the path.
+- **GitHub Actions rejects YAML anchors/aliases** — a shared `&prose` anchor for the two `paths-ignore`
+  lists parses fine in PyYAML and then fails in the workflow parser. The lists are duplicated on purpose.
+- **`gh run watch --exit-status` exited 0 on a run whose conclusion was `failure`.** Read
+  `gh run view --json conclusion`, never the watcher's exit code.
+- Jobs bill by the rounded-up minute, so 7 sub-minute jobs = ~17 billable min (macOS x10 is 10 of them).
 - Isolating the two causes: extracting the same commit LF-only with
   `git -c core.autocrlf=false checkout-index -a --prefix=<tmp>/` and running pytest there gave
   3656 passed / 1 failed — separating the CRLF failures from the real test defect in one run.
@@ -36,7 +46,8 @@
 ## State at end
 - `main` at `0658fa5` (synced). Working branch `claude/windows-eol-acceptance` pushed; **PR #112
   awaiting review** — nothing merged, `.meta/version` untouched (still v0.3.0 shipped, cursor v0.3.1).
-- `pytest -q` is now genuinely `agent-runnable` on Windows: 3657 passed, 0 failed.
+- `pytest -q` is now genuinely `agent-runnable` on Windows: 3657 passed, 0 failed — and verified in a clean
+  venv with only the declared deps (lxml 6.1.3, pytest 9.1.1), which is what caught the pyparsing gap.
 - No work started on the v0.3.1 cursor (example scripts).
 
 ## Open threads

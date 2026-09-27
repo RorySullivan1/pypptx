@@ -8,8 +8,8 @@
 - Package 0.3.0 = epics #87/#79/#75/#66/#62/#56 + issue #51, itemised in
   `.meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md`; their design decisions are in Decisions below.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
-- Windows checkouts need `.gitattributes` (PR #112, open): without it autocrlf gives a CRLF tree and 52 tests
-  fail/error; `pytest -q` = 3657 passed on Windows with it. No CI runs the tests at all.
+- PR #112 (open) makes the suite runnable everywhere: `.gitattributes` (CRLF tree = 52 failures), `pyparsing` in
+  the dev extra, and `tests.yml` — pytest on Linux 3.9–3.13 + Windows + macOS, all 7 cells green.
 
 ## Decisions        (append-only; supersede, never delete)
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
@@ -50,10 +50,11 @@
 - Issue #51 (checklist trimmed 2026-09-25): open items are proxy-tuple caching (paragraphs/runs/shapes) and a "no slower than
   baseline" `pytest -m perf` gate in CI; plan + baseline in `.claude/context/performance.md`.
 - `unverified` surfaces (verification-surface.md): type checker, Sphinx build, real-world corpus.
-- PR #112 (LF `.gitattributes` + portable font-dir test) open, unmerged; existing Windows clones need
-  `git add --renormalize .` after pulling it. Until merged a fresh Windows clone fails 52 tests.
-- No CI workflow runs `pytest` (only `epic-autoclose.yml`, ubuntu) — every past "green at merge" was a Linux
-  agent run. A ubuntu/windows/macOS matrix would also cover the #51 perf gate.
+- PR #112 open, unmerged (4 commits: .gitattributes, memory, tests.yml, pyparsing). Existing Windows clones
+  need `git add --renormalize .` after pulling it; until merged a fresh Windows clone fails 52 tests.
+- `tests.yml` caveats: `paths-ignore` (md/.claude/.meta) must go if `tests` ever becomes a REQUIRED check, or
+  docs-only PRs wait forever; ~17 billable min/run, 10 of them the single macOS cell (x10 multiplier).
+- The #51 perf gate is still absent, deliberately — shared-runner timing noise would make it flake.
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md
