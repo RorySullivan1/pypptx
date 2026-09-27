@@ -1,42 +1,25 @@
-# version: v0.3.0
-status: shipped
-theme: Feature gaps — epics shipped ahead of the map
-branch: claude/epic-87-closeout-hfo5vj
-previous: v0.2.0
-prs: #94, #96, #99, #101, #103, #105, #107, #108, #109 (plus memory and housekeeping PRs in between)
+# version: v0.3.1
+status: in-progress
+started: 2026-09-27
+theme: Example scripts for under-demonstrated areas
+branch: v0.3.1
+previous: v0.3.0
+pr:
 
-## Objective
-Record, as one release, the feature work that shipped between v0.2.0 and the
-2026-09-26 roadmap reconcile without a card of its own: six GitHub epics that
-closed schema-backed gaps, plus the first measured performance work from #51.
-Written after the fact — this card is history, not a plan.
-
-## Goals (all shipped)
-- Epic #87 (PR #94) — master text styles, theme style lists, `SlideMaster.apply_theme`.
-- Epic #79 (PR #96) — freeform curves/arcs, line cap/join, picture fill, non-linear
-  gradients, table row/column add/remove, cell text direction, autofit readouts.
-- Epic #56 (PR #99) — notes size, custom shows, slide-show settings, table-style listing,
-  embedded fonts; `LazyXmlPart` keeps untouched parts byte-stable.
-- Epic #62 (PR #101) — SmartArt detection, node-tree read, node text edit.
-- Epic #66 (PR #103) — chartex charts (read all types; add waterfall, histogram, box &
-  whisker, treemap, sunburst, funnel) and the classic-chart data table.
-- Epic #75 (PR #105) — `add_audio`, movie/audio trim and fade, 3D models / zooms /
-  equations listed as read-only `AlternateContentShape`s.
-- Issue #51 (PRs #107–#109) — cached `qn()` and compiled XPath (~39% faster per deck),
-  `examples/batch_process.py`, and the `tests/perf/` harness.
-- Fix: `PP_MEDIA_TYPE.SOUND` is 2 (was an alias of `OTHER`).
-
-## Dependencies
-- `v0.2.0` — the feature manifest and gap log these epics were planned against.
-
-## Out of scope
-- Everything the planned cards own: real-world corpus (v0.4.0), transitions/animations
-  and custom layouts (v0.5.0), the rest of the performance pass (v0.6.0), cross-run text
-  (v0.7.0), example scripts and docstrings (v0.3.1, v0.3.2).
+## Goals
+- A runnable example for each feature area that has none: chart trendlines and error bars,
+  chart 3D view and wall/floor formatting, master→layout→slide placeholder inheritance,
+  and picture effects.
+- Every new script re-opens the `.pptx` it wrote and asserts the round-tripped values match
+  what was written — a script that only saves proves nothing.
+- Round-trip asserts added to `examples/add_chart_secondary_axis.py`, which already exists.
+- README "Examples" table lists every script; each new script's module docstring points back
+  to the `.claude/context/feature-manifest.md` section it demonstrates.
 
 ## Objectives / acceptance
-- Each epic's sub-issues closed by their PR; `pytest -q` green at each merge (3657 tests
-  at the last one).
-- Package version `0.3.0` in `pyproject.toml` and `pptx.__version__`.
-- Human-gated PowerPoint checks for these features are tracked in `.claude/memory/INDEX.md`
-  (Threads) and are **not** yet done; they are not a condition of this card.
+- `python examples/<name>.py` exits 0 for every script, from a clean working directory.
+- Each new script's assertions are bare `assert`s against values read back from the reopened
+  file, and each has been seen to fail (checked by perturbing an expected value once).
+- `pytest -q` stays at 3657 passed; CI green on all 7 cells.
+- `ls examples/` and the README "Examples" table list the same files.
+- No new public API on this branch. Gaps found are filed for v0.4.0, not patched here.
