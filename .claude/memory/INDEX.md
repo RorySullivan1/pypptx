@@ -8,10 +8,9 @@
 - Package 0.3.0 = epics #87/#79/#75/#66/#62/#56 + issue #51, itemised in
   `.meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md`; their design decisions are in Decisions below.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
-- PR #112 merged (`b64d2b9`): `.gitattributes` pins LF (a CRLF tree = 52 failures), `pyparsing` in the dev extra,
-  `tests.yml` runs pytest on Linux 3.9–3.13 + Windows + macOS; `main` was 7/7 green.
+- Since `b64d2b9`: `.gitattributes` pins LF (CRLF tree = 52 failures), `pyparsing` is a dev dep, `tests.yml` runs
+  pytest on Linux 3.9–3.13 + Win + macOS — **but Actions is billing-blocked (2026-09-27), so evidence is local**.
 - v0.3.1 in progress on branch `v0.3.1` (PR #116): 5 of 6 example goals landed, goal 3 deferred to #115.
-- **CI is billing-blocked** since 2026-09-27 ~22:27Z (Actions jobs not starting), so #116 has local evidence only.
 
 ## Decisions        (append-only; supersede, never delete)
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
