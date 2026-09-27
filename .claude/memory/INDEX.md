@@ -8,8 +8,10 @@
 - Package 0.3.0 = epics #87/#79/#75/#66/#62/#56 + issue #51, itemised in
   `.meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md`; their design decisions are in Decisions below.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
-- PR #112 (open) makes the suite runnable everywhere: `.gitattributes` (CRLF tree = 52 failures), `pyparsing` in
-  the dev extra, and `tests.yml` — pytest on Linux 3.9–3.13 + Windows + macOS, all 7 cells green.
+- PR #112 merged (`b64d2b9`): `.gitattributes` pins LF (a CRLF tree = 52 failures), `pyparsing` in the dev extra,
+  `tests.yml` runs pytest on Linux 3.9–3.13 + Windows + macOS; `main` was 7/7 green.
+- v0.3.1 in progress on branch `v0.3.1` (PR #116): 5 of 6 example goals landed, goal 3 deferred to #115.
+- **CI is billing-blocked** since 2026-09-27 ~22:27Z (Actions jobs not starting), so #116 has local evidence only.
 
 ## Decisions        (append-only; supersede, never delete)
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
@@ -50,11 +52,16 @@
 - Issue #51 (checklist trimmed 2026-09-25): open items are proxy-tuple caching (paragraphs/runs/shapes) and a "no slower than
   baseline" `pytest -m perf` gate in CI; plan + baseline in `.claude/context/performance.md`.
 - `unverified` surfaces (verification-surface.md): type checker, Sphinx build, real-world corpus.
-- PR #112 open, unmerged (4 commits: .gitattributes, memory, tests.yml, pyparsing). Existing Windows clones
-  need `git add --renormalize .` after pulling it; until merged a fresh Windows clone fails 52 tests.
+- Anyone with a Windows clone predating `b64d2b9` needs `git add --renormalize .` once after pulling, or git
+  reports every text file modified (its dirty check compares the size recorded in the index, not content).
 - `tests.yml` caveats: `paths-ignore` (md/.claude/.meta) must go if `tests` ever becomes a REQUIRED check, or
   docs-only PRs wait forever; ~17 billable min/run, 10 of them the single macOS cell (x10 multiplier).
 - The #51 perf gate is still absent, deliberately — shared-runner timing noise would make it flake.
+- **Actions billing blocks every job.** Fix the spending limit/payment, or cut cost: the lone macOS cell is
+  ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
+- #114 (shape-level tags) and #115 (3D chart authoring; also unblocks examples/chart_3d_view.py) → v0.4.0.
+- PRs open: #113 (verification-surface stamp) and #116 (v0.3.1). Both touch memory/INDEX.md, so whichever
+  merges second may need a trivial conflict resolution there.
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md
@@ -71,3 +78,4 @@
 - 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
 - 2026-09-26 | Roadmap reconcile + package 0.3.0 | .meta/roadmap/INDEX.md
 - 2026-09-26 2219 | Windows acceptance: LF .gitattributes, 3657 green (PR #112) | sessions/2026-09-26-2219-windows-crlf-acceptance.md
+- 2026-09-27 1829 | v0.3.1 examples (PR #116); #114/#115 filed; Actions billing-blocked | sessions/2026-09-27-1829-v031-examples.md
