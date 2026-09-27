@@ -4,7 +4,7 @@ started: 2026-09-27
 theme: Example scripts for under-demonstrated areas
 branch: v0.3.1
 previous: v0.3.0
-pr:
+pr: #116
 
 ## Goals
 - A runnable example for each feature area that has none: chart trendlines and error bars,
