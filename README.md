@@ -72,10 +72,13 @@ See the [`examples/`](examples/) directory for runnable scripts:
 | [`hello_world.py`](examples/hello_world.py) | Minimal presentation with title slide and core properties |
 | [`add_textbox.py`](examples/add_textbox.py) | Text boxes with rich font formatting and paragraph alignment |
 | [`add_picture.py`](examples/add_picture.py) | Insert and format images |
+| [`picture_effects.py`](examples/picture_effects.py) | Brightness, contrast, grayscale, transparent colour, and cropping |
 | [`shapes_and_fills.py`](examples/shapes_and_fills.py) | AutoShapes with solid, gradient, and pattern fills |
 | [`shape_effects.py`](examples/shape_effects.py) | Shadow, glow, reflection, and 3D formatting |
 | [`add_table.py`](examples/add_table.py) | Tables with merged cells, borders, and cell fills |
 | [`add_chart.py`](examples/add_chart.py) | Bar and line charts with data labels and legends |
+| [`add_chart_secondary_axis.py`](examples/add_chart_secondary_axis.py) | Combo chart: column plot plus a line plot on a secondary value axis |
+| [`chart_trendlines_error_bars.py`](examples/chart_trendlines_error_bars.py) | Linear, polynomial and moving-average trendlines; fixed, percentage and std-dev error bars |
 | [`batch_process.py`](examples/batch_process.py) | Process a folder of decks in parallel with a process pool (find/replace text, per-file error reporting) |
 | [`modern_charts.py`](examples/modern_charts.py) | Waterfall, histogram, box & whisker, treemap, sunburst and funnel charts, and a chart data table |
 | [`slide_operations.py`](examples/slide_operations.py) | Duplicate, reorder, and delete slides |
@@ -83,6 +86,8 @@ See the [`examples/`](examples/) directory for runnable scripts:
 | [`bullet_lists.py`](examples/bullet_lists.py) | Bullet formatting, numbered lists, and indentation |
 | [`connectors_and_groups.py`](examples/connectors_and_groups.py) | Connectors with arrowheads and group shapes |
 | [`comments_and_metadata.py`](examples/comments_and_metadata.py) | Comments, tags, sections, and custom properties |
+| [`custom_slide_master_walk.py`](examples/custom_slide_master_walk.py) | Walk master → layout → slide placeholder inheritance, and override one |
+| [`investor_presentation.py`](examples/investor_presentation.py) | A five-slide styled deck end to end |
 
 ## Requirements
 

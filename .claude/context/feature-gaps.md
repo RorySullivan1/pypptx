@@ -753,6 +753,22 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 
 ---
 
+## 28. Python API — Shape-Level Customer Data Tags
+
+Found 2026-09-27 while planning v0.3.1's `sections_tags_custom_props` example: the card asked
+for a demonstration of "slide **and shape** tags", and only the slide half exists.
+
+- [x] Slide tags — `Slide.tags` (`TagsPart`, mapping-style: `__getitem__`/`__setitem__`/
+      `__delitem__`/`__contains__`/`items`/`get`), `p:custDataLst/p:tags` on `p:sld`
+- [ ] Shape tags — no API. The slot is already reserved in the element sequences
+      (`p:custDataLst` in `oxml/shapes/shared.py`, `oxml/slide.py`), so this is an
+      unimplemented surface rather than an unrepresentable one. Needs: `p:custDataLst/p:tags`
+      accessor on `CT_ApplicationNonVisualDrawingProps` (`p:nvPr`), a `TagsPart` relationship
+      from the *slide* part keyed per shape, and a `BaseShape.tags` proxy reusing `TagsPart`
+- [ ] Deferred to v0.4.0 (#114) — v0.3.1 adds no public API by its own terms
+
+---
+
 ## Out of Scope
 
 The following are **not planned** as they require capabilities beyond XML file manipulation:
