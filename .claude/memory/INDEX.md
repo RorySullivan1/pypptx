@@ -3,15 +3,13 @@
 ## State            (rewrite in place — current truth only, ≤ ~10 lines)
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
-- Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); package 0.3.0 = the epics below (card recorded after the fact);
-  cursor v0.3.1 (examples), then v0.3.2 (docstrings/Sphinx), v0.4.0 corpus … v0.7.0 cross-run text.
-- Epic #87 closed (PR #94): master text styles, theme style lists, `SlideMaster.apply_theme`.
-- Epic #79 closed (PR #96): freeform curves/arcs, line cap/join, picture fill, non-linear gradients, table row/col add/remove, cell text direction, autofit readouts.
-- Epic #75 closed (PR #105): add_audio, media trim/fade, AlternateContent shapes listed read-only.
-- Epic #66 closed (PR #103): chartex charts (read all, add 6 types) + chart data table.
-- Epic #62 closed (PR #101): SmartArt detection, node-tree read, node text edit (drops cached drawing).
-- Epic #56 closed (PR #99): notes size, custom shows, slide-show settings (presProps), table-style listing, embedded fonts; `LazyXmlPart` keeps untouched parts byte-stable.
+- Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); cursor v0.3.1 (examples), then v0.3.2
+  (docstrings/Sphinx), v0.4.0 corpus … v0.7.0 cross-run text.
+- Package 0.3.0 = epics #87/#79/#75/#66/#62/#56 + issue #51, itemised in
+  `.meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md`; their design decisions are in Decisions below.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
+- Windows checkouts need `.gitattributes` (PR #112, open): without it autocrlf gives a CRLF tree and 52 tests
+  fail/error; `pytest -q` = 3657 passed on Windows with it. No CI runs the tests at all.
 
 ## Decisions        (append-only; supersede, never delete)
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
@@ -35,6 +33,11 @@
   (`xmlchemy.compiled_xpath`) — sessions/2026-09-25-1630-issue-51-perf-caches.md
 - [2026-09-26] Roadmap renumbered: shipped epics = v0.3.0; docs versions v0.2.1/v0.2.2 → v0.3.1/v0.3.2; stage-03 plans
   v0.3.0–v0.6.0 → v0.4.0–v0.7.0 (package versions must increase) — .meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md
+- [2026-09-26] Pin `* text=auto eol=lf` repo-wide + explicit `binary` fixtures: the snippet loaders are
+  byte-exact (`"rb"`, split on `"
+
+"`) so a CRLF tree breaks 51 tests; `osx_dirs_fixture` injects `posixpath`
+  rather than skipping on Windows — sessions/2026-09-26-2219-windows-crlf-acceptance.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
@@ -47,6 +50,10 @@
 - Issue #51 (checklist trimmed 2026-09-25): open items are proxy-tuple caching (paragraphs/runs/shapes) and a "no slower than
   baseline" `pytest -m perf` gate in CI; plan + baseline in `.claude/context/performance.md`.
 - `unverified` surfaces (verification-surface.md): type checker, Sphinx build, real-world corpus.
+- PR #112 (LF `.gitattributes` + portable font-dir test) open, unmerged; existing Windows clones need
+  `git add --renormalize .` after pulling it. Until merged a fresh Windows clone fails 52 tests.
+- No CI workflow runs `pytest` (only `epic-autoclose.yml`, ubuntu) — every past "green at merge" was a Linux
+  agent run. A ubuntu/windows/macOS matrix would also cover the #51 perf gate.
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md
@@ -62,3 +69,4 @@
 - 2026-09-25 1630 | Issue #51: profile + qn/XPath caches (−39%/deck) | sessions/2026-09-25-1630-issue-51-perf-caches.md
 - 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
 - 2026-09-26 | Roadmap reconcile + package 0.3.0 | .meta/roadmap/INDEX.md
+- 2026-09-26 2219 | Windows acceptance: LF .gitattributes, 3657 green (PR #112) | sessions/2026-09-26-2219-windows-crlf-acceptance.md
