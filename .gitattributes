@@ -1,0 +1,35 @@
+# Line endings are part of this project's test data.
+#
+# The fixture loaders in `tests/unitutil/file.py` open snippet files as `"rb"`
+# and compare the decoded text byte-for-byte; `snippet_seq()` splits on "\n\n",
+# and `tests/opc/test_serialized.py` asserts the SHA-1 of a file read out of
+# `tests/test_files/expanded_pptx/`. A CRLF working tree therefore fails ~50
+# tests. Git for Windows ships `core.autocrlf=true` in its system config, so
+# without these rules a Windows clone cannot run the suite.
+#
+# `eol=lf` pins the *working tree*, not just the index, on every platform.
+* text=auto eol=lf
+
+# Binary fixtures — never transform these. Git's text/binary heuristic
+# mis-detects `dummy.mp4` and `cdw-logo.eps` (both are stored as text in the
+# index), which silently corrupted them in a CRLF working tree.
+*.bin   binary
+*.bmp   binary
+*.docx  binary
+*.emf   binary
+*.eps   binary
+*.gif   binary
+*.jpeg  binary
+*.jpg   binary
+*.mp3   binary
+*.mp4   binary
+*.otf   binary
+*.png   binary
+*.potx  binary
+*.pptx  binary
+*.thmx  binary
+*.tiff  binary
+*.ttf   binary
+*.wav   binary
+*.wmf   binary
+*.xlsx  binary

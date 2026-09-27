@@ -1,0 +1,111 @@
+# tests: run the pytest suite on every OS a contributor might develop on.
+#
+# The matrix is an explicit `include` list, not a cross-product: the Python range is
+# covered on Linux (cheapest runner), and Windows and macOS get one job each on the
+# newest version. Private-repo Actions minutes bill Windows at 2x and macOS at 10x, so
+# a full 3x5 grid would cost ~4x this one for coverage that overlaps almost entirely.
+#
+# Two steps ride along inside existing jobs rather than adding billable ones:
+#   - the Windows job guards against a CRLF working tree (see .gitattributes -- a CRLF
+#     checkout breaks 51 byte-exact fixture tests);
+#   - the newest Linux job runs every examples/ script, which is the "public API as
+#     used" row of .claude/context/verification-surface.md.
+#
+# Benchmarks are excluded by `addopts = "-m 'not perf'"` in pyproject.toml. A
+# "no slower than baseline" perf gate is deliberately NOT here: shared runners have
+# noisy timing and it would flake. See the issue #51 thread in .claude/memory/INDEX.md.
+name: tests
+
+on:
+  push:
+    branches: [main]
+    # Duplicated below rather than shared via a YAML anchor: the Actions workflow
+    # parser does not support anchors/aliases. Keep the two lists in step.
+    paths-ignore:
+      - "**/*.md"
+      - ".claude/**"
+      - ".meta/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - ".claude/**"
+      - ".meta/**"
+  workflow_dispatch:
+
+# A newer push to the same ref makes the in-flight run pointless; don't pay for it.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One red cell must not hide the others -- that is the whole point of a matrix.
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, python: "3.9" }
+          - { os: ubuntu-latest, python: "3.10" }
+          - { os: ubuntu-latest, python: "3.11" }
+          - { os: ubuntu-latest, python: "3.12" }
+          - { os: ubuntu-latest, python: "3.13", examples: true }
+          - { os: windows-latest, python: "3.13" }
+          - { os: macos-latest, python: "3.13" }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Guard against a CRLF working tree
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          crlf="$(git ls-files --eol | grep 'w/crlf' || true)"
+          if [ -n "$crlf" ]; then
+            echo "::error::CRLF files in the working tree. The fixture loaders in"
+            echo "::error::tests/unitutil/file.py are byte-exact; .gitattributes must pin eol=lf."
+            echo "$crlf"
+            exit 1
+          fi
+          echo "No CRLF files in the working tree."
+
+      - name: Test
+        run: pytest -q
+
+      - name: Run the example scripts
+        if: matrix.examples
+        shell: bash
+        run: |
+          # Run from a scratch directory: the scripts write .pptx files next to the cwd.
+          cd "$(mktemp -d)"
+          failed=0
+          for script in "$GITHUB_WORKSPACE"/examples/*.py; do
+            name="$(basename "$script")"
+            # batch_process.py takes IN_DIR/OUT_DIR arguments; it has no no-arg smoke mode
+            # worth gating on here.
+            if [ "$name" = "batch_process.py" ]; then continue; fi
+            if output="$(python "$script" 2>&1)"; then
+              echo "  ok    $name"
+            else
+              echo "::error::$name exited non-zero"
+              echo "$output" | tail -20
+              failed=1
+            fi
+          done
+          exit $failed

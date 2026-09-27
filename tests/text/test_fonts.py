@@ -118,10 +118,13 @@ class DescribeFontFiles:
 
     @pytest.fixture
     def osx_dirs_fixture(self, request):
-        import os
+        import posixpath
 
         os_ = var_mock(request, "pptx.text.fonts.os")
-        os_.path = os.path
+        # posixpath, not the host's os.path -- `_os_x_font_directories()` only ever runs on
+        # macOS, so the expected values below are POSIX paths. Handing the mock `os.path`
+        # made this test assert the *host* separator, which fails on Windows (ntpath).
+        os_.path = posixpath
         os_.environ = {"HOME": "/Users/fbar"}
         return [
             "/Library/Fonts",
