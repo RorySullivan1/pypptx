@@ -8,8 +8,10 @@ pr:
 
 ## Goals
 - A runnable example for each feature area that has none: chart trendlines and error bars,
-  chart 3D view and wall/floor formatting, master→layout→slide placeholder inheritance,
-  and picture effects.
+  master→layout→slide placeholder inheritance, and picture effects.
+- Deferred: the chart 3D view / wall-and-floor example. No 3D chart type can be authored
+  (`add_chart` has no `bar3DChart`/`line3DChart`/`pie3DChart`/`area3DChart` writer) and no
+  fixture holds one to read, so there is nothing the API could visibly act on. Filed as #115.
 - Every new script re-opens the `.pptx` it wrote and asserts the round-tripped values match
   what was written — a script that only saves proves nothing.
 - Round-trip asserts added to `examples/add_chart_secondary_axis.py`, which already exists.
