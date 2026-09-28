@@ -544,7 +544,7 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] Supports "line", "bar", "area", "scatter" overlay types
 - [x] `Chart.plots` iteration verified working with multiple xChart elements
 
-### 18.6 3D Chart Properties (DONE)
+### 18.6 3D Chart Properties (view/surfaces DONE; authoring MISSING)
 
 - [x] `CT_View3D` — `rotX`, `rotY`, `rAngAx`, `perspective`, `depthPercent`, `hPercent` children with val properties
 - [x] `CT_RotX`, `CT_RotY`, `CT_Perspective`, `CT_DepthPercent`, `CT_HPercent` element classes
@@ -552,6 +552,7 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] Declared `c:view3D`, `c:floor`, `c:sideWall`, `c:backWall` as `ZeroOrOne` on `CT_Chart`
 - [x] `Chart.view_3d` API — `View3D` with rot_x, rot_y, right_angle_axes, perspective, depth_percent, height_percent
 - [x] `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` — `ChartSurface` with format and thickness
+- [ ] **Authoring a 3D chart — missing (#115).** No XML writer exists for `c:bar3DChart`, `c:line3DChart`, `c:pie3DChart` or `c:area3DChart`, so `add_chart(XL_CHART_TYPE.THREE_D_*)` raises `NotImplementedError`; the only `THREE_D` member in the writer map is `BUBBLE_THREE_D_EFFECT` (a 2D bubble chart). The view/surface APIs above can therefore only be set on charts with no 3D plot box to render them. No 3D fixture in `tests/test_files/` either, so read paths are uncovered. Found 2026-09-27 planning the v0.3.1 examples
 
 ### 18.7 Chart & Plot Area Formatting (DONE)
 
@@ -750,6 +751,22 @@ OXML layer support exists (`CT_PresetTextShape` on `CT_TextBodyProperties`) for 
 - [x] `AlternateContentShape` (read-only) — `content_kind` (`model3d` / `zoom` / `equation` / `unknown`, from the choice's `Requires` namespaces, `a:graphicData/@uri` and Office Math content), `has_fallback`, `alternate_content_element`; name/id/geometry from the represented shape; `MSO_SHAPE_TYPE.MODEL_3D` (30) (#78)
 - [x] `oxml.shapes.shared.tree_elm()` also recognizes `mc:Fallback`, so move/remove/duplicate/group act on the whole wrapper (#78)
 - [ ] Deferred — editing the choice content; authoring 3D models, zooms, equations or ink
+
+---
+
+## 28. Python API — Shape-Level Customer Data Tags
+
+Found 2026-09-27 while planning v0.3.1's `sections_tags_custom_props` example: the card asked
+for a demonstration of "slide **and shape** tags", and only the slide half exists.
+
+- [x] Slide tags — `Slide.tags` (`TagsPart`, mapping-style: `__getitem__`/`__setitem__`/
+      `__delitem__`/`__contains__`/`items`/`get`), `p:custDataLst/p:tags` on `p:sld`
+- [ ] Shape tags — no API. The slot is already reserved in the element sequences
+      (`p:custDataLst` in `oxml/shapes/shared.py`, `oxml/slide.py`), so this is an
+      unimplemented surface rather than an unrepresentable one. Needs: `p:custDataLst/p:tags`
+      accessor on `CT_ApplicationNonVisualDrawingProps` (`p:nvPr`), a `TagsPart` relationship
+      from the *slide* part keyed per shape, and a `BaseShape.tags` proxy reusing `TagsPart`
+- [ ] Deferred to v0.4.0 (#114) — v0.3.1 adds no public API by its own terms
 
 ---
 

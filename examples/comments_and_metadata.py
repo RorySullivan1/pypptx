@@ -55,3 +55,47 @@ print(f"Department: {prs.custom_properties['Department']}")
 
 prs.save("comments_and_metadata.pptx")
 print("Saved comments_and_metadata.pptx")
+
+# --- Round trip ---
+# Reopen the saved deck and assert every piece of metadata survived. Comments, tags, sections
+# and custom properties each live in a different part of the package -- comments in their own
+# part, tags in a related tags part, sections in the presentation part's extension list, and
+# custom properties in docProps/custom.xml -- so this is really four round trips in one.
+reopened = Presentation("comments_and_metadata.pptx")
+r_slide1, r_slide2 = reopened.slides
+
+# Legacy comments, with their authors.
+assert len(r_slide1.comments) == 2, len(r_slide1.comments)
+assert [c.author for c in r_slide1.comments] == ["Alice", "Bob"]
+assert [c.text for c in r_slide1.comments] == [
+    "Please review the layout.",
+    "Looks good to me!",
+]
+
+# The modern threaded comment, its reply, and the resolved flag.
+assert len(r_slide2.threaded_comments) == 1, len(r_slide2.threaded_comments)
+r_thread = list(r_slide2.threaded_comments)[0]
+assert r_thread.author == "Alice"
+assert r_thread.text == "Can we add a chart here?"
+assert r_thread.resolved is True
+assert len(r_thread.replies) == 1
+assert r_thread.replies[0].author == "Bob"
+assert r_thread.replies[0].text == "Added one in the next revision."
+
+# Slide tags.
+assert r_slide1.tags["status"] == "draft"
+assert r_slide1.tags["reviewer"] == "alice"
+assert "missing" not in r_slide1.tags
+
+# Sections, and the slide each one holds.
+assert [s.name for s in reopened.sections] == ["Introduction", "Content"]
+assert reopened.sections[0].slide_ids == (r_slide1.slide_id,)
+assert reopened.sections[1].slide_ids == (r_slide2.slide_id,)
+
+# Custom document properties keep their Python types, not just their text.
+assert reopened.custom_properties["Department"] == "Engineering"
+assert reopened.custom_properties["Version"] == 2
+assert isinstance(reopened.custom_properties["Version"], int)
+assert reopened.custom_properties["Approved"] is True
+
+print("Round trip verified: comments, threads, tags, sections, typed custom properties")
