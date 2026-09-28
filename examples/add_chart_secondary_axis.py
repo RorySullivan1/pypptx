@@ -138,3 +138,36 @@ style_secondary_axis_series(margin_line_series, secondary_axis)
 
 prs.save("add_chart_secondary_axis.pptx")
 print("Saved add_chart_secondary_axis.pptx")
+
+# --- Round trip ---
+# Reopen the saved file and assert the combo structure survived. The OXML surgery above moves
+# a `<c:ser>` between xCharts, so the thing worth proving is that PowerPoint's own schema
+# order held and both plots came back -- not merely that the setters ran.
+reopened = Presentation("add_chart_secondary_axis.pptx")
+r_chart = next(shape for shape in reopened.slides[0].shapes if shape.has_chart).chart
+
+# Two plots: the column chart and the line overlay.
+assert len(r_chart.plots) == 2, len(r_chart.plots)
+assert len(r_chart.plots[0].series) == 2, len(r_chart.plots[0].series)
+assert len(r_chart.plots[1].series) == 1, len(r_chart.plots[1].series)
+
+# The moved series re-typed itself off its new parent xChart: it reports as a line series and
+# kept its name and values.
+moved = r_chart.plots[1].series[0]
+assert moved.name == "Margin (%)", moved.name
+assert moved.values == (20, 23, 24, 28), moved.values
+assert type(moved).__name__ == "LineSeries", type(moved).__name__
+
+# Two distinct value axes, and the overlay plot is bound to the second one.
+assert r_chart.value_axis._element is not r_chart.secondary_value_axis._element
+primary_ax_ids = {el.get("val") for el in r_chart.plots[0]._element.xpath("c:axId")}
+secondary_ax_ids = {el.get("val") for el in r_chart.plots[1]._element.xpath("c:axId")}
+assert primary_ax_ids != secondary_ax_ids, (primary_ax_ids, secondary_ax_ids)
+assert not primary_ax_ids & secondary_ax_ids, "the two plots share an axis"
+
+# The styling on the secondary series survived too.
+assert r_chart.secondary_value_axis.has_title is True
+assert r_chart.secondary_value_axis.axis_title.text_frame.text == "Margin (%)"
+assert moved.format.line.color.rgb == MARGIN_GOLD
+
+print("Round trip verified: 2 plots, moved series re-typed, axes independent")

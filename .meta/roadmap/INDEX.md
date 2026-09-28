@@ -24,7 +24,7 @@ Scope and exclusions: `.claude/context/feature-manifest.md`.
 | v0.1.0  | 01    | Initial alpha + enum expansion                          | shipped |
 | v0.2.0  | 02    | Documentation & MANIFEST resync                         | shipped |
 | v0.3.0  | 03    | Feature-gap epics: SmartArt, chartex, media, text styles… (recorded after the fact) | shipped |
-| v0.3.1  | 02    | Example scripts for under-demonstrated areas            | planned ← cursor |
+| v0.3.1  | 02    | Example scripts for under-demonstrated areas            | in-progress ← cursor |
 | v0.3.2  | 02    | Docstring audit & Sphinx scaffold                       | planned |
 | v0.4.0  | 03    | Stability & real-world round-trip                       | planned |
 | v0.5.0  | 03    | Transitions, animations (read), custom layouts          | planned |
