@@ -10,7 +10,7 @@
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
 - Since `b64d2b9`: `.gitattributes` pins LF (CRLF tree = 52 failures), `pyparsing` is a dev dep, `tests.yml` runs
   pytest on Linux 3.9–3.13 + Win + macOS — **but Actions is billing-blocked (2026-09-27), so evidence is local**.
-- v0.3.1 in progress on branch `v0.3.1` (PR #116): 5 of 6 example goals landed, goal 3 deferred to #115.
+- v0.3.1 merged (#116): 5 of 6 example goals landed, goal 3 deferred to #115. Cursor not yet advanced to v0.3.2.
 
 ## Decisions        (append-only; supersede, never delete)
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
@@ -59,8 +59,6 @@
 - **Actions billing blocks every job.** Fix the spending limit/payment, or cut cost: the lone macOS cell is
   ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
 - #114 (shape-level tags) and #115 (3D chart authoring; also unblocks examples/chart_3d_view.py) → v0.4.0.
-- PRs open: #113 (verification-surface stamp) and #116 (v0.3.1). Both touch memory/INDEX.md, so whichever
-  merges second may need a trivial conflict resolution there.
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md
@@ -77,4 +75,5 @@
 - 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
 - 2026-09-26 | Roadmap reconcile + package 0.3.0 | .meta/roadmap/INDEX.md
 - 2026-09-26 2219 | Windows acceptance: LF .gitattributes, 3657 green (PR #112) | sessions/2026-09-26-2219-windows-crlf-acceptance.md
+- 2026-09-27 | PR #112 merged (b64d2b9): LF + cross-platform CI + pyparsing; main 7/7 green | .claude/context/verification-surface.md
 - 2026-09-27 1829 | v0.3.1 examples (PR #116); #114/#115 filed; Actions billing-blocked | sessions/2026-09-27-1829-v031-examples.md
