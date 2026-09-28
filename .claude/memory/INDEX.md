@@ -3,14 +3,12 @@
 ## State            (rewrite in place — current truth only, ≤ ~10 lines)
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
-- Roadmap in `.meta/roadmap/` (stages 01–04, v0.1.0 → v1.0.0); cursor v0.3.1 (examples), then v0.3.2
-  (docstrings/Sphinx), v0.4.0 corpus … v0.7.0 cross-run text.
-- Package 0.3.0 = epics #87/#79/#75/#66/#62/#56 + issue #51, itemised in
-  `.meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md`; their design decisions are in Decisions below.
+- Package 0.3.1. Roadmap `.meta/roadmap/`: v0.3.0 (epics #87/#79/#75/#66/#62/#56 + #51, card in stage 03) and
+  v0.3.1 (examples, #116; 3D-chart example deferred to #115) shipped; cursor v0.3.2 (docstrings/Sphinx), then v0.4.0 … v0.7.0.
+- No git tags or GitHub Releases yet: sessions can't push tags — the owner tags `v0.3.0`/`v0.3.1` by hand.
 - Assets adopted from claudeBrain @ `8e281af` by selection; shared ones are copies — improve upstream, re-copy.
 - Since `b64d2b9`: `.gitattributes` pins LF (CRLF tree = 52 failures), `pyparsing` is a dev dep, `tests.yml` runs
   pytest on Linux 3.9–3.13 + Win + macOS — **but Actions is billing-blocked (2026-09-27), so evidence is local**.
-- v0.3.1 merged (#116): 5 of 6 example goals landed, goal 3 deferred to #115. Cursor not yet advanced to v0.3.2.
 
 ## Decisions        (append-only; supersede, never delete)
 - [2026-09-24] Claude assets consolidated: internal_docs → `.claude/context/`, dev_map → `.meta/roadmap/` (hooks read `.meta/`)
@@ -77,3 +75,4 @@
 - 2026-09-26 2219 | Windows acceptance: LF .gitattributes, 3657 green (PR #112) | sessions/2026-09-26-2219-windows-crlf-acceptance.md
 - 2026-09-27 | PR #112 merged (b64d2b9): LF + cross-platform CI + pyparsing; main 7/7 green | .claude/context/verification-surface.md
 - 2026-09-27 1829 | v0.3.1 examples (PR #116); #114/#115 filed; Actions billing-blocked | sessions/2026-09-27-1829-v031-examples.md
+- 2026-09-28 | v0.3.1 marked shipped, cursor → v0.3.2, package 0.3.1 | .meta/version
