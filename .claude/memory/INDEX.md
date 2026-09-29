@@ -37,6 +37,9 @@
 
 "`) so a CRLF tree breaks 51 tests; `osx_dirs_fixture` injects `posixpath`
   rather than skipping on Windows — sessions/2026-09-26-2219-windows-crlf-acceptance.md
+- [2026-09-29] Tags are one part PER owner, referenced from its `p:custDataLst/p:tags` (`p:nvPr` for a shape,
+  `p:cSld` for the slide), related from the slide part; slide tags resolve by that reference, not by reltype
+  — sessions/2026-09-29-1211-issue-114-shape-tags.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
@@ -56,19 +59,17 @@
 - The #51 perf gate is still absent, deliberately — shared-runner timing noise would make it flake.
 - **Actions billing blocks every job.** Fix the spending limit/payment, or cut cost: the lone macOS cell is
   ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
-- #114 (shape-level tags) and #115 (3D chart authoring; also unblocks examples/chart_3d_view.py) → v0.4.0.
+- #115 (3D chart authoring; also unblocks examples/chart_3d_view.py) → v0.4.0.
+- #114 human check: shape-tagged deck opens in PowerPoint without repair. Follow-up idea: `has_tags` (reading creates a part).
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md
 - 2026-09-24 1819 | Close epic #87 (text styles, theme lists, apply_theme) | sessions/2026-09-24-1819-epic-87-text-styles-themes.md
 - 2026-09-24 1844 | Close epic #79 (shape/line/fill/table completeness) | sessions/2026-09-24-1844-epic-79-shape-line-fill-table.md
 - 2026-09-25 1202 | Close epic #56 (package-level presentation parts) | sessions/2026-09-25-1202-epic-56-presentation-parts.md
-- 2026-09-25 1400 | Epic #62 SmartArt read + node text edit | sessions/2026-09-25-1400-epic-62-smartart.md
-- 2026-09-25 1430 | Merge PR #101; epic #62 + #63-#65 closed | sessions/2026-09-25-1400-epic-62-smartart.md
-- 2026-09-25 1530 | Epic #66 chartex + data table | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
-- 2026-09-25 1520 | Merge PR #103; epic #66 + #67-#70 closed | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
-- 2026-09-25 1600 | Epic #75 audio, trim/fade, AlternateContent shapes | sessions/2026-09-25-1600-epic-75-media-altcontent.md
-- 2026-09-25 1610 | Merge PR #105; epic #75 + #76-#78 closed | sessions/2026-09-25-1600-epic-75-media-altcontent.md
+- 2026-09-25 1400 | Epic #62 SmartArt read + node text edit (PR #101 merged) | sessions/2026-09-25-1400-epic-62-smartart.md
+- 2026-09-25 1530 | Epic #66 chartex + data table (PR #103 merged) | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
+- 2026-09-25 1600 | Epic #75 audio, trim/fade, AlternateContent shapes (PR #105 merged) | sessions/2026-09-25-1600-epic-75-media-altcontent.md
 - 2026-09-25 1630 | Issue #51: profile + qn/XPath caches (−39%/deck) | sessions/2026-09-25-1630-issue-51-perf-caches.md
 - 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
 - 2026-09-26 | Roadmap reconcile + package 0.3.0 | .meta/roadmap/INDEX.md
@@ -76,3 +77,4 @@
 - 2026-09-27 | PR #112 merged (b64d2b9): LF + cross-platform CI + pyparsing; main 7/7 green | .claude/context/verification-surface.md
 - 2026-09-27 1829 | v0.3.1 examples (PR #116); #114/#115 filed; Actions billing-blocked | sessions/2026-09-27-1829-v031-examples.md
 - 2026-09-28 | v0.3.1 marked shipped, cursor → v0.3.2, package 0.3.1 | .meta/version
+- 2026-09-29 1211 | #114 shape tags (`BaseShape.tags`), slide tags keyed by cSld ref | sessions/2026-09-29-1211-issue-114-shape-tags.md

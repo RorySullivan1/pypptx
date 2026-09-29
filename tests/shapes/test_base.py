@@ -888,3 +888,96 @@ class Describe_PlaceholderFormat:
         ph_cxml, expected_value = request.param
         placeholder_format = _PlaceholderFormat(element(ph_cxml))
         return placeholder_format, expected_value
+
+
+class DescribeBaseShape_tags:
+    """Unit-test suite for `BaseShape.tags`, customer data tags on a shape."""
+
+    @pytest.mark.parametrize("kind", ["autoshape", "picture", "graphic_frame", "group", "connector"])
+    def it_provides_tags_on_each_kind_of_shape(self, kind: str):
+        slide = _blank_slide()
+        shape = _add_shape(slide, kind)
+
+        shape.tags["source"] = "crm"
+
+        assert shape.tags["source"] == "crm"
+        nvPr = shape._element._nvXxPr.nvPr
+        assert nvPr.tags_rId is not None
+        assert slide.part.related_part(nvPr.tags_rId) is shape.tags
+
+    def it_offers_the_same_mapping_surface_as_slide_tags(self):
+        shape = _add_shape(_blank_slide(), "autoshape")
+        tags = shape.tags
+
+        tags["a"] = "1"
+        tags["b"] = "2"
+        tags["a"] = "3"
+        del tags["b"]
+
+        assert len(tags) == 1
+        assert list(tags) == ["a"]
+        assert tags.items() == [("a", "3")]
+        assert "a" in tags
+        assert "b" not in tags
+        assert tags.get("b") is None
+        assert tags.get("b", "x") == "x"
+        with pytest.raises(KeyError):
+            tags["b"]
+        with pytest.raises(KeyError):
+            del tags["b"]
+
+    def it_gives_each_shape_its_own_tags_part(self):
+        slide = _blank_slide()
+        shape_a = _add_shape(slide, "autoshape")
+        shape_b = _add_shape(slide, "autoshape")
+
+        shape_a.tags["k"] = "a"
+        shape_b.tags["k"] = "b"
+
+        assert shape_a.tags is not shape_b.tags
+        assert (shape_a.tags["k"], shape_b.tags["k"]) == ("a", "b")
+        assert shape_a.tags is slide.shapes[0].tags
+
+    def it_keeps_shape_tags_apart_from_slide_tags(self):
+        slide = _blank_slide()
+        shape = _add_shape(slide, "autoshape")
+
+        shape.tags["k"] = "shape"
+        slide.tags["k"] = "slide"
+
+        assert shape.tags["k"] == "shape"
+        assert slide.tags["k"] == "slide"
+        assert shape.tags is not slide.tags
+
+    def it_provides_tags_on_a_shape_inside_a_group(self):
+        slide = _blank_slide()
+        group = slide.shapes.add_group_shape()
+        child = group.shapes.add_textbox(0, 0, 100, 100)
+
+        child.tags["role"] = "child"
+
+        assert slide.shapes[0].shapes[0].tags["role"] == "child"
+        assert len(group.tags) == 0
+
+
+def _blank_slide():
+    from pptx import Presentation
+
+    prs = Presentation()
+    return prs.slides.add_slide(prs.slide_layouts[6])
+
+
+def _add_shape(slide, kind: str):
+    from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+    from pptx.util import Inches
+
+    shapes = slide.shapes
+    if kind == "autoshape":
+        return shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(1), Inches(1))
+    if kind == "picture":
+        return shapes.add_picture("tests/test_files/python-icon.jpeg", 0, 0)
+    if kind == "graphic_frame":
+        return shapes.add_table(2, 2, 0, 0, Inches(2), Inches(1))
+    if kind == "group":
+        return shapes.add_group_shape()
+    return shapes.add_connector(MSO_CONNECTOR.STRAIGHT, 0, 0, Inches(1), Inches(1))

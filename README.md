@@ -55,7 +55,7 @@ prs.save("hello.pptx")
 - **Visual effects** — outer/inner shadow with transparency, reflection, glow, soft edges
 - **3D formatting** — extrusion, bevel, 3D scene, lighting, camera
 - **Headers & footers** — per-slide date/time, footer text, slide-number overrides
-- **Metadata** — tags, sections, custom document properties
+- **Metadata** — slide and shape tags, sections, custom document properties
 - **Comments** — add, read, delete with author tracking and positioning
 - **Picture effects** — brightness, contrast, grayscale, transparency color
 - **Theme access** — color schemes, font schemes, effect schemes, fill/line style lists; replace a master's theme from another deck or a `.thmx`
@@ -85,7 +85,7 @@ See the [`examples/`](examples/) directory for runnable scripts:
 | [`merge_presentations.py`](examples/merge_presentations.py) | Import and merge slides across presentations |
 | [`bullet_lists.py`](examples/bullet_lists.py) | Bullet formatting, numbered lists, and indentation |
 | [`connectors_and_groups.py`](examples/connectors_and_groups.py) | Connectors with arrowheads and group shapes |
-| [`comments_and_metadata.py`](examples/comments_and_metadata.py) | Comments, tags, sections, and custom properties |
+| [`comments_and_metadata.py`](examples/comments_and_metadata.py) | Comments, slide and shape tags, sections, and custom properties |
 | [`custom_slide_master_walk.py`](examples/custom_slide_master_walk.py) | Walk master → layout → slide placeholder inheritance, and override one |
 | [`investor_presentation.py`](examples/investor_presentation.py) | A five-slide styled deck end to end |
 

@@ -1375,6 +1375,59 @@ assert slide_xml.count("<mc:AlternateContent") == 3
 assert slide_xml.count("<mc:Fallback>") == 3
 """)
 
+    def it_round_trips_shape_tags(self):
+        _run_roundtrip_test("""\\
+from pptx.enum.shapes import MSO_SHAPE
+
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+shapes = slide.shapes
+autoshape = shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(1), Inches(1))
+picture = shapes.add_picture("tests/test_files/python-icon.jpeg", Inches(2), 0)
+frame = shapes.add_table(2, 2, Inches(4), 0, Inches(2), Inches(1))
+group = shapes.add_group_shape()
+group.shapes.add_textbox(0, Inches(2), Inches(1), Inches(1)).tags["role"] = "child"
+for shape in (autoshape, picture, frame, group):
+    shape.tags["source"] = "crm"
+    shape.tags["name"] = shape.name
+slide.tags["status"] = "draft"
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+slide2 = Presentation(stream).slides[0]
+
+assert len(slide2.shapes) == 4
+for shape in slide2.shapes:
+    assert shape.tags.items() == [("source", "crm"), ("name", shape.name)]
+assert slide2.shapes[3].shapes[0].tags["role"] == "child"
+assert slide2.tags.items() == [("status", "draft")]
+assert len({shape.tags.partname for shape in slide2.shapes}) == 4
+""")
+
+    def it_preserves_powerpoint_shape_tags_through_an_unrelated_edit(self):
+        _run_roundtrip_test("""\\
+from tests.unitutil.shapetags import shape_tags_pptx
+
+prs = Presentation(shape_tags_pptx())
+tagged = prs.slides[0].shapes[0]
+assert tagged.tags["SOURCE"] == "crm"
+tagged.left = Inches(2)
+tagged.name = "Renamed"
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+slide2 = Presentation(stream).slides[0]
+
+tagged2, plain2, group2 = slide2.shapes
+assert tagged2.left == Inches(2)
+assert tagged2.tags.items() == [("SOURCE", "crm"), ("GENERATED", "1")]
+assert plain2._element._nvXxPr.nvPr.tags_rId is None
+assert group2.shapes[0].tags.items() == [("ROLE", "child")]
+assert slide2.tags.items() == [("STATUS", "draft")]
+""")
+
     def it_round_trips_alternate_content_shapes_unchanged(self):
         _run_roundtrip_test("""\\
 from tests.unitutil.altcontent import altcontent_pptx

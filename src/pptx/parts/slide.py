@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from pptx.enum.chart import XL_CHART_TYPE
     from pptx.media import Audio, Video
     from pptx.opc.package import Package
+    from pptx.oxml.tags import CustDataLstOwnerMixin
     from pptx.parts.image import Image, ImagePart
     from pptx.parts.presentation import PresentationPart
 
@@ -56,6 +57,19 @@ class BaseSlidePart(XmlPart):
         image_part = self._package.get_or_add_image_part(image_file)
         rId = self.relate_to(image_part, RT.IMAGE)
         return image_part, rId
+
+    def get_or_add_tags_part(self, owner: CustDataLstOwnerMixin) -> TagsPart:
+        """The |TagsPart| that `owner` refers to, created and related when it has none.
+
+        `owner` is the `p:nvPr` of a shape in this part, or this part's `p:cSld`; either holds
+        the `p:custDataLst/p:tags` reference to its own tags part, as PowerPoint writes it.
+        """
+        rId = owner.tags_rId
+        if rId is not None:
+            return cast("TagsPart", self.related_part(rId))
+        tags_part = TagsPart.new(self._package)
+        owner.set_tags_rId(self.relate_to(tags_part, RT.TAGS))
+        return tags_part
 
     @property
     def name(self) -> str:
@@ -303,13 +317,20 @@ class SlidePart(BaseSlidePart):
 
     @property
     def tags_part(self) -> TagsPart:
-        """The |TagsPart| for this slide, creating one if not present."""
-        try:
-            return cast("TagsPart", self.part_related_by(RT.TAGS))
-        except KeyError:
-            tags_part = TagsPart.new(self._package)
-            self.relate_to(tags_part, RT.TAGS)
-            return tags_part
+        """The |TagsPart| for this slide, creating one if not present.
+
+        It is the part `p:cSld/p:custDataLst/p:tags` refers to. The slide part also relates the
+        tags part of each tagged shape, so a tags relationship alone does not identify the
+        slide's; one no shape refers to (as pypptx wrote before shape tags) is adopted.
+        """
+        cSld = self._element.cSld
+        if cSld.tags_rId is None:
+            shape_rIds = set(cSld.spTree.xpath(".//p:custDataLst/p:tags/@r:id"))
+            for rId, rel in self.rels.items():
+                if rel.reltype == RT.TAGS and not rel.is_external and rId not in shape_rIds:
+                    cSld.set_tags_rId(rId)
+                    break
+        return self.get_or_add_tags_part(cSld)
 
     @lazyproperty
     def notes_slide(self) -> NotesSlide:

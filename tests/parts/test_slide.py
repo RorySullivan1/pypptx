@@ -28,6 +28,7 @@ from pptx.parts.slide import (
     SlideMasterPart,
     SlidePart,
 )
+from pptx.parts.tags import TagsPart
 from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
 
 from ..unitutil.cxml import element
@@ -680,3 +681,52 @@ def _source_theme_part_with_accent1(rgb: str):
     )[0]
     srgbClr.set("val", rgb)
     return source_theme_part
+
+
+class DescribeSlidePart_tags:
+    """Unit-test suite for slide and shape tags parts on `SlidePart`."""
+
+    def it_relates_a_new_tags_part_for_an_untagged_owner(self):
+        slide_part = _new_slide_part()
+        cSld = slide_part._element.cSld
+
+        tags_part = slide_part.get_or_add_tags_part(cSld)
+
+        assert cSld.tags_rId is not None
+        assert slide_part.related_part(cSld.tags_rId) is tags_part
+        assert slide_part.get_or_add_tags_part(cSld) is tags_part
+
+    def it_finds_the_slide_tags_by_the_cSld_reference(self):
+        from pptx import Presentation
+
+        from ..unitutil.shapetags import shape_tags_pptx
+
+        slide_part = Presentation(shape_tags_pptx()).slides[0].part
+
+        assert slide_part.tags_part.items() == [("STATUS", "draft")]
+
+    def it_adopts_an_unreferenced_tags_relationship_as_the_slide_tags(self):
+        slide_part = _new_slide_part()
+        legacy_part = TagsPart.new(slide_part.package)
+        legacy_part["k"] = "v"
+        rId = slide_part.relate_to(legacy_part, RT.TAGS)
+
+        assert slide_part.tags_part is legacy_part
+        assert slide_part._element.cSld.tags_rId == rId
+
+    def it_does_not_take_a_shape_tags_part_for_the_slide_tags(self):
+        slide = _new_slide_part().slide
+        shape = slide.shapes.add_textbox(0, 0, 100, 100)
+        shape.tags["k"] = "shape"
+
+        slide_tags = slide.part.tags_part
+
+        assert slide_tags is not shape.tags
+        assert len(slide_tags) == 0
+
+
+def _new_slide_part() -> SlidePart:
+    from pptx import Presentation
+
+    prs = Presentation()
+    return prs.slides.add_slide(prs.slide_layouts[6]).part

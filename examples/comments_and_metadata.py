@@ -1,7 +1,7 @@
 """Comments, tags, sections, and custom document properties.
 
-Demonstrates adding legacy and modern (threaded) comments to slides, setting key-value tags,
-creating presentation sections, and custom properties.
+Demonstrates adding legacy and modern (threaded) comments to slides, setting key-value tags on
+a slide and on a shape, creating presentation sections, and custom properties.
 Saves to comments_and_metadata.pptx.
 """
 
@@ -38,6 +38,12 @@ for thread in slide2.threaded_comments:
 slide1.tags["status"] = "draft"
 slide1.tags["reviewer"] = "alice"
 print(f"Tags: status={slide1.tags['status']}, reviewer={slide1.tags['reviewer']}")
+
+# Shapes take tags too -- add-ins and pipelines use them to mark a shape and find it again.
+# Each tagged shape keeps its tags in a tags part of its own, as PowerPoint does.
+txBox1.tags["source"] = "crm"
+txBox1.tags["generated"] = "yes"
+print(f"Shape tags on {txBox1.name!r}: {dict(txBox1.tags.items())}")
 
 # Create sections to organize slides
 intro = prs.sections.add("Introduction")
@@ -87,6 +93,10 @@ assert r_slide1.tags["status"] == "draft"
 assert r_slide1.tags["reviewer"] == "alice"
 assert "missing" not in r_slide1.tags
 
+# Shape tags. (Reading `tags` on an untagged shape gives it an empty tags part, as on a slide.)
+(r_txBox1,) = [shape for shape in r_slide1.shapes if shape.name == txBox1.name]
+assert r_txBox1.tags.items() == [("source", "crm"), ("generated", "yes")]
+
 # Sections, and the slide each one holds.
 assert [s.name for s in reopened.sections] == ["Introduction", "Content"]
 assert reopened.sections[0].slide_ids == (r_slide1.slide_id,)
@@ -98,4 +108,4 @@ assert reopened.custom_properties["Version"] == 2
 assert isinstance(reopened.custom_properties["Version"], int)
 assert reopened.custom_properties["Approved"] is True
 
-print("Round trip verified: comments, threads, tags, sections, typed custom properties")
+print("Round trip verified: comments, threads, slide and shape tags, sections, typed custom properties")

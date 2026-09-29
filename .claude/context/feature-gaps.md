@@ -760,13 +760,19 @@ Found 2026-09-27 while planning v0.3.1's `sections_tags_custom_props` example: t
 for a demonstration of "slide **and shape** tags", and only the slide half exists.
 
 - [x] Slide tags — `Slide.tags` (`TagsPart`, mapping-style: `__getitem__`/`__setitem__`/
-      `__delitem__`/`__contains__`/`items`/`get`), `p:custDataLst/p:tags` on `p:sld`
-- [ ] Shape tags — no API. The slot is already reserved in the element sequences
-      (`p:custDataLst` in `oxml/shapes/shared.py`, `oxml/slide.py`), so this is an
-      unimplemented surface rather than an unrepresentable one. Needs: `p:custDataLst/p:tags`
-      accessor on `CT_ApplicationNonVisualDrawingProps` (`p:nvPr`), a `TagsPart` relationship
-      from the *slide* part keyed per shape, and a `BaseShape.tags` proxy reusing `TagsPart`
-- [ ] Deferred to v0.4.0 (#114) — v0.3.1 adds no public API by its own terms
+      `__delitem__`/`__contains__`/`__len__`/`__iter__`/`items`/`get`), referenced from
+      `p:cSld/p:custDataLst/p:tags`; a tags relationship no shape refers to (as pypptx wrote
+      before #114) is adopted as the slide's (#114)
+- [x] `CT_CustomerDataList` (`p:custDataLst`) and `CT_TagsData` (`p:tags`) in `oxml/tags.py`;
+      `tags_rId` / `set_tags_rId()` / `remove_tags_rId()` on `p:nvPr` and `p:cSld` (#114)
+- [x] Shape tags — `BaseShape.tags`, the same `TagsPart` mapping, for every shape kind
+      (autoshape, picture, graphic frame, group, connector, shapes inside a group). Each tagged
+      shape gets a tags part of its own, related from the slide part and referenced from its
+      `p:nvPr/p:custDataLst/p:tags`, as PowerPoint writes it (#114)
+- [x] Shape tags follow the shape: `duplicate_shape` copies them into a new part (per shape, in
+      a copied group too), `remove_shape` drops the relationship, and slide duplicate/import
+      carry them in parts of their own (slide tags still are not carried) (#114)
+- [ ] Human check — a deck with shape tags opens in PowerPoint without repair (#114)
 
 ---
 

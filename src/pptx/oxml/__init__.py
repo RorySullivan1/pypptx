@@ -702,10 +702,17 @@ register_element_cls("cust:Properties", CT_CustomProperties)
 register_element_cls("cust:property", CT_CustomProperty)
 
 
-from pptx.oxml.tags import CT_StringTag, CT_TagList  # noqa: E402
+from pptx.oxml.tags import (  # noqa: E402
+    CT_CustomerDataList,
+    CT_StringTag,
+    CT_TagList,
+    CT_TagsData,
+)
 
 register_element_cls("p:tag", CT_StringTag)
 register_element_cls("p:tagLst", CT_TagList)
+register_element_cls("p:tags", CT_TagsData)
+register_element_cls("p:custDataLst", CT_CustomerDataList)
 
 
 from pptx.oxml.presprops import (  # noqa: E402
