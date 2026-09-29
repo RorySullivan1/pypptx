@@ -666,6 +666,7 @@ class PlotTypeInspector:
                 ST_Grouping.PERCENT_STACKED: XL.THREE_D_BAR_STACKED_100,
             }[barChart.grouping_val]
         return {
+            ST_Grouping.STANDARD: XL.THREE_D_COLUMN,
             ST_Grouping.CLUSTERED: XL.THREE_D_COLUMN_CLUSTERED,
             ST_Grouping.STACKED: XL.THREE_D_COLUMN_STACKED,
             ST_Grouping.PERCENT_STACKED: XL.THREE_D_COLUMN_STACKED_100,

@@ -141,7 +141,7 @@ The codebase is organized in four layers, from low-level to high-level:
 - Lighting rig — `Scene3D.light_rig` with `LightRig.rig_type`, `direction`
 
 ### Charts
-- 16 classic chart families (75+ enumerated `XL_CHART_TYPE` values) — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie, plus 3D variants (bar3D, line3D, pie3D, area3D, surface3D)
+- 16 classic chart families (75+ enumerated `XL_CHART_TYPE` values) — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie, plus 3D variants (bar3D, line3D, pie3D, area3D added and read; surface3D read)
 - Series formatting — markers, fill, line; pie/bar/bubble per-series properties (explosion, bar shape, bubble-3D)
 - Axes — value, category, date; primary + secondary; log scale; tick / label skip; label offset and rotation; display units; date axis time units; axis crossing
 - Legends — `Legend.format` (`ChartFormat` for box formatting); per-entry overrides

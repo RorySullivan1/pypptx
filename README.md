@@ -49,7 +49,7 @@ prs.save("hello.pptx")
 - **Rich text formatting** — bold, italic, underline, color, size, shadow, strikethrough, caps, superscript/subscript, character spacing, kerning, bullets, tab stops, columns, RTL, vertical orientation
 - **Fill styles** — solid, gradient (linear, radial, rectangular, path), pattern, picture (stretched or tiled), background (no fill)
 - **Line formatting** — width, color, dash styles, compound styles, cap and join styles, arrowheads, transparency, pattern fill
-- **75+ chart types** — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie (plus 3D variants); combo charts with trendlines, error bars, secondary axes, drop / hi-lo / up-down lines, log scale, 3D view, data labels with leader lines, data tables; Office 2016+ waterfall, histogram, box & whisker, treemap, sunburst and funnel charts (add and read; Pareto and region map read)
+- **75+ chart types** — bar, line, pie, scatter, bubble, area, radar, stock, surface, doughnut, of-pie (plus 3D column, bar, line, pie and area variants, add and read); combo charts with trendlines, error bars, secondary axes, drop / hi-lo / up-down lines, log scale, 3D view, data labels with leader lines, data tables; Office 2016+ waterfall, histogram, box & whisker, treemap, sunburst and funnel charts (add and read; Pareto and region map read)
 - **SmartArt** — detect SmartArt graphic frames, walk the node tree with text and levels, edit node text (PowerPoint re-lays out the diagram on open)
 - **Tables** — create, insert/delete rows and columns, merge/split cells, borders (including diagonal), cell fills, cell text direction, banding, table styles
 - **Visual effects** — outer/inner shadow with transparency, reflection, glow, soft edges
@@ -78,6 +78,7 @@ See the [`examples/`](examples/) directory for runnable scripts:
 | [`add_table.py`](examples/add_table.py) | Tables with merged cells, borders, and cell fills |
 | [`add_chart.py`](examples/add_chart.py) | Bar and line charts with data labels and legends |
 | [`add_chart_secondary_axis.py`](examples/add_chart_secondary_axis.py) | Combo chart: column plot plus a line plot on a secondary value axis |
+| [`chart_3d_view.py`](examples/chart_3d_view.py) | 3D column, bar and pie charts; camera rotation, perspective and depth; floor and wall formatting |
 | [`chart_trendlines_error_bars.py`](examples/chart_trendlines_error_bars.py) | Linear, polynomial and moving-average trendlines; fixed, percentage and std-dev error bars |
 | [`batch_process.py`](examples/batch_process.py) | Process a folder of decks in parallel with a process pool (find/replace text, per-file error reporting) |
 | [`modern_charts.py`](examples/modern_charts.py) | Waterfall, histogram, box & whisker, treemap, sunburst and funnel charts, and a chart data table |

@@ -1447,3 +1447,77 @@ assert [getattr(shape, "content_kind", None) for shape in shapes2] == kinds
 assert [shape.shape_id for shape in shapes2] == [10, 11, 12, 13, 14]
 assert len(shapes2._spTree.xpath("./mc:AlternateContent/mc:Fallback")) == 3
 """)
+
+    def it_round_trips_3d_charts_of_every_type(self):
+        _run_roundtrip_test("""\\
+from pptx.chart.data import CategoryChartData
+from pptx.chart.plot import Area3DPlot, Bar3DPlot, Line3DPlot, Pie3DPlot
+from pptx.dml.color import RGBColor
+from pptx.enum.chart import XL_CHART_TYPE as XL
+
+plot_cls = {"AREA": Area3DPlot, "BAR": Bar3DPlot, "COLUMN": Bar3DPlot, "LINE": Line3DPlot, "PIE": Pie3DPlot}
+types = [member for member in XL if member.name.startswith("THREE_D_")]
+assert len(types) == 13
+
+prs = Presentation()
+for chart_type in types:
+    chart_data = CategoryChartData()
+    chart_data.categories = ["East", "West", "North"]
+    chart_data.add_series("Sales", (1.5, 2.5, 3.5))
+    if "PIE" not in chart_type.name:
+        chart_data.add_series("Costs", (1.0, 2.0, 3.0))
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    chart = slide.shapes.add_chart(chart_type, 0, 0, Inches(6), Inches(4), chart_data).chart
+    chart.view_3d.rot_x = 20
+    chart.view_3d.rot_y = 35
+    if "PIE" not in chart_type.name:
+        chart.view_3d.height_percent = 120
+        chart.floor.format.fill.solid()
+        chart.floor.format.fill.fore_color.rgb = RGBColor(0x33, 0x66, 0x99)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+prs2 = Presentation(stream)
+
+for chart_type, slide in zip(types, prs2.slides):
+    chart = slide.shapes[0].chart
+    plot = chart.plots[0]
+    assert chart.chart_type == chart_type, (chart_type, chart.chart_type)
+    assert type(plot) is plot_cls[chart_type.name.split("_")[2]]
+    assert tuple(plot.categories) == ("East", "West", "North")
+    assert plot.series[0].name == "Sales"
+    assert tuple(plot.series[0].values) == (1.5, 2.5, 3.5)
+    assert (chart.view_3d.rot_x, chart.view_3d.rot_y) == (20, 35)
+    if "PIE" not in chart_type.name:
+        assert tuple(plot.series[1].values) == (1.0, 2.0, 3.0)
+        assert chart.view_3d.height_percent == 120
+        assert chart.floor.format.fill.fore_color.rgb == RGBColor(0x33, 0x66, 0x99)
+""")
+
+    def it_replaces_the_data_of_a_3d_chart(self):
+        _run_roundtrip_test("""\\
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE as XL
+
+chart_data = CategoryChartData()
+chart_data.categories = ["A", "B"]
+chart_data.add_series("S1", (1, 2))
+chart_data.add_series("S2", (3, 4))
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+chart = slide.shapes.add_chart(XL.THREE_D_COLUMN, 0, 0, Inches(6), Inches(4), chart_data).chart
+
+new_data = CategoryChartData()
+new_data.categories = ["X", "Y", "Z"]
+new_data.add_series("Only", (7, 8, 9))
+chart.replace_data(new_data)
+
+stream = BytesIO()
+prs.save(stream)
+stream.seek(0)
+chart2 = Presentation(stream).slides[0].shapes[0].chart
+assert chart2.chart_type == XL.THREE_D_COLUMN
+assert [(s.name, tuple(s.values)) for s in chart2.plots[0].series] == [("Only", (7.0, 8.0, 9.0))]
+assert tuple(chart2.plots[0].categories) == ("X", "Y", "Z")
+""")

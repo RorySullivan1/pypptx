@@ -42,6 +42,19 @@ def ChartXmlWriter(chart_type, chart_data):
             XL_CT.RADAR: _RadarChartXmlWriter,
             XL_CT.RADAR_FILLED: _RadarChartXmlWriter,
             XL_CT.RADAR_MARKERS: _RadarChartXmlWriter,
+            XL_CT.THREE_D_AREA: _Area3DChartXmlWriter,
+            XL_CT.THREE_D_AREA_STACKED: _Area3DChartXmlWriter,
+            XL_CT.THREE_D_AREA_STACKED_100: _Area3DChartXmlWriter,
+            XL_CT.THREE_D_BAR_CLUSTERED: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_BAR_STACKED: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_BAR_STACKED_100: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_COLUMN: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_COLUMN_CLUSTERED: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_COLUMN_STACKED: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_COLUMN_STACKED_100: _Bar3DChartXmlWriter,
+            XL_CT.THREE_D_LINE: _Line3DChartXmlWriter,
+            XL_CT.THREE_D_PIE: _Pie3DChartXmlWriter,
+            XL_CT.THREE_D_PIE_EXPLODED: _Pie3DChartXmlWriter,
             XL_CT.XY_SCATTER: _XyChartXmlWriter,
             XL_CT.XY_SCATTER_LINES: _XyChartXmlWriter,
             XL_CT.XY_SCATTER_LINES_NO_MARKERS: _XyChartXmlWriter,
@@ -1359,6 +1372,415 @@ class _BubbleChartXmlWriter(_XyChartXmlWriter):
                 }
             )
         return xml
+
+
+class _Base3DChartXmlWriter(_BaseChartXmlWriter):
+    """Shared composition for the 3D category chart writers.
+
+    A 3D chart differs from its 2D sibling in the ``c:view3D`` camera, the ``c:floor``,
+    ``c:sideWall`` and ``c:backWall`` surfaces, and, for the "true 3D" types that plot
+    each series in its own row, a series (depth) axis. PowerPoint writes all three on a new
+    3D chart; without the camera the plot renders flat. Subclasses provide the xChart
+    element and the camera settings.
+    """
+
+    _CAT_AX_ID = "2068027336"
+    _VAL_AX_ID = "2113994440"
+    _SER_AX_ID = "2112876328"
+
+    @property
+    def xml(self) -> str:
+        return (
+            "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n"
+            '<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawin'
+            'gml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/draw'
+            'ingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/off'
+            'iceDocument/2006/relationships">\n'
+            '  <c:date1904 val="0"/>\n'
+            '  <c:roundedCorners val="0"/>\n'
+            "  <c:chart>\n"
+            '    <c:autoTitleDeleted val="0"/>\n'
+            "{view3D_xml}"
+            "{surfaces_xml}"
+            "    <c:plotArea>\n"
+            "      <c:layout/>\n"
+            "{xChart_xml}"
+            "{axes_xml}"
+            "    </c:plotArea>\n"
+            "    <c:legend>\n"
+            '      <c:legendPos val="r"/>\n'
+            "      <c:layout/>\n"
+            '      <c:overlay val="0"/>\n'
+            "    </c:legend>\n"
+            '    <c:plotVisOnly val="1"/>\n'
+            '    <c:dispBlanksAs val="gap"/>\n'
+            "  </c:chart>\n"
+            "  <c:txPr>\n"
+            "    <a:bodyPr/>\n"
+            "    <a:lstStyle/>\n"
+            "    <a:p>\n"
+            "      <a:pPr>\n"
+            '        <a:defRPr sz="1800"/>\n'
+            "      </a:pPr>\n"
+            '      <a:endParaRPr lang="en-US"/>\n'
+            "    </a:p>\n"
+            "  </c:txPr>\n"
+            "</c:chartSpace>\n"
+        ).format(
+            **{
+                "view3D_xml": self._view3D_xml,
+                "surfaces_xml": self._surfaces_xml,
+                "xChart_xml": self._xChart_xml,
+                "axes_xml": self._axes_xml,
+            }
+        )
+
+    @property
+    def _axId_xml(self) -> str:
+        """The `c:axId` children of the xChart element, series axis last when present."""
+        ax_ids = [self._CAT_AX_ID, self._VAL_AX_ID]
+        if self._has_ser_ax:
+            ax_ids.append(self._SER_AX_ID)
+        return "".join('        <c:axId val="%s"/>\n' % ax_id for ax_id in ax_ids)
+
+    @property
+    def _axes_xml(self) -> str:
+        """The category, value and (when present) series axis elements."""
+        xml = self._cat_ax_xml + self._val_ax_xml
+        if self._has_ser_ax:
+            xml += (
+                "      <c:serAx>\n"
+                '        <c:axId val="{ser_ax_id}"/>\n'
+                "        <c:scaling>\n"
+                '          <c:orientation val="minMax"/>\n'
+                "        </c:scaling>\n"
+                '        <c:delete val="0"/>\n'
+                '        <c:axPos val="b"/>\n'
+                '        <c:majorTickMark val="out"/>\n'
+                '        <c:minorTickMark val="none"/>\n'
+                '        <c:tickLblPos val="nextTo"/>\n'
+                '        <c:crossAx val="{val_ax_id}"/>\n'
+                '        <c:crosses val="autoZero"/>\n'
+                "      </c:serAx>\n"
+            ).format(ser_ax_id=self._SER_AX_ID, val_ax_id=self._VAL_AX_ID)
+        return xml
+
+    @property
+    def _cat_ax_pos(self) -> str:
+        """`c:axPos` value for the category axis; "l" when bars run horizontally."""
+        return "b"
+
+    @property
+    def _cat_ax_xml(self) -> str:
+        categories = self._chart_data.categories
+
+        if categories.are_dates:
+            return (
+                "      <c:dateAx>\n"
+                '        <c:axId val="{cat_ax_id}"/>\n'
+                "        <c:scaling>\n"
+                '          <c:orientation val="minMax"/>\n'
+                "        </c:scaling>\n"
+                '        <c:delete val="0"/>\n'
+                '        <c:axPos val="{cat_ax_pos}"/>\n'
+                '        <c:numFmt formatCode="{nf}" sourceLinked="1"/>\n'
+                '        <c:majorTickMark val="out"/>\n'
+                '        <c:minorTickMark val="none"/>\n'
+                '        <c:tickLblPos val="nextTo"/>\n'
+                '        <c:crossAx val="{val_ax_id}"/>\n'
+                '        <c:crosses val="autoZero"/>\n'
+                '        <c:auto val="1"/>\n'
+                '        <c:lblOffset val="100"/>\n'
+                '        <c:baseTimeUnit val="days"/>\n'
+                "      </c:dateAx>\n"
+            ).format(
+                cat_ax_id=self._CAT_AX_ID,
+                cat_ax_pos=self._cat_ax_pos,
+                nf=categories.number_format,
+                val_ax_id=self._VAL_AX_ID,
+            )
+
+        return (
+            "      <c:catAx>\n"
+            '        <c:axId val="{cat_ax_id}"/>\n'
+            "        <c:scaling>\n"
+            '          <c:orientation val="minMax"/>\n'
+            "        </c:scaling>\n"
+            '        <c:delete val="0"/>\n'
+            '        <c:axPos val="{cat_ax_pos}"/>\n'
+            '        <c:majorTickMark val="out"/>\n'
+            '        <c:minorTickMark val="none"/>\n'
+            '        <c:tickLblPos val="nextTo"/>\n'
+            '        <c:crossAx val="{val_ax_id}"/>\n'
+            '        <c:crosses val="autoZero"/>\n'
+            '        <c:auto val="1"/>\n'
+            '        <c:lblAlgn val="ctr"/>\n'
+            '        <c:lblOffset val="100"/>\n'
+            '        <c:noMultiLvlLbl val="0"/>\n'
+            "      </c:catAx>\n"
+        ).format(
+            cat_ax_id=self._CAT_AX_ID, cat_ax_pos=self._cat_ax_pos, val_ax_id=self._VAL_AX_ID
+        )
+
+    @property
+    def _has_ser_ax(self) -> bool:
+        """True for the "true 3D" types, which plot each series in its own row."""
+        return False
+
+    @property
+    def _ser_xml(self) -> str:
+        xml = ""
+        for series in self._chart_data:
+            xml_writer = _CategorySeriesXmlWriter(series)
+            xml += (
+                "        <c:ser>\n"
+                '          <c:idx val="{ser_idx}"/>\n'
+                '          <c:order val="{ser_order}"/>\n'
+                "{tx_xml}"
+                "{cat_xml}"
+                "{val_xml}"
+                "        </c:ser>\n"
+            ).format(
+                **{
+                    "ser_idx": series.index,
+                    "ser_order": series.index,
+                    "tx_xml": xml_writer.tx_xml,
+                    "cat_xml": xml_writer.cat_xml,
+                    "val_xml": xml_writer.val_xml,
+                }
+            )
+        return xml
+
+    @property
+    def _surfaces_xml(self) -> str:
+        """The `c:floor`, `c:sideWall` and `c:backWall` elements PowerPoint writes."""
+        return "".join(
+            "    <c:%s>\n" '      <c:thickness val="0"/>\n' "    </c:%s>\n" % (tag, tag)
+            for tag in ("floor", "sideWall", "backWall")
+        )
+
+    @property
+    def _val_ax_pos(self) -> str:
+        """`c:axPos` value for the value axis; "b" when bars run horizontally."""
+        return "l"
+
+    @property
+    def _val_ax_xml(self) -> str:
+        return (
+            "      <c:valAx>\n"
+            '        <c:axId val="{val_ax_id}"/>\n'
+            "        <c:scaling>\n"
+            '          <c:orientation val="minMax"/>\n'
+            "        </c:scaling>\n"
+            '        <c:delete val="0"/>\n'
+            '        <c:axPos val="{val_ax_pos}"/>\n'
+            "        <c:majorGridlines/>\n"
+            '        <c:numFmt formatCode="General" sourceLinked="1"/>\n'
+            '        <c:majorTickMark val="out"/>\n'
+            '        <c:minorTickMark val="none"/>\n'
+            '        <c:tickLblPos val="nextTo"/>\n'
+            '        <c:crossAx val="{cat_ax_id}"/>\n'
+            '        <c:crosses val="autoZero"/>\n'
+            '        <c:crossBetween val="between"/>\n'
+            "      </c:valAx>\n"
+        ).format(
+            val_ax_id=self._VAL_AX_ID, val_ax_pos=self._val_ax_pos, cat_ax_id=self._CAT_AX_ID
+        )
+
+    @property
+    def _view3D_xml(self) -> str:
+        """The default `c:view3D` camera, as PowerPoint writes it for this chart type.
+
+        The "true 3D" types get a perspective camera with independent axes; the others
+        keep right-angle axes, which is what makes them read as clustered or stacked.
+        """
+        if self._has_ser_ax:
+            return (
+                "    <c:view3D>\n"
+                '      <c:rotX val="15"/>\n'
+                '      <c:rotY val="20"/>\n'
+                '      <c:depthPercent val="100"/>\n'
+                '      <c:rAngAx val="0"/>\n'
+                '      <c:perspective val="30"/>\n'
+                "    </c:view3D>\n"
+            )
+        return (
+            "    <c:view3D>\n"
+            '      <c:rotX val="15"/>\n'
+            '      <c:rotY val="20"/>\n'
+            '      <c:depthPercent val="100"/>\n'
+            '      <c:rAngAx val="1"/>\n'
+            "    </c:view3D>\n"
+        )
+
+    @property
+    def _xChart_xml(self) -> str:
+        raise NotImplementedError("must be implemented by all subclasses")
+
+
+class _Area3DChartXmlWriter(_Base3DChartXmlWriter):
+    """Provides specialized methods particular to the ``<c:area3DChart>`` element."""
+
+    @property
+    def _has_ser_ax(self) -> bool:
+        return self._chart_type == XL_CHART_TYPE.THREE_D_AREA
+
+    @property
+    def _xChart_xml(self) -> str:
+        grouping = {
+            XL_CHART_TYPE.THREE_D_AREA: "standard",
+            XL_CHART_TYPE.THREE_D_AREA_STACKED: "stacked",
+            XL_CHART_TYPE.THREE_D_AREA_STACKED_100: "percentStacked",
+        }[self._chart_type]
+        return (
+            "      <c:area3DChart>\n"
+            '        <c:grouping val="{grouping}"/>\n'
+            '        <c:varyColors val="0"/>\n'
+            "{ser_xml}"
+            "{axId_xml}"
+            "      </c:area3DChart>\n"
+        ).format(grouping=grouping, ser_xml=self._ser_xml, axId_xml=self._axId_xml)
+
+
+class _Bar3DChartXmlWriter(_Base3DChartXmlWriter):
+    """Provides specialized methods particular to the ``<c:bar3DChart>`` element.
+
+    Covers the seven 3D column and bar types, which differ only in ``c:barDir`` and
+    ``c:grouping``. `THREE_D_COLUMN` is the "true 3D" column chart: standard grouping,
+    each series in its own row along a series axis.
+    """
+
+    @property
+    def _barDir(self) -> str:
+        XL = XL_CHART_TYPE
+        bar_types = (XL.THREE_D_BAR_CLUSTERED, XL.THREE_D_BAR_STACKED, XL.THREE_D_BAR_STACKED_100)
+        return "bar" if self._chart_type in bar_types else "col"
+
+    @property
+    def _cat_ax_pos(self) -> str:
+        return "l" if self._barDir == "bar" else "b"
+
+    @property
+    def _grouping(self) -> str:
+        XL = XL_CHART_TYPE
+        return {
+            XL.THREE_D_BAR_CLUSTERED: "clustered",
+            XL.THREE_D_BAR_STACKED: "stacked",
+            XL.THREE_D_BAR_STACKED_100: "percentStacked",
+            XL.THREE_D_COLUMN: "standard",
+            XL.THREE_D_COLUMN_CLUSTERED: "clustered",
+            XL.THREE_D_COLUMN_STACKED: "stacked",
+            XL.THREE_D_COLUMN_STACKED_100: "percentStacked",
+        }[self._chart_type]
+
+    @property
+    def _has_ser_ax(self) -> bool:
+        return self._chart_type == XL_CHART_TYPE.THREE_D_COLUMN
+
+    @property
+    def _val_ax_pos(self) -> str:
+        return "b" if self._barDir == "bar" else "l"
+
+    @property
+    def _xChart_xml(self) -> str:
+        return (
+            "      <c:bar3DChart>\n"
+            '        <c:barDir val="{barDir}"/>\n'
+            '        <c:grouping val="{grouping}"/>\n'
+            '        <c:varyColors val="0"/>\n'
+            "{ser_xml}"
+            '        <c:gapWidth val="150"/>\n'
+            '        <c:shape val="box"/>\n'
+            "{axId_xml}"
+            "      </c:bar3DChart>\n"
+        ).format(
+            barDir=self._barDir,
+            grouping=self._grouping,
+            ser_xml=self._ser_xml,
+            axId_xml=self._axId_xml,
+        )
+
+
+class _Line3DChartXmlWriter(_Base3DChartXmlWriter):
+    """Provides specialized methods particular to the ``<c:line3DChart>`` element.
+
+    The schema requires exactly three axis ids on ``c:line3DChart``, so a 3D line chart
+    always has a series axis: each series is a ribbon in its own row.
+    """
+
+    @property
+    def _has_ser_ax(self) -> bool:
+        return True
+
+    @property
+    def _xChart_xml(self) -> str:
+        return (
+            "      <c:line3DChart>\n"
+            '        <c:grouping val="standard"/>\n'
+            '        <c:varyColors val="0"/>\n'
+            "{ser_xml}"
+            "{axId_xml}"
+            "      </c:line3DChart>\n"
+        ).format(ser_xml=self._ser_xml, axId_xml=self._axId_xml)
+
+
+class _Pie3DChartXmlWriter(_Base3DChartXmlWriter):
+    """Provides specialized methods particular to the ``<c:pie3DChart>`` element.
+
+    A pie has no axes and no walls; PowerPoint tilts it with a 30-degree camera.
+    """
+
+    @property
+    def _axes_xml(self) -> str:
+        return ""
+
+    @property
+    def _explosion_xml(self) -> str:
+        if self._chart_type == XL_CHART_TYPE.THREE_D_PIE_EXPLODED:
+            return '          <c:explosion val="25"/>\n'
+        return ""
+
+    @property
+    def _ser_xml(self) -> str:
+        xml_writer = _CategorySeriesXmlWriter(self._chart_data[0])
+        return (
+            "        <c:ser>\n"
+            '          <c:idx val="0"/>\n'
+            '          <c:order val="0"/>\n'
+            "{tx_xml}"
+            "{explosion_xml}"
+            "{cat_xml}"
+            "{val_xml}"
+            "        </c:ser>\n"
+        ).format(
+            tx_xml=xml_writer.tx_xml,
+            explosion_xml=self._explosion_xml,
+            cat_xml=xml_writer.cat_xml,
+            val_xml=xml_writer.val_xml,
+        )
+
+    @property
+    def _surfaces_xml(self) -> str:
+        return ""
+
+    @property
+    def _view3D_xml(self) -> str:
+        return (
+            "    <c:view3D>\n"
+            '      <c:rotX val="30"/>\n'
+            '      <c:rotY val="0"/>\n'
+            '      <c:rAngAx val="0"/>\n'
+            "    </c:view3D>\n"
+        )
+
+    @property
+    def _xChart_xml(self) -> str:
+        return (
+            "      <c:pie3DChart>\n"
+            '        <c:varyColors val="1"/>\n'
+            "{ser_xml}"
+            "      </c:pie3DChart>\n"
+        ).format(ser_xml=self._ser_xml)
 
 
 class _CategorySeriesXmlWriter(_BaseSeriesXmlWriter):

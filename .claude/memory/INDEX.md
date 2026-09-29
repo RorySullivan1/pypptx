@@ -40,6 +40,8 @@
 - [2026-09-29] Tags are one part PER owner, referenced from its `p:custDataLst/p:tags` (`p:nvPr` for a shape,
   `p:cSld` for the slide), related from the slide part; slide tags resolve by that reference, not by reltype
   — sessions/2026-09-29-1211-issue-114-shape-tags.md
+- [2026-09-29] 3D chart writers share `_Base3DChartXmlWriter`; only THREE_D_COLUMN/AREA/LINE get a `c:serAx` + perspective
+  camera. New chart XML uses POSITIVE axis ids (`unsignedInt`) — sessions/2026-09-29-2205-issue-115-3d-charts.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
@@ -59,7 +61,7 @@
 - The #51 perf gate is still absent, deliberately — shared-runner timing noise would make it flake.
 - **Actions billing blocks every job.** Fix the spending limit/payment, or cut cost: the lone macOS cell is
   ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
-- #115 (3D chart authoring; also unblocks examples/chart_3d_view.py) → v0.4.0.
+- #115 human check: new 3D charts (column/bar/line/pie/area) open without repair; camera/walls visibly change. No `series_axis` API.
 - #114 human check: shape-tagged deck opens in PowerPoint without repair. Follow-up idea: `has_tags` (reading creates a part).
 
 ## Log              (append-only pointers)
@@ -70,11 +72,10 @@
 - 2026-09-25 1400 | Epic #62 SmartArt read + node text edit (PR #101 merged) | sessions/2026-09-25-1400-epic-62-smartart.md
 - 2026-09-25 1530 | Epic #66 chartex + data table (PR #103 merged) | sessions/2026-09-25-1530-epic-66-chartex-dtable.md
 - 2026-09-25 1600 | Epic #75 audio, trim/fade, AlternateContent shapes (PR #105 merged) | sessions/2026-09-25-1600-epic-75-media-altcontent.md
-- 2026-09-25 1630 | Issue #51: profile + qn/XPath caches (−39%/deck) | sessions/2026-09-25-1630-issue-51-perf-caches.md
-- 2026-09-25 1740 | #51: perf harness on main (PR #109), checklist trimmed | .claude/context/performance.md
+- 2026-09-25 1630 | Issue #51: qn/XPath caches (−39%/deck); perf harness PR #109 | sessions/2026-09-25-1630-issue-51-perf-caches.md
 - 2026-09-26 | Roadmap reconcile + package 0.3.0 | .meta/roadmap/INDEX.md
-- 2026-09-26 2219 | Windows acceptance: LF .gitattributes, 3657 green (PR #112) | sessions/2026-09-26-2219-windows-crlf-acceptance.md
-- 2026-09-27 | PR #112 merged (b64d2b9): LF + cross-platform CI + pyparsing; main 7/7 green | .claude/context/verification-surface.md
+- 2026-09-26 2219 | Windows/LF acceptance + cross-platform CI (PR #112 merged b64d2b9) | sessions/2026-09-26-2219-windows-crlf-acceptance.md
 - 2026-09-27 1829 | v0.3.1 examples (PR #116); #114/#115 filed; Actions billing-blocked | sessions/2026-09-27-1829-v031-examples.md
 - 2026-09-28 | v0.3.1 marked shipped, cursor → v0.3.2, package 0.3.1 | .meta/version
 - 2026-09-29 1211 | #114 shape tags (`BaseShape.tags`), slide tags keyed by cSld ref | sessions/2026-09-29-1211-issue-114-shape-tags.md
+- 2026-09-29 2205 | #115 3D chart authoring: 13 THREE_D_* types via add_chart | sessions/2026-09-29-2205-issue-115-3d-charts.md
