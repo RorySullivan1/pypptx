@@ -44,7 +44,8 @@ class PresentationPart(XmlPart):
 
         The new slide is a deep clone of the source slide with all relationships
         (images, charts, media, layout, etc.) re-established on the new part.
-        Notes slide and comments are not carried over to the duplicate.
+        Notes slide, comments and slide tags are not carried over to the duplicate; each shape
+        keeps its tags, in a tags part of its own.
         """
         from pptx.opc.constants import CONTENT_TYPE as CT
 
@@ -60,13 +61,15 @@ class PresentationPart(XmlPart):
         copier = _PartCopier(self.package, dedup=False)
 
         # --- build rId mapping from old slide to new slide ---
+        # --- slide tags aren't carried over, but shape tags are: each shape keeps its own ---
+        shape_tags_rIds = _shape_tags_rIds(slide_part)
         rId_map: dict[str, str] = {}
         for rId, rel in slide_part.rels.items():
-            if rel.reltype in _skip_reltypes:
+            if rel.reltype in _skip_reltypes and rId not in shape_tags_rIds:
                 continue
             if rel.is_external:
                 new_rId = new_slide_part.relate_to(rel.target_ref, rel.reltype, is_external=True)
-            elif rel.reltype == RT.CHART:
+            elif rel.reltype in (RT.CHART, RT.TAGS):
                 new_rId = new_slide_part.relate_to(copier.copy(rel.target_part), rel.reltype)
             else:
                 new_rId = new_slide_part.relate_to(rel.target_part, rel.reltype)
@@ -74,9 +77,10 @@ class PresentationPart(XmlPart):
 
         # --- update rId references in the cloned XML (r:id, r:embed, r:link) ---
         _remap_rIds(new_element, rId_map)
-        # --- comments aren't carried over, so drop the extension that points at them; the copy
-        # --- is a new slide, so it also gets its own creation id (modern comments key on it) ---
+        # --- comments and slide tags aren't carried over, so drop the references to them; the
+        # --- copy is a new slide, so it also gets its own creation id (modern comments key on it)
         new_element.remove_comment_rel()
+        new_element.cSld.remove_tags_rId()
         new_element.cSld.renew_creation_id()
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
@@ -89,7 +93,7 @@ class PresentationPart(XmlPart):
         package. The source slide's layout is matched by name in this presentation;
         if no match is found, the layout (and its master/theme if needed) are imported.
         All relationships (images, charts, media) are re-established in this package.
-        Notes, comments, and tags are not imported.
+        Notes, comments, and slide tags are not imported; shape tags are.
         """
         from pptx.opc.constants import CONTENT_TYPE as CT
 
@@ -115,12 +119,18 @@ class PresentationPart(XmlPart):
         copier = _PartCopier(self.package, dedup=True)
 
         # --- build rId mapping, re-establishing relationships in target package ---
+        # --- slide tags aren't imported, but shape tags are, one tags part per shape as ever ---
+        shape_tags_rIds = _shape_tags_rIds(source_slide_part)
         rId_map: dict[str, str] = {}
         for rId, rel in source_slide_part.rels.items():
-            if rel.reltype in _skip_reltypes:
+            if rel.reltype in _skip_reltypes and rId not in shape_tags_rIds:
                 continue
             if rel.is_external:
                 new_rId = new_slide_part.relate_to(rel.target_ref, rel.reltype, is_external=True)
+            elif rel.reltype == RT.TAGS:
+                new_rId = new_slide_part.relate_to(
+                    copier.copy(rel.target_part, dedup=False), rel.reltype
+                )
             elif rel.reltype in _STRUCTURAL_RELTYPES:
                 new_rId = new_slide_part.relate_to(self._import_part(rel.target_part), rel.reltype)
             else:
@@ -139,9 +149,10 @@ class PresentationPart(XmlPart):
 
         # --- update rId references in the cloned XML ---
         _remap_rIds(new_element, rId_map)
-        # --- comments aren't carried over, so drop the extension that points at them; the copy
-        # --- is a new slide, so it also gets its own creation id (modern comments key on it) ---
+        # --- comments and slide tags aren't carried over, so drop the references to them; the
+        # --- copy is a new slide, so it also gets its own creation id (modern comments key on it)
         new_element.remove_comment_rel()
+        new_element.cSld.remove_tags_rId()
         new_element.cSld.renew_creation_id()
 
         rId = self.relate_to(new_slide_part, RT.SLIDE)
@@ -486,12 +497,15 @@ class _PartCopier:
         self._copies: dict[Part, Part] = {}
         self._taken: set[str] | None = None
 
-    def copy(self, source_part: Part) -> Part:
-        """Return the copy of `source_part` in the target package, creating it if needed."""
+    def copy(self, source_part: Part, dedup: bool | None = None) -> Part:
+        """Return the copy of `source_part` in the target package, creating it if needed.
+
+        `dedup` overrides the copier's setting for this part (not for the parts it relates to).
+        """
         if source_part in self._copies:
             return self._copies[source_part]
 
-        if self._dedup:
+        if self._dedup if dedup is None else dedup:
             existing = self._find_identical(source_part)
             if existing is not None:
                 self._copies[source_part] = existing
@@ -542,6 +556,11 @@ class _PartCopier:
             partname = tmpl % n
         self._taken.add(partname)
         return PackURI(partname)
+
+
+def _shape_tags_rIds(slide_part: SlidePart) -> set[str]:
+    """The rIds by which the shapes on `slide_part` refer to their tags parts."""
+    return set(slide_part._element.cSld.spTree.xpath(".//p:custDataLst/p:tags/@r:id"))
 
 
 def _remap_rIds(element: BaseOxmlElement, rId_map: dict[str, str]) -> None:

@@ -9,6 +9,7 @@ from pptx.oxml import parse_from_template, parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls, qn
 from pptx.oxml.simpletypes import XsdBoolean, XsdString
+from pptx.oxml.tags import CT_CustomerDataList, CustDataLstOwnerMixin
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     Choice,
@@ -97,7 +98,7 @@ class CT_BackgroundProperties(BaseOxmlElement):
         return CT_GradientFillProperties.new_gradFill()
 
 
-class CT_CommonSlideData(BaseOxmlElement):
+class CT_CommonSlideData(CustDataLstOwnerMixin, BaseOxmlElement):
     """`p:cSld` element."""
 
     _remove_bg: Callable[[], None]
@@ -109,6 +110,9 @@ class CT_CommonSlideData(BaseOxmlElement):
         "p:bg", successors=_tag_seq[1:]
     )
     spTree: CT_GroupShape = OneAndOnlyOne("p:spTree")  # pyright: ignore[reportAssignmentType]
+    custDataLst: CT_CustomerDataList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:custDataLst", successors=_tag_seq[3:]
+    )
     extLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:extLst", successors=()
     )

@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes import ShapeElement
     from pptx.oxml.shapes.shared import CT_Placeholder
     from pptx.parts.slide import BaseSlidePart
+    from pptx.parts.tags import TagsPart
     from pptx.shapes.group import GroupShape
     from pptx.types import ProvidesPart
     from pptx.util import Length
@@ -324,6 +325,18 @@ class BaseShape:
         Like ``MSO_SHAPE_TYPE.CHART``. Must be implemented by subclasses.
         """
         raise NotImplementedError(f"{type(self).__name__} does not implement `.shape_type`")
+
+    @property
+    def tags(self) -> TagsPart:
+        """The |TagsPart| holding this shape's customer data tags, as a mapping of str to str.
+
+        A tags part is created on first access if the shape has none. Supports ``tags[key]``,
+        ``tags[key] = value``, ``del tags[key]``, ``key in tags``, ``len(tags)``, iteration over
+        the keys, ``tags.items()`` and ``tags.get(key)``, like |Slide| ``.tags``. Add-ins use
+        shape tags to mark a shape and find it again; PowerPoint keeps them with the shape.
+        """
+        nvPr = self._element._nvXxPr.nvPr  # pyright: ignore[reportPrivateUsage]
+        return self.part.get_or_add_tags_part(nvPr)
 
     @property
     def title(self) -> str:

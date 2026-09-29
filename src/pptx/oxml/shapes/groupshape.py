@@ -19,7 +19,7 @@ from pptx.util import Emu
 if TYPE_CHECKING:
     from pptx.enum.shapes import PP_PLACEHOLDER
     from pptx.oxml.shapes import ShapeElement
-    from pptx.oxml.shapes.shared import CT_Transform2D
+    from pptx.oxml.shapes.shared import CT_ApplicationNonVisualDrawingProps, CT_Transform2D
 
 
 class CT_GroupShape(BaseShapeElement):
@@ -278,6 +278,9 @@ class CT_GroupShapeNonVisual(BaseShapeElement):
     """`p:nvGrpSpPr` element."""
 
     cNvPr = OneAndOnlyOne("p:cNvPr")
+    nvPr: CT_ApplicationNonVisualDrawingProps = OneAndOnlyOne(  # pyright: ignore[reportAssignmentType]
+        "p:nvPr"
+    )
 
 
 class CT_GroupShapeProperties(BaseOxmlElement):

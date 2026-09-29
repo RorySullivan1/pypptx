@@ -27,6 +27,7 @@ from pptx.oxml.simpletypes import (
     XsdString,
     XsdUnsignedInt,
 )
+from pptx.oxml.tags import CT_CustomerDataList, CustDataLstOwnerMixin
 from pptx.oxml.xmlchemy import (
     BaseOxmlElement,
     Choice,
@@ -295,7 +296,7 @@ class BaseShapeElement(BaseOxmlElement):
         setattr(xfrm, name, value)
 
 
-class CT_ApplicationNonVisualDrawingProps(BaseOxmlElement):
+class CT_ApplicationNonVisualDrawingProps(CustDataLstOwnerMixin, BaseOxmlElement):
     """`p:nvPr` element."""
 
     get_or_add_ph: Callable[[], CT_Placeholder]
@@ -312,6 +313,9 @@ class CT_ApplicationNonVisualDrawingProps(BaseOxmlElement):
             "p:custDataLst",
             "p:extLst",
         ),
+    )
+    custDataLst: CT_CustomerDataList | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:custDataLst", successors=("p:extLst",)
     )
     extLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "p:extLst", successors=()

@@ -76,7 +76,8 @@ The codebase is organized in four layers, from low-level to high-level:
 
 ### Sections, Tags & Comments
 - Sections — `Presentation.sections` with add, remove, rename, iterate, and per-section slide-ID enumeration (`p14:sectionLst`)
-- Tags — dict-like API on slides (and shapes) via `TagsPart` (get/set/del/contains/iter/items)
+- Tags — dict-like API on slides (`Slide.tags`) and shapes (`BaseShape.tags`) via `TagsPart`
+  (get/set/del/contains/len/iter/items); one tags part per tagged shape, as PowerPoint writes it
 - Slide comments — `Slide.comments` with add/iterate/clear/indexed access; per-comment `author`, `text` (r/w), `datetime`, `position`, `delete()`
 - Comment authors — auto-managed via package-level `CommentAuthorsPart`
 - Modern threaded comments (PowerPoint 365) — `Slide.threaded_comments`: read threads with replies, authors, created time, anchor and resolved state; add threads, reply, and resolve/reopen

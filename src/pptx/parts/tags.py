@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from pptx.opc.constants import CONTENT_TYPE as CT
@@ -33,6 +34,14 @@ class TagsPart(XmlPart):
         tagLst_xml = '<p:tagLst %s/>' % nsdecls("p", "r")
         tagLst = parse_xml(tagLst_xml)
         return cls(partname, CT.PML_TAGS, package, tagLst)
+
+    def copy(self) -> TagsPart:
+        """Return a new |TagsPart| in the same package holding a copy of these tags.
+
+        The copy takes the next free partname, so relate it before copying another.
+        """
+        partname = self._package.next_partname(self.partname_template)
+        return TagsPart(partname, CT.PML_TAGS, self._package, deepcopy(self._element))
 
     def __getitem__(self, key: str) -> str:
         """Return value for `key`. Raises KeyError if not found."""

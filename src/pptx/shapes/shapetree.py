@@ -12,6 +12,7 @@ from pptx.enum.shapes import PP_PLACEHOLDER, PROG_ID
 from pptx.media import SPEAKER_IMAGE_BYTES, Video
 from pptx.media import Audio as _AudioMedia
 from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.ns import qn
 from pptx.oxml.shapes.autoshape import CT_Shape
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
@@ -50,6 +51,7 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes.groupshape import CT_GroupShape
     from pptx.parts.image import ImagePart
     from pptx.parts.slide import SlidePart
+    from pptx.parts.tags import TagsPart
     from pptx.shapes.range import ShapeRange
     from pptx.slide import Slide, SlideLayout
     from pptx.types import ProvidesPart
@@ -561,6 +563,11 @@ class _BaseGroupShapes(_BaseShapes):
             each_cNvPr.id = new_id
             each_cNvPr.name = new_name
 
+        # -- tags are per shape, so the copy (and each shape in a copied group) gets its own --
+        for tags in new_outer.xpath(".//p:custDataLst/p:tags"):
+            tags_part = cast("TagsPart", self.part.related_part(tags.rId)).copy()
+            tags.rId = self.part.relate_to(tags_part, RT.TAGS)
+
         self._grpSp.append(new_outer)
         self._invalidate_shape_cache()
         self._recalculate_extents()
@@ -569,9 +576,14 @@ class _BaseGroupShapes(_BaseShapes):
     def remove_shape(self, shape: BaseShape) -> None:
         """Remove `shape` from this shape tree.
 
-        The shape element is removed from the XML and the shape is no longer accessible.
+        The shape element is removed from the XML and the shape is no longer accessible. Its tags
+        part, if any, goes with it.
         """
-        self._grpSp.remove(tree_elm(shape.element))
+        outer_elm = tree_elm(shape.element)
+        tags_rIds = outer_elm.xpath(".//p:custDataLst/p:tags/@r:id")
+        self._grpSp.remove(outer_elm)
+        for rId in tags_rIds:
+            self.part.drop_rel(rId)
         self._invalidate_shape_cache()
 
     def _add_chart_graphicFrame(

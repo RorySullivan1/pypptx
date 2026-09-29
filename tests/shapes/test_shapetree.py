@@ -2879,3 +2879,48 @@ class Describe_NotesSlideShapeFactory:
     @pytest.fixture
     def shapes_(self, request):
         return instance_mock(request, _BaseShapes)
+
+
+class Describe_BaseGroupShapes_tags:
+    """Unit-test suite for tags parts when shapes are duplicated or removed."""
+
+    def it_gives_a_duplicated_shape_its_own_copy_of_the_tags(self):
+        slide = _blank_slide()
+        shape = slide.shapes.add_textbox(0, 0, 100, 100)
+        shape.tags["k"] = "v"
+
+        copy = slide.shapes.duplicate_shape(shape)
+        copy.tags["k"] = "changed"
+
+        assert copy.tags is not shape.tags
+        assert shape.tags["k"] == "v"
+        assert copy.tags.partname != shape.tags.partname
+
+    def it_copies_the_tags_of_each_shape_in_a_duplicated_group(self):
+        slide = _blank_slide()
+        group = slide.shapes.add_group_shape()
+        child = group.shapes.add_textbox(0, 0, 100, 100)
+        child.tags["role"] = "child"
+
+        group_copy = slide.shapes.duplicate_shape(group)
+
+        child_copy = group_copy.shapes[0]
+        assert child_copy.tags["role"] == "child"
+        assert child_copy.tags is not child.tags
+
+    def it_drops_the_tags_part_of_a_removed_shape(self):
+        slide = _blank_slide()
+        shape = slide.shapes.add_textbox(0, 0, 100, 100)
+        shape.tags["k"] = "v"
+        rId = shape._element._nvXxPr.nvPr.tags_rId
+
+        slide.shapes.remove_shape(shape)
+
+        assert rId not in slide.part.rels
+
+
+def _blank_slide():
+    from pptx import Presentation
+
+    prs = Presentation()
+    return prs.slides.add_slide(prs.slide_layouts[6])

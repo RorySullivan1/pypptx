@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+import pptx
 from pptx.exc import SlideError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.packuri import PackURI
@@ -16,6 +17,7 @@ from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
 from ..unitutil.cxml import element
 from ..unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
+from ..unitutil.shapetags import shape_tags_pptx
 
 
 class DescribePresentationPart:
@@ -345,3 +347,52 @@ class DescribePresentationPart:
     @pytest.fixture
     def slide_part_(self, request):
         return instance_mock(request, SlidePart)
+
+
+class DescribePresentationPart_shape_tags:
+    """Unit-test suite for shape and slide tags when a slide is duplicated or imported."""
+
+    def it_carries_shape_tags_to_a_duplicated_slide_in_parts_of_their_own(self):
+        prs = pptx.Presentation(shape_tags_pptx())
+        slide = prs.slides[0]
+
+        dup = prs.slides.duplicate(slide)
+
+        tagged, _, group = dup.shapes
+        assert tagged.tags.items() == [("SOURCE", "crm"), ("GENERATED", "1")]
+        assert group.shapes[0].tags.items() == [("ROLE", "child")]
+        assert tagged.tags is not slide.shapes[0].tags
+        tagged.tags["SOURCE"] = "changed"
+        assert slide.shapes[0].tags["SOURCE"] == "crm"
+
+    def it_does_not_carry_the_slide_tags_to_a_duplicated_slide(self):
+        prs = pptx.Presentation(shape_tags_pptx())
+
+        dup = prs.slides.duplicate(prs.slides[0])
+
+        assert dup.part._element.cSld.tags_rId is None
+        assert len(dup.tags) == 0
+
+    def it_carries_shape_tags_to_an_imported_slide(self):
+        source = pptx.Presentation(shape_tags_pptx())
+        target = pptx.Presentation()
+
+        imported = target.slides.import_slide(source.slides[0])
+
+        tagged, _, group = imported.shapes
+        assert tagged.tags["SOURCE"] == "crm"
+        assert group.shapes[0].tags["ROLE"] == "child"
+        assert tagged.tags.package is target.part.package
+        assert len(imported.tags) == 0
+
+    def it_gives_identical_imported_shape_tags_separate_parts(self):
+        source = pptx.Presentation()
+        slide = source.slides.add_slide(source.slide_layouts[6])
+        for _ in range(2):
+            slide.shapes.add_textbox(0, 0, 100, 100).tags["same"] = "value"
+        target = pptx.Presentation()
+
+        imported = target.slides.import_slide(slide)
+
+        first, second = imported.shapes
+        assert first.tags is not second.tags
