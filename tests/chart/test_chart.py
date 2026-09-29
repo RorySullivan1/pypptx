@@ -833,3 +833,61 @@ class Describe_Plots:
     @pytest.fixture
     def plot_(self, request):
         return instance_mock(request, _BasePlot)
+
+
+class DescribeChart_3d:
+    """Reading and editing a 3D chart saved the way PowerPoint writes one."""
+
+    def it_reads_a_powerpoint_style_3d_column_chart(self):
+        import pptx
+        from pptx.chart.plot import Bar3DPlot
+
+        from ..unitutil.chart3d import CATEGORIES, SERIES, chart_3d_pptx
+
+        chart = pptx.Presentation(chart_3d_pptx()).slides[0].shapes[0].chart
+
+        assert chart.chart_type == XL_CHART_TYPE.THREE_D_COLUMN_CLUSTERED
+        plot = chart.plots[0]
+        assert isinstance(plot, Bar3DPlot)
+        assert plot.gap_width == 150
+        assert tuple(plot.categories) == CATEGORIES
+        assert [(s.name, tuple(s.values)) for s in plot.series] == list(SERIES)
+        view = chart.view_3d
+        assert (view.rot_x, view.rot_y, view.depth_percent, view.right_angle_axes) == (
+            15,
+            20,
+            100,
+            True,
+        )
+        assert chart.floor.thickness == 0
+        assert chart.back_wall.format.fill.type is not None
+
+    def it_keeps_powerpoint_markup_when_the_camera_and_walls_change(self):
+        from io import BytesIO
+
+        import pptx
+        from pptx.dml.color import RGBColor
+
+        from ..unitutil.chart3d import chart_3d_pptx
+
+        prs = pptx.Presentation(chart_3d_pptx())
+        chart = prs.slides[0].shapes[0].chart
+        chart.view_3d.rot_y = 40
+        chart.view_3d.right_angle_axes = False
+        chart.view_3d.perspective = 45
+        chart.back_wall.format.fill.solid()
+        chart.back_wall.format.fill.fore_color.rgb = RGBColor(0xEE, 0xEE, 0xEE)
+        stream = BytesIO()
+        prs.save(stream)
+        stream.seek(0)
+
+        chart = pptx.Presentation(stream).slides[0].shapes[0].chart
+        chartSpace = chart._chartSpace
+        assert (chart.view_3d.rot_y, chart.view_3d.right_angle_axes) == (40, False)
+        assert chart.view_3d.perspective == 45
+        assert chart.back_wall.format.fill.fore_color.rgb == RGBColor(0xEE, 0xEE, 0xEE)
+        assert chartSpace.xpath("c:chart/c:backWall/c:thickness/@val") == ["0"]
+        assert chartSpace.xpath("c:chart/c:plotArea/c:bar3DChart/c:axId/@val")[-1] == "0"
+        assert len(chartSpace.xpath("c:chart/c:plotArea/c:bar3DChart/c:ser/c:extLst")) == 2
+        assert len(chartSpace.xpath("mc:AlternateContent")) == 1
+        assert chartSpace.xpath("c:externalData/@r:id") == ["rId1"]

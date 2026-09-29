@@ -544,7 +544,7 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] Supports "line", "bar", "area", "scatter" overlay types
 - [x] `Chart.plots` iteration verified working with multiple xChart elements
 
-### 18.6 3D Chart Properties (view/surfaces DONE; authoring MISSING)
+### 18.6 3D Chart Properties (DONE; human check open)
 
 - [x] `CT_View3D` — `rotX`, `rotY`, `rAngAx`, `perspective`, `depthPercent`, `hPercent` children with val properties
 - [x] `CT_RotX`, `CT_RotY`, `CT_Perspective`, `CT_DepthPercent`, `CT_HPercent` element classes
@@ -552,7 +552,11 @@ OXML already supports multiple axes via `ZeroOrMore`. API exposure added.
 - [x] Declared `c:view3D`, `c:floor`, `c:sideWall`, `c:backWall` as `ZeroOrOne` on `CT_Chart`
 - [x] `Chart.view_3d` API — `View3D` with rot_x, rot_y, right_angle_axes, perspective, depth_percent, height_percent
 - [x] `Chart.floor`, `Chart.back_wall`, `Chart.side_wall` — `ChartSurface` with format and thickness
-- [ ] **Authoring a 3D chart — missing (#115).** No XML writer exists for `c:bar3DChart`, `c:line3DChart`, `c:pie3DChart` or `c:area3DChart`, so `add_chart(XL_CHART_TYPE.THREE_D_*)` raises `NotImplementedError`; the only `THREE_D` member in the writer map is `BUBBLE_THREE_D_EFFECT` (a 2D bubble chart). The view/surface APIs above can therefore only be set on charts with no 3D plot box to render them. No 3D fixture in `tests/test_files/` either, so read paths are uncovered. Found 2026-09-27 planning the v0.3.1 examples
+- [x] **Authoring a 3D chart (#115).** `add_chart` writes all 13 `XL_CHART_TYPE.THREE_D_*` types: `_Bar3DChartXmlWriter` (7 column/bar types), `_Line3DChartXmlWriter`, `_Pie3DChartXmlWriter` (plain and exploded) and `_Area3DChartXmlWriter` (3 types), on a shared `_Base3DChartXmlWriter` that emits PowerPoint's default `c:view3D` camera plus `c:floor`/`c:sideWall`/`c:backWall`. The "true 3D" types (`THREE_D_COLUMN`, `THREE_D_AREA`, `THREE_D_LINE`) get a series (depth) axis — the schema requires it on `c:line3DChart` — and a perspective camera; the clustered/stacked types keep right-angle axes. Output validates against the ISO 29500 chart schema for all 13 types, string and date categories
+- [x] `PlotTypeInspector` maps a standard-grouping `c:bar3DChart` to `THREE_D_COLUMN` (it raised `KeyError` before)
+- [x] Read-path coverage from a PowerPoint-layout 3D column chart (`tests/unitutil/chart3d.py`: `c:lang`, `mc:AlternateContent` style, wall `spPr` with `a:sp3d`, third `c:axId val="0"`, series `c:extLst`, `c:externalData`) — read, edited and re-saved with that markup intact; `examples/chart_3d_view.py` demonstrates the camera and walls
+- [ ] Human check (#115): a new 3D chart of each family opens in PowerPoint without repair, and `view_3d`/floor/wall settings visibly change the plot. The read fixture is hand-built to PowerPoint's layout; a genuinely PowerPoint-saved 3D chart deck would still strengthen it
+- [ ] Not exposed: the series (depth) axis of a true 3D chart has no API proxy (`c:serAx` is written and preserved, but there is no `Chart.series_axis`)
 
 ### 18.7 Chart & Plot Area Formatting (DONE)
 

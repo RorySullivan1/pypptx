@@ -18,9 +18,9 @@ from pptx.chart.data import (
     _BaseSeriesData,
 )
 from pptx.chart.xmlwriter import (
-    ChartXmlWriter,
-    SeriesXmlRewriterFactory,
+    _Area3DChartXmlWriter,
     _AreaChartXmlWriter,
+    _Bar3DChartXmlWriter,
     _BarChartXmlWriter,
     _BaseSeriesXmlRewriter,
     _BubbleChartXmlWriter,
@@ -28,10 +28,14 @@ from pptx.chart.xmlwriter import (
     _BubbleSeriesXmlWriter,
     _CategorySeriesXmlRewriter,
     _CategorySeriesXmlWriter,
+    ChartXmlWriter,
     _DoughnutChartXmlWriter,
+    _Line3DChartXmlWriter,
     _LineChartXmlWriter,
+    _Pie3DChartXmlWriter,
     _PieChartXmlWriter,
     _RadarChartXmlWriter,
+    SeriesXmlRewriterFactory,
     _XyChartXmlWriter,
     _XySeriesXmlRewriter,
     _XySeriesXmlWriter,
@@ -80,6 +84,19 @@ class DescribeChartXmlWriter:
             ("RADAR", _RadarChartXmlWriter),
             ("RADAR_FILLED", _RadarChartXmlWriter),
             ("RADAR_MARKERS", _RadarChartXmlWriter),
+            ("THREE_D_AREA", _Area3DChartXmlWriter),
+            ("THREE_D_AREA_STACKED", _Area3DChartXmlWriter),
+            ("THREE_D_AREA_STACKED_100", _Area3DChartXmlWriter),
+            ("THREE_D_BAR_CLUSTERED", _Bar3DChartXmlWriter),
+            ("THREE_D_BAR_STACKED", _Bar3DChartXmlWriter),
+            ("THREE_D_BAR_STACKED_100", _Bar3DChartXmlWriter),
+            ("THREE_D_COLUMN", _Bar3DChartXmlWriter),
+            ("THREE_D_COLUMN_CLUSTERED", _Bar3DChartXmlWriter),
+            ("THREE_D_COLUMN_STACKED", _Bar3DChartXmlWriter),
+            ("THREE_D_COLUMN_STACKED_100", _Bar3DChartXmlWriter),
+            ("THREE_D_LINE", _Line3DChartXmlWriter),
+            ("THREE_D_PIE", _Pie3DChartXmlWriter),
+            ("THREE_D_PIE_EXPLODED", _Pie3DChartXmlWriter),
             ("XY_SCATTER", _XyChartXmlWriter),
             ("XY_SCATTER_LINES", _XyChartXmlWriter),
             ("XY_SCATTER_LINES_NO_MARKERS", _XyChartXmlWriter),
@@ -331,6 +348,87 @@ class Describe_XyChartXmlWriter:
         xml_writer = _XyChartXmlWriter(chart_type, chart_data)
         expected_xml = snippet_text(snippet_name)
         return xml_writer, expected_xml
+
+
+class Describe_3DChartXmlWriters:
+    """Unit-test suite for the `c:bar3DChart`, `c:line3DChart`, `c:pie3DChart` and
+    `c:area3DChart` XML writers in `pptx.chart.xmlwriter`."""
+
+    @pytest.mark.parametrize(
+        "member, cat_count, ser_count, cat_type, snippet_name",
+        (
+            ("THREE_D_COLUMN", 2, 2, str, "2x2-3d-column"),
+            ("THREE_D_COLUMN_STACKED", 2, 2, date, "2x2-3d-column-stacked-date"),
+            ("THREE_D_BAR_CLUSTERED", 2, 2, str, "2x2-3d-bar-clustered"),
+            ("THREE_D_AREA", 2, 2, str, "2x2-3d-area"),
+            ("THREE_D_AREA_STACKED", 2, 2, str, "2x2-3d-area-stacked"),
+            ("THREE_D_LINE", 2, 2, str, "2x2-3d-line"),
+            ("THREE_D_PIE_EXPLODED", 3, 1, str, "3x1-3d-pie-exploded"),
+        ),
+    )
+    def it_can_generate_xml_for_3d_charts(
+        self, member, cat_count, ser_count, cat_type, snippet_name
+    ):
+        chart_type = getattr(XL_CHART_TYPE, member)
+        chart_data = make_category_chart_data(cat_count, cat_type, ser_count)
+        xml_writer = ChartXmlWriter(chart_type, chart_data)
+
+        assert xml_writer.xml == snippet_text(snippet_name)
+
+    @pytest.mark.parametrize(
+        "member, xChart, barDir, grouping, ax_count, rAngAx",
+        (
+            ("THREE_D_AREA", "area3DChart", None, "standard", 3, "0"),
+            ("THREE_D_AREA_STACKED", "area3DChart", None, "stacked", 2, "1"),
+            ("THREE_D_AREA_STACKED_100", "area3DChart", None, "percentStacked", 2, "1"),
+            ("THREE_D_BAR_CLUSTERED", "bar3DChart", "bar", "clustered", 2, "1"),
+            ("THREE_D_BAR_STACKED", "bar3DChart", "bar", "stacked", 2, "1"),
+            ("THREE_D_BAR_STACKED_100", "bar3DChart", "bar", "percentStacked", 2, "1"),
+            ("THREE_D_COLUMN", "bar3DChart", "col", "standard", 3, "0"),
+            ("THREE_D_COLUMN_CLUSTERED", "bar3DChart", "col", "clustered", 2, "1"),
+            ("THREE_D_COLUMN_STACKED", "bar3DChart", "col", "stacked", 2, "1"),
+            ("THREE_D_COLUMN_STACKED_100", "bar3DChart", "col", "percentStacked", 2, "1"),
+            ("THREE_D_LINE", "line3DChart", None, "standard", 3, "0"),
+            ("THREE_D_PIE", "pie3DChart", None, None, 0, "0"),
+            ("THREE_D_PIE_EXPLODED", "pie3DChart", None, None, 0, "0"),
+        ),
+    )
+    def it_writes_the_plot_camera_and_axes_each_3d_type_needs(
+        self, member, xChart, barDir, grouping, ax_count, rAngAx
+    ):
+        chart_type = getattr(XL_CHART_TYPE, member)
+        chart_data = make_category_chart_data(3, str, 2)
+
+        chartSpace = parse_xml(ChartXmlWriter(chart_type, chart_data).xml.encode("utf-8"))
+
+        plot = chartSpace.xpath("c:chart/c:plotArea/c:%s" % xChart)
+        assert len(plot) == 1
+        assert plot[0].xpath("c:barDir/@val") == ([barDir] if barDir else [])
+        assert plot[0].xpath("c:grouping/@val") == ([grouping] if grouping else [])
+        assert len(plot[0].xpath("c:axId")) == ax_count
+        assert len(chartSpace.xpath("c:chart/c:plotArea/c:serAx")) == (1 if ax_count == 3 else 0)
+        assert chartSpace.xpath("c:chart/c:view3D/c:rAngAx/@val") == [rAngAx]
+        walls = chartSpace.xpath("c:chart/c:floor | c:chart/c:sideWall | c:chart/c:backWall")
+        assert len(walls) == (0 if xChart == "pie3DChart" else 3)
+
+    @pytest.mark.parametrize(
+        "member, cat_ax_pos, val_ax_pos",
+        (
+            ("THREE_D_BAR_CLUSTERED", "l", "b"),
+            ("THREE_D_BAR_STACKED_100", "l", "b"),
+            ("THREE_D_COLUMN", "b", "l"),
+            ("THREE_D_COLUMN_STACKED", "b", "l"),
+        ),
+    )
+    def it_places_the_axes_by_bar_direction(self, member, cat_ax_pos, val_ax_pos):
+        chart_type = getattr(XL_CHART_TYPE, member)
+        chart_data = make_category_chart_data(2, str, 2)
+
+        chartSpace = parse_xml(ChartXmlWriter(chart_type, chart_data).xml.encode("utf-8"))
+        plotArea = chartSpace.xpath("c:chart/c:plotArea")[0]
+
+        assert plotArea.xpath("c:catAx/c:axPos/@val") == [cat_ax_pos]
+        assert plotArea.xpath("c:valAx/c:axPos/@val") == [val_ax_pos]
 
 
 class Describe_BubbleSeriesXmlWriter:
