@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 import posixpath
 import zipfile
+import zlib
 from typing import IO, TYPE_CHECKING, Any, Container, Sequence
 
-from pptx.exc import PackageNotFoundError
+from pptx.exc import InvalidPackageError, PackageNotFoundError
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.oxml import CT_Types, serialize_part_xml
 from pptx.opc.packuri import CONTENT_TYPES_URI, PACKAGE_URI, PackURI
@@ -138,10 +139,11 @@ class _PhysPkgReader(Container[PackURI]):
         if os.path.isdir(pkg_file):
             return _DirPkgReader(pkg_file)
 
-        if zipfile.is_zipfile(pkg_file):
-            return _ZipPkgReader(pkg_file)
+        if not os.path.exists(pkg_file):
+            raise PackageNotFoundError("Package not found at '%s'" % pkg_file)
 
-        raise PackageNotFoundError("Package not found at '%s'" % pkg_file)
+        # --- an existing file that is not a readable zip raises InvalidPackageError ---
+        return _ZipPkgReader(pkg_file)
 
 
 class _DirPkgReader(_PhysPkgReader):
@@ -178,11 +180,20 @@ class _ZipPkgReader(_PhysPkgReader):
     """
 
     def __init__(self, pkg_file: str | IO[bytes]):
-        self._zipf = zipfile.ZipFile(pkg_file, "r")
+        try:
+            self._zipf = zipfile.ZipFile(pkg_file, "r")
+        except (zipfile.BadZipFile, EOFError, ValueError) as e:
+            raise InvalidPackageError(
+                "%s is not a valid .pptx package: not a readable zip archive (%s)"
+                % (_describe(pkg_file), e)
+            ) from e
 
     def __del__(self) -> None:
         """Close the zip file when this reader is garbage-collected."""
-        self._zipf.close()
+        # -- `_zipf` is absent when opening the archive raised in `__init__()` --
+        zipf = getattr(self, "_zipf", None)
+        if zipf is not None:
+            zipf.close()
 
     def __contains__(self, pack_uri: object) -> bool:
         """Return True when part identified by `pack_uri` is present in zip archive."""
@@ -197,7 +208,13 @@ class _ZipPkgReader(_PhysPkgReader):
         membername = self._member_names.get(pack_uri)
         if membername is None:
             raise KeyError("no member '%s' in package" % pack_uri)
-        return self._zipf.read(membername)
+        try:
+            return self._zipf.read(membername)
+        except (zipfile.BadZipFile, zlib.error, EOFError, NotImplementedError) as e:
+            raise InvalidPackageError(
+                "part '%s' of the package cannot be read: the archive is corrupt (%s)"
+                % (pack_uri, e)
+            ) from e
 
     @lazyproperty
     def _member_names(self) -> dict[PackURI, str]:
@@ -207,6 +224,11 @@ class _ZipPkgReader(_PhysPkgReader):
         read on demand in ``__getitem__``.
         """
         return {PackURI("/%s" % name): name for name in self._zipf.namelist()}
+
+
+def _describe(pkg_file: str | IO[bytes]) -> str:
+    """Name `pkg_file` for an error message: its path, or "the stream" for a file-like object."""
+    return "'%s'" % pkg_file if isinstance(pkg_file, str) else "the stream"
 
 
 class _PhysPkgWriter:

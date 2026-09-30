@@ -9,7 +9,7 @@ from __future__ import annotations
 import collections
 from typing import IO, TYPE_CHECKING, DefaultDict, Iterator, Mapping, Set, cast
 
-from pptx.exc import PackageError
+from pptx.exc import InvalidPackageError, PackageError
 from pptx.opc.constants import RELATIONSHIP_TARGET_MODE as RTM
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.oxml import CT_Relationships, serialize_part_xml
@@ -129,7 +129,13 @@ class OpcPackage(_RelatableMixin):
 
         In this case it will be a |Presentation| part.
         """
-        return cast("PresentationPart", self.part_related_by(RT.OFFICE_DOCUMENT))
+        try:
+            return cast("PresentationPart", self.part_related_by(RT.OFFICE_DOCUMENT))
+        except KeyError as e:
+            raise InvalidPackageError(
+                "package has no main document part: its package relationships (/_rels/.rels)"
+                " are missing or name no officeDocument part"
+            ) from e
 
     def next_partname(self, tmpl: str) -> PackURI:
         """Return |PackURI| next available partname matching `tmpl`.
@@ -205,7 +211,13 @@ class _PackageLoader:
 
         Provides a content-type (MIME-type) for any given partname.
         """
-        return _ContentTypeMap.from_xml(self._package_reader[CONTENT_TYPES_URI])
+        try:
+            content_types_xml = self._package_reader[CONTENT_TYPES_URI]
+        except KeyError as e:
+            raise InvalidPackageError(
+                "package has no [Content_Types].xml, which every .pptx package must have"
+            ) from e
+        return _ContentTypeMap.from_xml(content_types_xml)
 
     @lazyproperty
     def _package_reader(self) -> PackageReader:

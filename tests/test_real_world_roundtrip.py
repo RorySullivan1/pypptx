@@ -7,9 +7,11 @@ nothing on a plain open-and-save.
 
 from __future__ import annotations
 
+import gc
 import io
 import posixpath
 import re
+import sys
 import zipfile
 from pathlib import Path
 
@@ -17,12 +19,14 @@ import pytest
 from lxml import etree
 
 from pptx import Presentation
+from pptx.exc import InvalidPackageError, PackageNotFoundError
 from pptx.util import Inches
 
 from .unitutil.deckwalk import walk
 
 CORPUS_DIR = Path(__file__).parent / "test_files" / "real_world"
 CORPUS = sorted(CORPUS_DIR.glob("*.pptx"), key=lambda p: p.name.lower())
+MALFORMED = sorted((CORPUS_DIR / "malformed").glob("*.pptx"))
 MARKER_TEXT = "pypptx round-trip marker"
 
 _blankless = etree.XMLParser(remove_blank_text=True)
@@ -121,3 +125,63 @@ def it_keeps_the_corpus_test_only():
     listed = set(re.findall(r"^\| `([^`]+\.pptx)` \| \d+ \| [^|]+ \| [^|]+ \|", sources, re.M))
     assert listed == {p.name for p in CORPUS}
     assert (CORPUS_DIR / "LICENSE").exists() and (CORPUS_DIR / "NOTICE").exists()
+
+
+def _rebuilt(source: Path, drop: str) -> io.BytesIO:
+    """A copy of the package at `source` without its `drop` member."""
+    stream = io.BytesIO()
+    with zipfile.ZipFile(source) as src, zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as dst:
+        for info in src.infolist():
+            if info.filename != drop:
+                dst.writestr(info, src.read(info.filename))
+    stream.seek(0)
+    return stream
+
+
+@pytest.mark.realworld
+class DescribeDamagedInput:
+    """A file or stream that is not a readable package fails with a clear pypptx exception."""
+
+    @pytest.mark.parametrize("path", MALFORMED, ids=[p.name[-24:] for p in MALFORMED])
+    def it_rejects_each_malformed_corpus_file(self, path: Path):
+        with pytest.raises(InvalidPackageError, match="is not a valid .pptx package"):
+            Presentation(str(path))
+
+    @pytest.mark.parametrize(
+        "data",
+        [b"", b"not a zip at all", (CORPUS_DIR / "bar-chart.pptx").read_bytes()[:5000]],
+        ids=["empty", "not-a-zip", "truncated"],
+    )
+    def it_rejects_a_damaged_stream(self, data: bytes):
+        with pytest.raises(InvalidPackageError, match="the stream is not a valid .pptx package"):
+            Presentation(io.BytesIO(data))
+
+    @pytest.mark.parametrize(
+        ("drop", "message"),
+        [
+            ("[Content_Types].xml", r"has no \[Content_Types\]\.xml"),
+            ("_rels/.rels", "has no main document part"),
+            ("ppt/presentation.xml", "has no main document part"),
+        ],
+    )
+    def it_rejects_a_zip_missing_a_required_part(self, drop: str, message: str):
+        stream = _rebuilt(CORPUS_DIR / "bar-chart.pptx", drop)
+
+        with pytest.raises(InvalidPackageError, match=message):
+            Presentation(stream)
+
+    def it_still_reports_a_missing_path_as_not_found(self, tmp_path: Path):
+        with pytest.raises(PackageNotFoundError):
+            Presentation(str(tmp_path / "absent.pptx"))
+
+    def it_leaves_no_error_behind_for_garbage_collection(self, monkeypatch):
+        """Rejecting a file must not leave a half-built reader whose `__del__` raises later."""
+        unraisable = []
+        monkeypatch.setattr(sys, "unraisablehook", unraisable.append)
+
+        for path in MALFORMED:
+            with pytest.raises(InvalidPackageError):
+                Presentation(str(path))
+        gc.collect()
+
+        assert [str(u.exc_value) for u in unraisable] == []
