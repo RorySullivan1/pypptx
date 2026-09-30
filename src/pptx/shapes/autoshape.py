@@ -296,16 +296,20 @@ class Shape(BaseShape):
 
     @property
     def shape_type(self) -> MSO_SHAPE_TYPE:
-        """Unique integer identifying the type of this shape, like `MSO_SHAPE_TYPE.TEXT_BOX`."""
+        """Unique integer identifying the type of this shape, like `MSO_SHAPE_TYPE.TEXT_BOX`.
+
+        A `p:sp` with no geometry and no text-box flag is `MSO_SHAPE_TYPE.AUTO_SHAPE`.
+        PowerPoint leaves such shapes behind, for example a slide-number shape on a layout
+        whose `p:ph` was stripped. Its `auto_shape_type` still raises |ShapeError|, because
+        it has no preset geometry to report.
+        """
         if self.is_placeholder:
             return MSO_SHAPE_TYPE.PLACEHOLDER
         if self._sp.has_custom_geometry:
             return MSO_SHAPE_TYPE.FREEFORM
-        if self._sp.is_autoshape:
-            return MSO_SHAPE_TYPE.AUTO_SHAPE
         if self._sp.is_textbox:
             return MSO_SHAPE_TYPE.TEXT_BOX
-        raise NotImplementedError("Shape instance of unrecognized shape type")
+        return MSO_SHAPE_TYPE.AUTO_SHAPE
 
     @property
     def text(self) -> str:
