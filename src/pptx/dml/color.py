@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pptx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
-from pptx.exc import ShapeError
+from pptx.exc import InvalidValueError, ShapeError
 from pptx.oxml.dml.color import (
     CT_HslColor,
     CT_PresetColor,
@@ -316,7 +316,7 @@ class RGBColor(tuple):
         msg = "RGBColor() takes three integer values 0-255"
         for val in (r, g, b):
             if not isinstance(val, int) or val < 0 or val > 255:
-                raise ValueError(msg)
+                raise InvalidValueError(msg)
         return super(RGBColor, cls).__new__(cls, (r, g, b))
 
     def __str__(self):

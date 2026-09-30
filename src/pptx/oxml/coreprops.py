@@ -8,6 +8,7 @@ from typing import Callable, cast
 
 from lxml.etree import _Element  # pyright: ignore[reportPrivateUsage]
 
+from pptx.exc import InvalidValueError
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
 from pptx.oxml.xmlchemy import BaseOxmlElement, ZeroOrOne
@@ -161,7 +162,7 @@ class CT_CoreProperties(BaseOxmlElement):
         """Set revision property to string value of integer `value`."""
         if not isinstance(value, int) or value < 1:  # pyright: ignore[reportUnnecessaryIsInstance]
             tmpl = "revision property requires positive int, got '%s'"
-            raise ValueError(tmpl % value)
+            raise InvalidValueError(tmpl % value)
         revision = self.get_or_add_revision()
         revision.text = str(value)
 
@@ -217,7 +218,7 @@ class CT_CoreProperties(BaseOxmlElement):
         """
         match = cls._offset_pattern.match(offset_str)
         if match is None:
-            raise ValueError(f"{repr(offset_str)} is not a valid offset string")
+            raise InvalidValueError(f"{repr(offset_str)} is not a valid offset string")
         sign, hours_str, minutes_str = match.groups()
         sign_factor = -1 if sign == "+" else 1
         hours = int(hours_str) * sign_factor
@@ -248,7 +249,7 @@ class CT_CoreProperties(BaseOxmlElement):
                 continue
         if timestamp is None:
             tmpl = "could not parse W3CDTF datetime string '%s'"
-            raise ValueError(tmpl % w3cdtf_str)
+            raise InvalidValueError(tmpl % w3cdtf_str)
         if len(offset_str) == 6:
             return cls._offset_dt(timestamp, offset_str)
         return timestamp
@@ -257,7 +258,7 @@ class CT_CoreProperties(BaseOxmlElement):
         """Set date/time value of child element having `prop_name` to `value`."""
         if not isinstance(value, dt.datetime):  # pyright: ignore[reportUnnecessaryIsInstance]
             tmpl = "property requires <type 'datetime.datetime'> object, got %s"
-            raise ValueError(tmpl % type(value))
+            raise InvalidValueError(tmpl % type(value))
         element = self._get_or_add(prop_name)
         dt_str = value.strftime("%Y-%m-%dT%H:%M:%SZ")
         element.text = dt_str
@@ -275,7 +276,7 @@ class CT_CoreProperties(BaseOxmlElement):
         value = str(value)
         if len(value) > 255:
             tmpl = "exceeded 255 char limit for property, got:\n\n'%s'"
-            raise ValueError(tmpl % value)
+            raise InvalidValueError(tmpl % value)
         element = self._get_or_add(prop_name)
         element.text = value
 

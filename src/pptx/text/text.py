@@ -16,6 +16,7 @@ from pptx.enum.text import (
     MSO_UNDERLINE,
     MSO_VERTICAL_ANCHOR,
 )
+from pptx.exc import InvalidValueError
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.simpletypes import ST_TextWrappingType
 from pptx.shapes import Subshape
@@ -298,7 +299,7 @@ class TextFrame(Subshape):
     @word_wrap.setter
     def word_wrap(self, value: bool | None) -> None:
         if value not in (True, False, None):
-            raise ValueError(  # pragma: no cover
+            raise InvalidValueError(  # pragma: no cover
                 "assigned value must be True, False, or None, got %s" % value
             )
         self._txBody.bodyPr.wrap = {

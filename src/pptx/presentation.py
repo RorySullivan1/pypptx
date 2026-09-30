@@ -6,6 +6,7 @@ from typing import IO, TYPE_CHECKING, Iterator, Mapping, cast
 
 from pptx.custom_show import CustomShows
 from pptx.enum.pres import PP_SLIDE_SHOW_TYPE
+from pptx.exc import InvalidValueError
 from pptx.shared import PartElementProxy
 from pptx.slide import SlideMasters, Slides
 from pptx.util import lazyproperty
@@ -404,7 +405,7 @@ class SlideShowSettings:
         elif value == PP_SLIDE_SHOW_TYPE.KIOSK:
             showPr.get_or_change_to_kiosk()
         else:  # pragma: no cover - defensive, PP_SLIDE_SHOW_TYPE has only 3 members
-            raise ValueError("unknown PP_SLIDE_SHOW_TYPE member: %r" % (value,))
+            raise InvalidValueError("unknown PP_SLIDE_SHOW_TYPE member: %r" % (value,))
 
     @property
     def pen_color(self) -> RGBColor | None:

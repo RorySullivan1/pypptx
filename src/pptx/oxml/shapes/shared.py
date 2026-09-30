@@ -13,6 +13,7 @@ from pptx.enum.dml import (
     MSO_RECT_ALIGNMENT,
 )
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.exc import ShapeError
 from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import (
     ST_Angle,
@@ -111,7 +112,7 @@ class BaseShapeElement(BaseOxmlElement):
             return lock
         lock_tag = self._lock_tag_map.get(self.tag)
         if lock_tag is None:
-            raise ValueError(f"No lock element defined for {self.tag}")
+            raise ShapeError(f"No lock element defined for {self.tag}")
         nvXxPr = self._nvXxPr
         cNvXxPr = nvXxPr[1]
         lock = etree.SubElement(cNvXxPr, lock_tag)
@@ -184,7 +185,7 @@ class BaseShapeElement(BaseOxmlElement):
         """
         ph = self.ph
         if ph is None:
-            raise ValueError("not a placeholder shape")
+            raise ShapeError("not a placeholder shape")
         return ph.idx
 
     @property
@@ -195,7 +196,7 @@ class BaseShapeElement(BaseOxmlElement):
         """
         ph = self.ph
         if ph is None:
-            raise ValueError("not a placeholder shape")
+            raise ShapeError("not a placeholder shape")
         return ph.orient
 
     @property
@@ -206,7 +207,7 @@ class BaseShapeElement(BaseOxmlElement):
         """
         ph = self.ph
         if ph is None:
-            raise ValueError("not a placeholder shape")
+            raise ShapeError("not a placeholder shape")
         return ph.sz
 
     @property
@@ -217,7 +218,7 @@ class BaseShapeElement(BaseOxmlElement):
         """
         ph = self.ph
         if ph is None:
-            raise ValueError("not a placeholder shape")
+            raise ShapeError("not a placeholder shape")
         return ph.type
 
     @property

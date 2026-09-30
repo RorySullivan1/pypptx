@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.dml import MSO_FILL, MSO_LINE_JOIN_STYLE
+from pptx.exc import InvalidValueError
 from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
@@ -287,7 +288,7 @@ class LineFormat:
         elif value == MSO_LINE_JOIN_STYLE.MITER:
             ln.get_or_change_to_miter()
         else:
-            raise ValueError(f"only a member of MSO_LINE_JOIN_STYLE or None can be assigned, got {value!r}")
+            raise InvalidValueError(f"only a member of MSO_LINE_JOIN_STYLE or None can be assigned, got {value!r}")
 
     @property
     def miter_limit(self) -> float | None:

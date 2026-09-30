@@ -94,7 +94,7 @@ class CategoryWorkbookWriter(_BaseWorkbookWriter):
         1 maps to column 'A'.
         """
         if column_number < 1 or column_number > 16384:
-            raise ValueError("column_number must be in range 1-16384")
+            raise ChartError("column_number must be in range 1-16384")
 
         # ---Work right-to-left, one order of magnitude at a time. Note there
         #    is no zero representation in Excel address scheme, so this is

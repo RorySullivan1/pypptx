@@ -8,7 +8,7 @@ from typing import IO, TYPE_CHECKING, Iterator, cast
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.exc import InvalidXmlError, PackageError, SlideError
+from pptx.exc import InvalidTypeError, InvalidXmlError, PackageError, SlideError
 from pptx.shapes.shapetree import (
     LayoutPlaceholders,
     LayoutShapes,
@@ -1164,7 +1164,7 @@ def _source_theme_part(
     elif hasattr(source, "slide_master"):
         master = cast("Presentation", source).slide_master
     else:
-        raise TypeError(
+        raise InvalidTypeError(
             "theme source must be a Presentation, SlideMaster, path, or file-like object, got %s"
             % type(source).__name__
         )

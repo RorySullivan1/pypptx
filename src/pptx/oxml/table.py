@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Iterator, cast
 
 from pptx.enum.text import MSO_TEXT_VERTICAL_TYPE, MSO_VERTICAL_ANCHOR
+from pptx.exc import InvalidValueError
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
@@ -324,7 +325,7 @@ class CT_Table(BaseOxmlElement):
         its effective value.
         """
         if value not in (True, False):
-            raise ValueError("assigned value must be either True or False, got %s" % value)
+            raise InvalidValueError("assigned value must be either True or False, got %s" % value)
         tblPr = self.get_or_add_tblPr()
         setattr(tblPr, propname, value)
 
