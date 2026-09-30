@@ -45,7 +45,7 @@ class ColorFormat:
 
         `eg_colorChoice_parent` is an element that may contain one `EG_ColorChoice` child
         (`a:srgbClr`, `a:schemeClr` and the like), for example `a:solidFill`. Used internally
-        by the fill, line and font objects that expose a `.color` property.
+        by the fill objects (and so line and font color) and by shadow color.
         """
         xClr = eg_colorChoice_parent.eg_colorChoice
         color = _Color(xClr)

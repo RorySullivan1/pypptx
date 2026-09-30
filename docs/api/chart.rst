@@ -86,3 +86,11 @@ Charts
 
 .. automodule:: pptx.chart.chartex
 
+Objects the API returns from private classes
+--------------------------------------------
+
+These classes have private names but are handed to callers, e.g. by
+``text_frame.paragraphs`` or ``table.cell()``.
+
+.. autoclass:: pptx.chart.chart._Plots
+

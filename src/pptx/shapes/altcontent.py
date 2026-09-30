@@ -107,7 +107,7 @@ class AlternateContentShape(BaseShape):
 
     @property
     def name(self) -> str:
-        """Name of the represented shape, as shown in the selection pane. Read-only.
+        """Name of the represented shape (the fallback, else the choice). Read-only.
 
         Assigning raises |ShapeError|.
         """

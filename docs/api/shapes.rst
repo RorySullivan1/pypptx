@@ -56,3 +56,15 @@ Shapes
 
 .. automodule:: pptx.shapes.shapetree
 
+Objects the API returns from private classes
+--------------------------------------------
+
+These classes have private names but are handed to callers, e.g. by
+``text_frame.paragraphs`` or ``table.cell()``.
+
+.. autoclass:: pptx.shapes.base._PlaceholderFormat
+
+.. autoclass:: pptx.shapes.picture._MediaFormat
+
+.. autoclass:: pptx.shapes.graphfrm._OleFormat
+

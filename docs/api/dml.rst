@@ -31,3 +31,13 @@ Formatting (DrawingML)
 
 .. automodule:: pptx.dml.chtfmt
 
+Objects the API returns from private classes
+--------------------------------------------
+
+These classes have private names but are handed to callers, e.g. by
+``text_frame.paragraphs`` or ``table.cell()``.
+
+.. autoclass:: pptx.dml.fill._GradientStops
+
+.. autoclass:: pptx.dml.fill._GradientStop
+

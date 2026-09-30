@@ -17,4 +17,6 @@ to its assigned branch, so the work lands there.
 ## Objectives / acceptance
 - `sphinx-build -W -b html docs docs/_build/html` succeeds with zero warnings.
 - Every audited module has an autodoc page; every public class on them has a summary line.
+- The main API reaches the index: `objects.inv` lists `SlideShapes.add_shape`, `_Paragraph`,
+  `_Run`, `_Cell` and inherited members such as `BarSeries.name`.
 - `pytest -q` stays green; no new ruff or pyright findings on the touched modules.

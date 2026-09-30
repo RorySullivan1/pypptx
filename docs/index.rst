@@ -21,3 +21,4 @@ Runnable examples for each feature area live in the repository's ``examples/`` d
    api/dml
    api/table
    api/enum
+   api/util

@@ -8,8 +8,8 @@ hosted site yet.
 from __future__ import annotations
 
 import os
-import re
 import sys
+import warnings
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
@@ -36,6 +36,10 @@ autodoc_default_options = {
     "members": True,
     "undoc-members": False,
     "show-inheritance": True,
+    # -- much of the API is defined on private bases (`_BaseGroupShapes.add_shape`,
+    # -- `_BaseSeries.name`, `_BaseAxis.has_major_gridlines`); show it on the public
+    # -- subclasses, but not what those bases inherit from the standard library --
+    "inherited-members": "object,int,str,tuple,list,dict,Enum,IntEnum,Sequence,Mapping",
 }
 autodoc_member_order = "bysource"
 autoclass_content = "class"
@@ -47,6 +51,20 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 autodoc_type_aliases = {"ShapeElement": "pptx.oxml.shapes.ShapeElement"}
 
 
+def _documented_modules() -> list[str]:
+    """Names of the modules the `docs/api/*.rst` pages document with `automodule`."""
+    api_dir = os.path.join(os.path.dirname(__file__), "api")
+    names: list[str] = []
+    for filename in sorted(os.listdir(api_dir)):
+        with open(os.path.join(api_dir, filename), encoding="utf-8") as f:
+            names += [
+                line.split("::", 1)[1].strip()
+                for line in f
+                if line.startswith(".. automodule::")
+            ]
+    return names
+
+
 def _substitutions() -> str:
     """Return an `rst_epilog` defining the `|Name|` substitutions the docstrings use.
 
@@ -54,52 +72,57 @@ def _substitutions() -> str:
     `Chart` class and `|None|` for the literal. Every class defined in a `pptx` module gets a
     substitution linking to it, so a new class needs no entry here. A `|Name|` that matches
     nothing stays undefined and fails the `-W` build, which is how a typo is caught.
+
+    Each name is defined once. Precedence: the fixed entries below, then classes in the
+    documented modules (in page order), then classes anywhere else in `pptx`. Where two
+    modules define the same class name, the module-qualified form (`|data.Category|`) reaches
+    either one.
     """
     import importlib
     import inspect
     import pkgutil
 
-    literals = ("True", "False", "None")
+    subs: dict[str, str] = {name: "``%s``" % name for name in ("True", "False", "None")}
+    subs["pp"] = "pypptx"
     builtins = ("AttributeError", "IndexError", "KeyError", "NotImplementedError", "ValueError")
     builtins += ("TypeError", "float", "int", "str", "bool")
-    lines = [".. |%s| replace:: ``%s``" % (name, name) for name in literals]
-    lines.append(".. |pp| replace:: pypptx")
-    lines += [".. |%s| replace:: :class:`%s`" % (name, name) for name in builtins]
-
-    classes: dict[str, str] = {}
-    modules = [pptx.__name__] + [
-        info.name for info in pkgutil.walk_packages(pptx.__path__, prefix="pptx.")
-    ]
-    for module_name in modules:
-        module = importlib.import_module(module_name)
-        for name, obj in vars(module).items():
-            if inspect.isclass(obj) and obj.__module__ == module_name:
-                # -- first definition wins; `pptx.chart.data.Category` and
-                # -- `pptx.chart.category.Category` are also reachable module-qualified --
-                classes.setdefault(name, "%s.%s" % (module_name, name))
-                short_module = module_name.rsplit(".", 1)[-1]
-                classes.setdefault("%s.%s" % (short_module, name), "%s.%s" % (module_name, name))
-    for name, target in sorted(classes.items()):
-        lines.append(".. |%s| replace:: :class:`~%s`" % (name, target))
+    subs.update({name: ":class:`%s`" % name for name in builtins})
 
     # -- conceptual names the docstrings use for a family of classes whose shared base is private --
     concepts = {
         "Axis": "pptx.chart.axis._BaseAxis",
         "CoreProperties": "pptx.parts.coreprops.CorePropertiesPart",
         "GradientStops": "pptx.dml.fill._GradientStops",
+        "GradientStop": "pptx.dml.fill._GradientStop",
         "Plot": "pptx.chart.plot._BasePlot",
         "Series": "pptx.chart.series._BaseSeries",
     }
-    for name, target in concepts.items():
-        lines.append(".. |%s| replace:: :class:`%s <%s>`" % (name, name, target))
+    subs.update({name: ":class:`%s <%s>`" % (name, target) for name, target in concepts.items()})
 
     # -- `|Class.member|` links to a member of a class --
-    members = {
-        "Chart.has_data_table": ":attr:`~pptx.chart.chart.Chart.has_data_table`",
-        "ThreadedComments.add": ":meth:`~pptx.slide.ThreadedComments.add`",
-    }
-    lines += [".. |%s| replace:: %s" % item for item in members.items()]
-    return "\n".join(lines) + "\n"
+    subs["Chart.has_data_table"] = ":attr:`~pptx.chart.chart.Chart.has_data_table`"
+    subs["ThreadedComments.add"] = ":meth:`~pptx.slide.ThreadedComments.add`"
+
+    documented = _documented_modules()
+    others = [pptx.__name__] + [
+        info.name
+        for info in pkgutil.walk_packages(pptx.__path__, prefix="pptx.")
+        if info.name not in documented
+    ]
+    for module_name in documented + others:
+        try:
+            module = importlib.import_module(module_name)
+        except Exception as e:  # noqa: BLE001 -- report and carry on; autodoc reports it too
+            warnings.warn("docs/conf.py: cannot import %s: %s" % (module_name, e))
+            continue
+        short_module = module_name.rsplit(".", 1)[-1]
+        for name, obj in vars(module).items():
+            if inspect.isclass(obj) and obj.__module__ == module_name:
+                target = ":class:`~%s.%s`" % (module_name, name)
+                subs.setdefault(name, target)
+                subs.setdefault("%s.%s" % (short_module, name), target)
+
+    return "\n".join(".. |%s| replace:: %s" % item for item in sorted(subs.items())) + "\n"
 
 
 rst_epilog = _substitutions()
@@ -108,14 +131,14 @@ rst_epilog = _substitutions()
 def _shield_attribute_summary(app, what, name, obj, options, lines):
     """Stop napoleon reading an attribute's first line as a Google-style `type: description`.
 
-    Property summaries here routinely name an XML element, as in "The `a:ln` element ...", and
-    napoleon splits that line at the colon inside the single backticks, turning the start of the
-    sentence into a bogus `:type:`. Napoleon does not split inside a double-backtick literal, and
-    with `default_role = "literal"` both spellings render the same, so the first line's
-    single-backtick spans are rewritten as double-backtick ones.
+    Napoleon splits the first line of a property or attribute docstring at its first colon and
+    renders the part before it as the type. The docstrings here never use that form, but their
+    summaries often contain a colon -- an XML name such as `a:ln`, a `:ref:` role, or prose like
+    "The thread's status: ...". Leading the docstring with an empty RST comment (`..` and a
+    blank line) gives napoleon a first line with no colon; the comment renders as nothing.
     """
-    if what in ("attribute", "property", "data") and lines and ":" in lines[0]:
-        lines[0] = re.sub(r"(?<!`)`([^`]+)`(?!`)", r"``\1``", lines[0])
+    if what in ("attribute", "property", "data") and lines and lines[0].strip():
+        lines[0:0] = ["..", ""]
 
 
 def setup(app):

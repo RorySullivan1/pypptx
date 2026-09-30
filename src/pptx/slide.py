@@ -876,9 +876,9 @@ class SlideComments:
         """Add a comment to this slide and return the new |Comment|.
 
         `author_name` and `author_initials` identify the author; an author already recorded
-        under that name is reused, otherwise one is added to the presentation's comment
-        authors. `text` is the comment body. `x` and `y` place the comment marker and are
-        written unchanged to the comment's `p:pos` element.
+        under that name and those initials is reused, otherwise one is added to the
+        presentation's comment authors. `text` is the comment body. `x` and `y` place the
+        comment marker and are written unchanged to the comment's `p:pos` element.
         """
         from lxml import etree
 

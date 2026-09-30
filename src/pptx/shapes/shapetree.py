@@ -354,9 +354,9 @@ class _BaseGroupShapes(_BaseShapes):
     ) -> Connector:
         """Add a newly created connector shape to the end of this shape tree.
 
-        `connector_type` is a member of the :ref:`MsoConnectorType` enumeration and the end-point
-        values are specified as EMU values. The returned connector is of type `connector_type` and
-        has begin and end points as specified.
+        `connector_type` is a member of the :ref:`MsoConnectorType` enumeration. The connector
+        runs from (`begin_x`, `begin_y`) to (`end_x`, `end_y`), each a |Length| in EMU. The
+        returned |Connector| is of type `connector_type`.
         """
         cxnSp = self._add_cxnSp(connector_type, begin_x, begin_y, end_x, end_y)
         self._invalidate_shape_cache()
@@ -469,8 +469,8 @@ class _BaseGroupShapes(_BaseShapes):
         """Return new |Shape| object appended to this shape tree.
 
         `autoshape_type_id` is a member of :ref:`MsoAutoShapeType` e.g. `MSO_SHAPE.RECTANGLE`
-        specifying the type of shape to be added. The remaining arguments specify the new shape's
-        position and size.
+        specifying the type of shape to be added. The shape's top-left corner is at (`left`,
+        `top`) and its size is (`width`, `height`), each a |Length|.
         """
         autoshape_type = AutoShapeType(autoshape_type_id)
         sp = self._add_sp(autoshape_type, left, top, width, height)
@@ -481,7 +481,8 @@ class _BaseGroupShapes(_BaseShapes):
     def add_textbox(self, left: Length, top: Length, width: Length, height: Length) -> Shape:
         """Return newly added text box shape appended to this shape tree.
 
-        The text box is of the specified size, located at the specified position on the slide.
+        The text box's top-left corner is at (`left`, `top`) and its size is (`width`,
+        `height`), each a |Length|. It is returned as a |Shape| with an empty text frame.
         """
         sp = self._add_textbox_sp(left, top, width, height)
         self._invalidate_shape_cache()
@@ -737,9 +738,9 @@ class SlideShapes(_BaseGroupShapes):
 
         * The size must be specified; no auto-scaling such as that provided by :meth:`add_picture`
           is performed.
-        * The MIME type of the video file should be specified as `mime_type`, e.g. 'video/mp4'. The provided
-          video file is not interrogated for its type. The MIME type `video/unknown` is used by
-          default (and works fine in tests as of this writing).
+        * The MIME type of the video file should be specified as `mime_type`, e.g.
+          'video/mp4'. The provided video file is not interrogated for its type. The MIME type
+          `video/unknown` is used by default (and works fine in tests as of this writing).
         * A poster frame image must be provided, it cannot be automatically extracted from the
           video file. If no poster frame is provided, the default "media loudspeaker" image will
           be used.
@@ -805,9 +806,10 @@ class SlideShapes(_BaseGroupShapes):
         """Add a |GraphicFrame| object containing a table.
 
         The table has the specified number of `rows` and `cols`, its top-left corner at
-        (`left`, `top`), and the specified size. `width` is evenly distributed between the columns of the new table. Likewise,
-        `height` is evenly distributed between the rows. Note that the `.table` property on the
-        returned |GraphicFrame| shape must be used to access the enclosed |Table| object.
+        (`left`, `top`), and the specified size. `width` is evenly distributed between the
+        columns of the new table. Likewise, `height` is evenly distributed between the rows.
+        Note that the `.table` property on the returned |GraphicFrame| shape must be used to
+        access the enclosed |Table| object.
         """
         graphicFrame = self._add_graphicFrame_containing_table(rows, cols, left, top, width, height)
         self._invalidate_shape_cache()

@@ -16,17 +16,27 @@
 - `sphinx-build -W -E` exit 0; 3745 passed; ruff: same 16 pre-existing F401s as main.
 
 ## Gotchas & dead ends
-- Napoleon treats a property docstring's first line as `type: description` and splits at the colon
-  inside `` `a:ln` ``. Prepending a blank line does NOT help (napoleon skips it); rewriting the first
-  line's single-backtick spans to double backticks does. `default_role = "literal"` keeps rendering uniform.
+- Napoleon treats a property docstring's first line as `type: description` and splits at ANY colon
+  (`a:ln`, `:ref:`, prose). A blank first line does NOT help (skipped); backtick rewriting breaks roles.
+  What works: prepend `..` + blank (an empty RST comment) — napoleon's first line has no colon.
+- `-W` only catches UNDEFINED substitutions; a defined `|Name|` whose class isn't rendered links nowhere
+  silently. `sphinx-build -n` lists those (~9.9k, mostly type hints) — not this version's bar.
 - A `.. _label:` must precede a section title, not a directive, or `:ref:` fails ("title not found").
 - Enum modules define aliases (`MSO_SHAPE = MSO_AUTO_SHAPE_TYPE`): dedupe by identity or autodoc
   documents the class twice.
 - Intersphinx needs network; lxml's inventory returned 503 so only Python is mapped.
 - `sed 's|^/docs/.build$|…|'` — `.` is a wildcard; it rewrote `/docs/_build`. Anchor literal dots.
 
+- Review round (code review + goal audit, the audit FAILED the first pass): the rendered reference
+  omitted API on private bases (`SlideShapes.add_shape`, `_Paragraph`, `_Run`, `_Cell`…). Fixed with
+  autodoc `inherited-members` (stdlib bases excluded) + explicit `autoclass` for private classes callers
+  hold; added a units page (`pptx.util`, `pptx.exc`, `EMU` label). The first-line shield broke `:ref:`
+  links and missed prose colons — replaced by leading every property docstring with an empty `..`
+  comment. Substitutions now one dict with precedence (documented modules win clashes). Docstring
+  facts corrected (comment authors match name AND initials; per-point number_format is never written).
+
 ## State at end
-- v0.3.2 implemented on the session branch; review + goal audit, then PR at the approval gate.
+- v0.3.2 PR opened after the user approved shipping it (2026-09-30).
 
 ## Open threads
 - Card's broader bar ("references the OOXML element where it clarifies") is qualitative; measured
