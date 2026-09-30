@@ -24,6 +24,8 @@ dev = [
     # and `removeQuotes`, which 3.x deprecates (the suite emits the warnings) and 4.x is
     # expected to remove.
     "pyparsing>=3.0,<4",
+    # tests/oxml/test_simpletypes_properties.py: property-based tests of the simple types.
+    "hypothesis>=6",
 ]
 # Builds the API reference in docs/: `sphinx-build -W -b html docs docs/_build/html`.
 docs = [

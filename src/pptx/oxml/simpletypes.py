@@ -9,6 +9,7 @@ attributes. Naming generally corresponds to the simple type in the associated XM
 
 from __future__ import annotations
 
+import math
 import numbers
 from typing import Any
 
@@ -29,13 +30,16 @@ class BaseSimpleType:
 
     @classmethod
     def validate_float(cls, value: Any):
-        """Note that int values are accepted."""
+        """Note that int values are accepted; NaN and infinity are not."""
         if not isinstance(value, (int, float)):
             raise InvalidTypeError("value must be a number, got %s" % type(value))
+        if not math.isfinite(value):
+            raise InvalidValueError("value must be a finite number, got %r" % value)
 
     @classmethod
     def validate_int(cls, value):
-        if not isinstance(value, numbers.Integral):
+        # -- bool is an Integral too, but would be written as "True"/"False" --
+        if not isinstance(value, numbers.Integral) or isinstance(value, bool):
             raise InvalidTypeError("value must be an integral type, got %s" % type(value))
 
     @classmethod
@@ -74,8 +78,7 @@ class BaseFloatType(BaseSimpleType):
 
     @classmethod
     def validate(cls, value):
-        if not isinstance(value, (int, float)):
-            raise InvalidTypeError("value must be a number, got %s" % type(value))
+        cls.validate_float(value)
 
 
 class BaseIntType(BaseSimpleType):
@@ -233,8 +236,9 @@ class ST_Angle(XsdInt):
         Convert signed angle float like -42.42 to int 60000 per degree,
         normalized to positive value.
         """
-        # modulo normalizes negative and >360 degree values
-        rot = int(round(value * cls.DEGREE_INCREMENTS)) % cls.THREE_SIXTY
+        # -- reduce to [0, 360) degrees before scaling, so a huge value cannot overflow; the
+        # -- second modulo folds a value that rounds up to exactly 360 degrees back to 0 --
+        rot = int(round((value % 360) * cls.DEGREE_INCREMENTS)) % cls.THREE_SIXTY
         return str(rot)
 
     @classmethod
@@ -633,15 +637,10 @@ class ST_PositiveFixedAngle(ST_Angle):
     def convert_to_xml(cls, degrees):
         """Convert signed angle float like -427.42 to int 60000 per degree.
 
-        Value is normalized to a positive value less than 360 degrees.
+        Value is normalized to a positive value less than 360 degrees; a value that rounds to
+        exactly 360 degrees is written as 0, since `a:lin@ang` must be less than 21600000.
         """
-        if degrees < 0.0:
-            degrees %= -360
-            degrees += 360
-        elif degrees > 0.0:
-            degrees %= 360
-
-        return str(int(round(degrees * cls.DEGREE_INCREMENTS)))
+        return super().convert_to_xml(degrees)
 
 
 class ST_PositiveFixedPercentage(ST_Percentage):
@@ -889,13 +888,19 @@ class ST_UniversalMeasure(BaseSimpleType):
     def convert_from_xml(cls, str_value):
         float_part, units_part = str_value[:-2], str_value[-2:]
         quantity = float(float_part)
-        multiplier = {
+        multipliers = {
             "mm": 36000,
             "cm": 360000,
             "in": 914400,
             "pt": 12700,
             "pc": 152400,
             "pi": 152400,
-        }[units_part]
+        }
+        if units_part not in multipliers:
+            raise InvalidXmlError(
+                "universal measure must end in one of %s, got %r"
+                % (", ".join(sorted(multipliers)), str_value)
+            )
+        multiplier = multipliers[units_part]
         emu_value = Emu(int(round(quantity * multiplier)))
         return emu_value
