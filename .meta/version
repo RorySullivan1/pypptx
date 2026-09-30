@@ -1,23 +1,22 @@
-# version: v0.3.2
-status: shipped
+# version: v0.4.0
+status: in-progress
 started: 2026-09-30
 branch: claude/epic-87-closeout-hfo5vj
-pr: https://github.com/RorySullivan1/pypptx/pull/120
-shipped: 2026-09-30
+pr:
 
-Branch note: the convention is `v0.3.2` (CLAUDE.md § Roadmap), but this session can push only
+Branch note: the convention is `v0.4.0` (CLAUDE.md § Roadmap), but this session can push only
 to its assigned branch, so the work lands there.
 
 ## Goals
-- Every public class, property and method in the audited modules has a docstring that names
-  its parameters; wrong cross-references in docstrings are fixed.
-- A Sphinx project under `docs/` (autodoc, napoleon, intersphinx, autodoc-typehints) renders
-  the API reference from the in-tree docstrings, plus an enumerations page.
-- `docs` extra in `pyproject.toml`; `sphinx-build` in CLAUDE.md's Common Commands.
+- A curated, test-only corpus of ~24 PowerPoint-authored files (Apache POI, Apache 2.0) with
+  provenance, plus a malformed set.
+- Round-trip and fidelity tests over the corpus.
+- Damaged input raises `InvalidPackageError`; no leaked `BadZipFile`, no `__del__` noise.
+- `Shape.shape_type` is `AUTO_SHAPE` for a geometry-less `p:sp`.
+- `GraphicFrame.shadow` for tables and charts; `ShapeError` for other kinds.
+- Bare `ValueError`/`TypeError` at API-reachable sites become `InvalidValueError` /
+  `InvalidTypeError`, which subclass both `PyPptxError` and the builtin.
+- Hypothesis property tests for `oxml/simpletypes.py`.
 
 ## Objectives / acceptance
-- `sphinx-build -W -b html docs docs/_build/html` succeeds with zero warnings.
-- Every audited module has an autodoc page; every public class on them has a summary line.
-- The main API reaches the index: `objects.inv` lists `SlideShapes.add_shape`, `_Paragraph`,
-  `_Run`, `_Cell` and inherited members such as `BarSeries.name`.
-- `pytest -q` stays green; no new ruff or pyright findings on the touched modules.
+- See the card, `.meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md`, "Objectives / acceptance".

@@ -4,7 +4,7 @@
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
 - Package 0.3.2; v0.3.0–v0.3.2 shipped. 0.3.2 also carries #114 (shape tags) and #115 (3D charts).
-- Cursor v0.4.0 (real-world round-trip; card still an overview — expand before building); then v0.5.0 … v0.7.0.
+- Cursor v0.4.0 (real-world round-trip) in progress, card expanded; then v0.5.0 … v0.7.0.
 - API reference: `sphinx-build -W -b html docs docs/_build/html` (docs extra). Only #51 open on GitHub.
 - No git tags or Releases yet: sessions can't push tags. Owner tags by hand from `.meta/release-tags.md` (v0.1.0–v0.3.2).
 - Sessions push only to their assigned branch, not `vX.Y.Z`; `.meta/version` records the real branch.
@@ -27,6 +27,8 @@
   camera. New chart XML uses POSITIVE axis ids (`unsignedInt`) — sessions/2026-09-29-2205-issue-115-3d-charts.md
 - [2026-09-30] Sphinx `|Name|` substitutions are GENERATED in docs/conf.py from pptx's classes (no hand list); enum `:ref:`
   labels live on docs/api/enum.rst; `-W` is the docs gate — sessions/2026-09-30-0353-v032-docstrings-sphinx.md
+- [2026-09-30] v0.4.0 owner decisions: Apache POI corpus files are OK for TESTING ONLY (tests/ never ships);
+  geometry-less `p:sp` → `shape_type` AUTO_SHAPE — .meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
@@ -48,8 +50,6 @@
   ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
 - #115 human check: new 3D charts (column/bar/line/pie/area) open without repair; camera/walls visibly change. No `series_axis` API.
 - #114 human check: shape-tagged deck opens in PowerPoint without repair. Follow-up idea: `has_tags` (reading creates a part).
-- v0.4.0 card expanded (pilot over 85 Apache POI decks). Owner decisions before building: OK to commit ALv2 POI test
-  files; `shape_type` of a geometry-less `p:sp` → AUTO_SHAPE (recommended) vs None.
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md

@@ -39,8 +39,9 @@ where = ["src"]
 testpaths = ["tests"]
 python_files = ["test_*.py", "bench_*.py"]
 python_classes = ["Describe*"]
-python_functions = ["it_*", "test_*", "bench_*"]
+python_functions = ["it_*", "and_it_*", "but_it_*", "test_*", "bench_*"]
 markers = [
     "perf: opt-in performance benchmark (run with `pytest -m perf`)",
+    "realworld: round-trip tests over the Apache POI corpus in tests/test_files/real_world/",
 ]
 addopts = "-m 'not perf'"
