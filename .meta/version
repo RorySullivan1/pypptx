@@ -1,28 +1,22 @@
-# version: v0.3.1
-status: shipped
-started: 2026-09-27
-shipped: 2026-09-27
-theme: Example scripts for under-demonstrated areas
-branch: v0.3.1
-previous: v0.3.0
-pr: #116
+# version: v0.3.2
+status: in-progress
+started: 2026-09-30
+branch: claude/epic-87-closeout-hfo5vj
+pr: https://github.com/RorySullivan1/pypptx/pull/120
+
+Branch note: the convention is `v0.3.2` (CLAUDE.md § Roadmap), but this session can push only
+to its assigned branch, so the work lands there.
 
 ## Goals
-- A runnable example for each feature area that has none: chart trendlines and error bars,
-  master→layout→slide placeholder inheritance, and picture effects.
-- Deferred: the chart 3D view / wall-and-floor example. No 3D chart type can be authored
-  (`add_chart` has no `bar3DChart`/`line3DChart`/`pie3DChart`/`area3DChart` writer) and no
-  fixture holds one to read, so there is nothing the API could visibly act on. Filed as #115.
-- Every new script re-opens the `.pptx` it wrote and asserts the round-tripped values match
-  what was written — a script that only saves proves nothing.
-- Round-trip asserts added to `examples/add_chart_secondary_axis.py`, which already exists.
-- README "Examples" table lists every script; each new script's module docstring points back
-  to the `.claude/context/feature-manifest.md` section it demonstrates.
+- Every public class, property and method in the audited modules has a docstring that names
+  its parameters; wrong cross-references in docstrings are fixed.
+- A Sphinx project under `docs/` (autodoc, napoleon, intersphinx, autodoc-typehints) renders
+  the API reference from the in-tree docstrings, plus an enumerations page.
+- `docs` extra in `pyproject.toml`; `sphinx-build` in CLAUDE.md's Common Commands.
 
 ## Objectives / acceptance
-- `python examples/<name>.py` exits 0 for every script, from a clean working directory.
-- Each new script's assertions are bare `assert`s against values read back from the reopened
-  file, and each has been seen to fail (checked by perturbing an expected value once).
-- `pytest -q` stays at 3657 passed; CI green on all 7 cells.
-- `ls examples/` and the README "Examples" table list the same files.
-- No new public API on this branch. Gaps found are filed for v0.4.0, not patched here.
+- `sphinx-build -W -b html docs docs/_build/html` succeeds with zero warnings.
+- Every audited module has an autodoc page; every public class on them has a summary line.
+- The main API reaches the index: `objects.inv` lists `SlideShapes.add_shape`, `_Paragraph`,
+  `_Run`, `_Cell` and inherited members such as `BarSeries.name`.
+- `pytest -q` stays green; no new ruff or pyright findings on the touched modules.

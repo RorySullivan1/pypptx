@@ -41,6 +41,12 @@ class ColorFormat:
 
     @classmethod
     def from_colorchoice_parent(cls, eg_colorChoice_parent):
+        """Return a |ColorFormat| for the color choice held by `eg_colorChoice_parent`.
+
+        `eg_colorChoice_parent` is an element that may contain one `EG_ColorChoice` child
+        (`a:srgbClr`, `a:schemeClr` and the like), for example `a:solidFill`. Used internally
+        by the fill objects (and so line and font color) and by shadow color.
+        """
         xClr = eg_colorChoice_parent.eg_colorChoice
         color = _Color(xClr)
         color_format = cls(eg_colorChoice_parent, color)
@@ -322,7 +328,7 @@ class RGBColor(tuple):
     @classmethod
     def from_string(cls, rgb_hex_str):
         """
-        Return a new instance from an RGB color hex string like ``'3C2F80'``.
+        Return a new instance from *rgb_hex_str*, an RGB color hex string like ``'3C2F80'``.
         """
         r = int(rgb_hex_str[:2], 16)
         g = int(rgb_hex_str[2:4], 16)

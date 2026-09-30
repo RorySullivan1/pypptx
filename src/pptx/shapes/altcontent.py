@@ -83,6 +83,10 @@ class AlternateContentShape(BaseShape):
 
     @property
     def height(self) -> Length:
+        """Height of the represented shape (the fallback, else the choice), in EMU. Read-only.
+
+        Assigning raises |ShapeError|.
+        """
         return super().height
 
     @height.setter
@@ -91,6 +95,10 @@ class AlternateContentShape(BaseShape):
 
     @property
     def left(self) -> Length:
+        """Distance from the slide's left edge to the represented shape, in EMU. Read-only.
+
+        Assigning raises |ShapeError|.
+        """
         return super().left
 
     @left.setter
@@ -99,6 +107,10 @@ class AlternateContentShape(BaseShape):
 
     @property
     def name(self) -> str:
+        """Name of the represented shape (the fallback, else the choice). Read-only.
+
+        Assigning raises |ShapeError|.
+        """
         return super().name
 
     @name.setter
@@ -107,6 +119,10 @@ class AlternateContentShape(BaseShape):
 
     @property
     def rotation(self) -> float:
+        """Clockwise rotation of the represented shape, in degrees. Read-only.
+
+        Assigning raises |ShapeError|.
+        """
         return super().rotation
 
     @rotation.setter
@@ -115,6 +131,10 @@ class AlternateContentShape(BaseShape):
 
     @property
     def top(self) -> Length:
+        """Distance from the slide's top edge to the represented shape, in EMU. Read-only.
+
+        Assigning raises |ShapeError|.
+        """
         return super().top
 
     @top.setter
@@ -123,6 +143,10 @@ class AlternateContentShape(BaseShape):
 
     @property
     def width(self) -> Length:
+        """Width of the represented shape, in EMU. Read-only.
+
+        Assigning raises |ShapeError|.
+        """
         return super().width
 
     @width.setter

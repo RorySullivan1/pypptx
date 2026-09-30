@@ -164,25 +164,6 @@ class AutoShapeType:
 
     Instances are cached, so no more than one instance for a particular auto shape type is in
     memory.
-
-    Instances provide the following attributes:
-
-    .. attribute:: autoshape_type_id
-
-       Integer uniquely identifying this auto shape type. Corresponds to a
-       value in `pptx.constants.MSO` like `MSO_SHAPE.ROUNDED_RECTANGLE`.
-
-    .. attribute:: basename
-
-       Base part of shape name for auto shapes of this type, e.g. `Rounded
-       Rectangle` becomes `Rounded Rectangle 99` when the distinguishing
-       integer is added to the shape name.
-
-    .. attribute:: prst
-
-       String identifier for this auto shape type used in the `a:prstGeom`
-       element.
-
     """
 
     _instances: dict[MSO_AUTO_SHAPE_TYPE, AutoShapeType] = {}

@@ -150,5 +150,5 @@ class ErrorBarsCollection:
         return ErrorBars(errBars_elm)
 
     def remove(self, error_bars: ErrorBars) -> None:
-        """Remove the specified error bars from the series."""
+        """Remove `error_bars`, one member of this collection, from the series."""
         self._ser.remove(error_bars._element)

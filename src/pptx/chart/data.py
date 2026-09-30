@@ -38,6 +38,10 @@ class _BaseChartData(Sequence):
         return self._series.__len__()
 
     def append(self, series):
+        """Add `series`, a series-data object, to the end of this chart data.
+
+        Prefer `add_series()`, which builds the series-data object for you.
+        """
         return self._series.append(series)
 
     def data_point_offset(self, series):
@@ -148,6 +152,10 @@ class _BaseSeriesData(Sequence):
         return self._data_points.__len__()
 
     def append(self, data_point):
+        """Add `data_point` to the end of this series' data points.
+
+        Prefer `add_data_point()`, which builds the data-point object for you.
+        """
         return self._data_points.append(data_point)
 
     @property
@@ -644,6 +652,9 @@ class CategorySeriesData(_BaseSeriesData):
         """
         Return a CategoryDataPoint object newly created with value *value*,
         an optional *number_format*, and appended to this sequence.
+
+        A per-point *number_format* is stored on the point but not currently written to the
+        chart or its workbook; only the series and chart number formats are.
         """
         data_point = CategoryDataPoint(self, value, number_format)
         self.append(data_point)
@@ -756,7 +767,9 @@ class XySeriesData(_BaseSeriesData):
     def add_data_point(self, x, y, number_format=None):
         """
         Return an XyDataPoint object newly created with values *x* and *y*,
-        and appended to this sequence.
+        and appended to this sequence. An optional *number_format* is stored on the point
+        but not currently written to the chart or its workbook; only the series and chart
+        number formats are.
         """
         data_point = XyDataPoint(self, x, y, number_format)
         self.append(data_point)
@@ -778,8 +791,8 @@ class BubbleSeriesData(XySeriesData):
     def add_data_point(self, x, y, size, number_format=None):
         """
         Append a new BubbleDataPoint object having the values *x*, *y*, and
-        *size*. The optional *number_format* is used to format the Y value.
-        If not provided, the number format is inherited from the series data.
+        *size*. An optional *number_format* is stored on the point but not currently written
+        to the chart or its workbook; only the series and chart number formats are.
         """
         data_point = BubbleDataPoint(self, x, y, size, number_format)
         self.append(data_point)

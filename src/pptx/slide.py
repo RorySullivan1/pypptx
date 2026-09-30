@@ -873,7 +873,13 @@ class SlideComments:
     def add(
         self, author_name: str, author_initials: str, text: str, x: int = 0, y: int = 0
     ) -> Comment:
-        """Add a comment to this slide and return the new |Comment|."""
+        """Add a comment to this slide and return the new |Comment|.
+
+        `author_name` and `author_initials` identify the author; an author already recorded
+        under that name and those initials is reused, otherwise one is added to the
+        presentation's comment authors. `text` is the comment body. `x` and `y` place the
+        comment marker and are written unchanged to the comment's `p:pos` element.
+        """
         from lxml import etree
 
         from pptx.oxml.ns import qn
@@ -986,7 +992,7 @@ class ThreadedComments:
         return threads[idx]
 
     def add(self, text: str, author: str, initials: str | None = None) -> ThreadedComment:
-        """Start a new thread on this slide and return it.
+        """Start a new thread whose first comment is `text`, and return it.
 
         `author` is the display name PowerPoint shows; an author already recorded under that
         name is reused, otherwise one is added with `initials`. The thread is anchored to the
@@ -1084,7 +1090,7 @@ class ThreadedComment(_BaseThreadedComment):
         return None if pos is None else (int(pos.x), int(pos.y))
 
     def reply(self, text: str, author: str, initials: str | None = None) -> CommentReply:
-        """Add a reply to the end of this thread and return it.
+        """Add a reply with body `text` to the end of this thread and return it.
 
         `author` and `initials` are handled as in |ThreadedComments.add|.
         """

@@ -25,6 +25,12 @@ dev = [
     # expected to remove.
     "pyparsing>=3.0,<4",
 ]
+# Builds the API reference in docs/: `sphinx-build -W -b html docs docs/_build/html`.
+docs = [
+    # sphinx-autodoc-typehints 3.x already warns of APIs Sphinx 10 removes.
+    "sphinx>=7,<10",
+    "sphinx-autodoc-typehints>=2",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
