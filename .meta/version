@@ -2,7 +2,7 @@
 status: in-progress
 started: 2026-09-30
 branch: claude/epic-87-closeout-hfo5vj
-pr:
+pr: https://github.com/RorySullivan1/pypptx/pull/120
 
 Branch note: the convention is `v0.3.2` (CLAUDE.md § Roadmap), but this session can push only
 to its assigned branch, so the work lands there.
