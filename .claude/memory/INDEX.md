@@ -6,7 +6,7 @@
 - Package 0.3.2; v0.3.0–v0.3.2 shipped. 0.3.2 also carries #114 (shape tags) and #115 (3D charts).
 - Cursor v0.4.0 (real-world round-trip; card still an overview — expand before building); then v0.5.0 … v0.7.0.
 - API reference: `sphinx-build -W -b html docs docs/_build/html` (docs extra). Only #51 open on GitHub.
-- No git tags or GitHub Releases yet (v0.3.0–v0.3.2): sessions can't push tags — the owner tags by hand.
+- No git tags or Releases yet: sessions can't push tags. Owner tags by hand from `.meta/release-tags.md` (v0.1.0–v0.3.2).
 - Sessions push only to their assigned branch, not `vX.Y.Z`; `.meta/version` records the real branch.
 - **Actions is billing-blocked (since 2026-09-27): all evidence is local.** LF pinned; `tests.yml` covers 3.9–3.13/Win/macOS.
 
@@ -48,6 +48,8 @@
   ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
 - #115 human check: new 3D charts (column/bar/line/pie/area) open without repair; camera/walls visibly change. No `series_axis` API.
 - #114 human check: shape-tagged deck opens in PowerPoint without repair. Follow-up idea: `has_tags` (reading creates a part).
+- v0.4.0 card expanded (pilot over 85 Apache POI decks). Owner decisions before building: OK to commit ALv2 POI test
+  files; `shape_type` of a geometry-less `p:sp` → AUTO_SHAPE (recommended) vs None.
 
 ## Log              (append-only pointers)
 - 2026-09-24 1505 | Consolidate into .claude/ + adopt claudeBrain assets | sessions/2026-09-24-1505-adopt-claudebrain-assets.md
@@ -66,3 +68,4 @@
 - 2026-09-29 2205 | #115 3D chart authoring: 13 THREE_D_* types via add_chart | sessions/2026-09-29-2205-issue-115-3d-charts.md
 - 2026-09-30 0353 | v0.3.2 started: Sphinx scaffold, -W clean, docstring gaps closed | sessions/2026-09-30-0353-v032-docstrings-sphinx.md
 - 2026-09-30 | v0.3.2 shipped (PR #120, 33a3e02): package 0.3.2, cursor → v0.4.0 | .meta/version
+- 2026-09-30 | Release-tag commits recorded (.meta/release-tags.md); v0.4.0 card expanded from a POI-corpus pilot | .meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md
