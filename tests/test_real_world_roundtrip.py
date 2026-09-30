@@ -29,6 +29,13 @@ CORPUS = sorted(CORPUS_DIR.glob("*.pptx"), key=lambda p: p.name.lower())
 MALFORMED = sorted((CORPUS_DIR / "malformed").glob("*.pptx"))
 MARKER_TEXT = "pypptx round-trip marker"
 
+# -- the corpus is test-only data kept out of published artifacts (MANIFEST.in prunes it from
+# -- the sdist), so a test run from an unpacked sdist has no corpus directory at all. In a
+# -- checkout the directory is tracked, and a missing deck fails `it_has_a_corpus_to_test`.
+pytestmark = pytest.mark.skipif(
+    not CORPUS_DIR.is_dir(), reason="real-world corpus not present (not shipped in the sdist)"
+)
+
 _blankless = etree.XMLParser(remove_blank_text=True)
 
 
@@ -220,3 +227,25 @@ class DescribeDamagedInput:
         gc.collect()
 
         assert [str(u.exc_value) for u in unraisable] == []
+
+
+@pytest.mark.realworld
+def it_keeps_in_document_hyperlinks_internal_when_a_slide_is_duplicated():
+    """`with_japanese.pptx` links to footnote anchors ("#_ftn1"), which are internal targets."""
+    prs = Presentation(str(CORPUS_DIR / "with_japanese.pptx"))
+    duplicate = prs.slides.duplicate(prs.slides[0])
+    stream = io.BytesIO()
+    prs.save(stream)
+
+    with zipfile.ZipFile(stream) as saved:
+        slide_xml = saved.read(duplicate.part.partname.membername)
+        rels_xml = saved.read("ppt/slides/_rels/%s.rels" % duplicate.part.partname.filename)
+    rels = etree.fromstring(rels_xml)
+    fragments = [rel for rel in rels if rel.get("Target").startswith("#")]
+
+    # -- the duplicate relates each distinct target once; both anchors survive, as internal --
+    assert {rel.get("Target") for rel in fragments} == {"#_ftn1", "#_ftnref1"}
+    assert {rel.get("TargetMode", "Internal") for rel in fragments} == {"Internal"}
+    # -- and every relationship the duplicated slide refers to exists --
+    referenced = set(re.findall(rb'r:(?:id|embed|link)="(rId\d+)"', slide_xml))
+    assert referenced <= {rel.get("Id").encode() for rel in rels}

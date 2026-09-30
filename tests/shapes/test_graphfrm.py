@@ -6,7 +6,7 @@ import pytest
 
 from pptx.chart.chart import Chart
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError, UnsupportedEffectError
+from pptx.exc import UnsupportedEffectError
 from pptx.parts.chart import ChartPart
 from pptx.parts.chartex import ChartExPart
 from pptx.parts.diagram import DiagramDataPart
@@ -255,23 +255,34 @@ class DescribeGraphicFrame:
             getattr(frame, name)
         assert hasattr(frame, name) is False
 
-    def it_round_trips_a_table_shadow_and_a_chart_shadow(self):
+    def it_round_trips_a_visible_table_shadow_and_chart_shadow(self):
         import io
 
         from pptx import Presentation
+        from pptx.dml.color import RGBColor
+        from pptx.util import Pt
 
         slide = _slide_with_table_and_chart()
         for frame in slide.shapes:
-            frame.shadow.inherit = False
+            shadow = frame.shadow
+            shadow.blur_radius = Pt(4)
+            shadow.distance = Pt(3)
+            shadow.direction = 45.0
+            shadow.color.rgb = RGBColor(0x11, 0x22, 0x33)
         stream = io.BytesIO()
         slide.part.package.save(stream)
         stream.seek(0)
 
         frames = Presentation(stream).slides[0].shapes
 
-        assert [frame.shadow.inherit for frame in frames] == [False, False]
+        for frame in frames:
+            shadow = frame.shadow
+            assert shadow.inherit is False
+            assert (shadow.blur_radius, shadow.distance, shadow.direction) == (Pt(4), Pt(3), 45.0)
+            assert shadow.color.rgb == RGBColor(0x11, 0x22, 0x33)
         tblPr = frames[0].table._tbl.tblPr
         assert [child.tag.split("}")[1] for child in tblPr] == ["effectLst", "tableStyleId"]
+        assert frames[1].chart._chartSpace.spPr.effectLst is not None
 
     @pytest.mark.parametrize(
         "uri, oleObj_child, expected_value",

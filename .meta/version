@@ -2,7 +2,7 @@
 status: in-progress
 started: 2026-09-30
 branch: claude/epic-87-closeout-hfo5vj
-pr:
+pr: https://github.com/RorySullivan1/pypptx/pull/122
 
 Branch note: the convention is `v0.4.0` (CLAUDE.md § Roadmap), but this session can push only
 to its assigned branch, so the work lands there.
@@ -14,8 +14,9 @@ to its assigned branch, so the work lands there.
 - Damaged input raises `InvalidPackageError`; no leaked `BadZipFile`, no `__del__` noise.
 - `Shape.shape_type` is `AUTO_SHAPE` for a geometry-less `p:sp`.
 - `GraphicFrame.shadow` for tables and charts; `ShapeError` for other kinds.
-- Bare `ValueError`/`TypeError` at API-reachable sites become `InvalidValueError` /
-  `InvalidTypeError`, which subclass both `PyPptxError` and the builtin.
+- Bare `ValueError`/`TypeError` at API-reachable sites become pypptx exceptions that keep the
+  builtin base: `InvalidValueError` / `InvalidTypeError`, or `ShapeError` / `ChartError` where
+  that fits (both now also `ValueError`).
 - Hypothesis property tests for `oxml/simpletypes.py`.
 
 ## Objectives / acceptance

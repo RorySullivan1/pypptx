@@ -690,13 +690,19 @@ class _Relationships(Mapping[str, "_Relationship"]):
         return rels_elm.xml_file_bytes
 
     def _add_relationship(self, reltype: str, target: Part | str, is_external: bool = False) -> str:
-        """Return str rId of |_Relationship| newly added to spec."""
+        """Return str rId of |_Relationship| newly added to spec.
+
+        A string target that is only a fragment, like "#_ftn1", is a place in the document, so
+        it is written with internal target-mode even when `is_external` is True, as PowerPoint
+        writes it. Copying such a relationship from another part therefore keeps its mode.
+        """
         rId = self._next_rId
+        in_document = isinstance(target, str) and _is_fragment(target)
         self._rels[rId] = _Relationship(
             self._base_uri,
             rId,
             reltype,
-            target_mode=RTM.EXTERNAL if is_external else RTM.INTERNAL,
+            target_mode=RTM.EXTERNAL if is_external and not in_document else RTM.INTERNAL,
             target=target,
         )
         return rId

@@ -52,12 +52,25 @@ ANY_VALUE = st.one_of(
 )
 
 
+# -- values most range-limited types accept, which the wide draws above rarely land on --
+IN_RANGE = st.one_of(
+    st.integers(min_value=0, max_value=100),
+    st.integers(min_value=-600, max_value=600),
+    st.integers(min_value=0, max_value=2_000_000),
+    st.floats(min_value=0.0, max_value=1.0),
+    st.integers(min_value=914400, max_value=51206400),  # -- slide sizes: 1 to 56 inches --
+    st.text(alphabet="0123456789ABCDEFabcdef", min_size=6, max_size=6),
+    st.sampled_from(["Internal", "External"]),
+)
+
+
 def values_for(cls) -> st.SearchStrategy:
-    """`ANY_VALUE`, plus the members of an enumeration type, which random text almost never hits."""
+    """Values to try on `cls`: the wide draws, in-range ones, and any enumeration members."""
+    strategies = [ANY_VALUE, IN_RANGE]
     members = getattr(cls, "_members", None)
     if members:
-        return st.one_of(st.sampled_from(sorted(members)), ANY_VALUE)
-    return ANY_VALUE
+        strategies.insert(0, st.sampled_from(sorted(members)))
+    return st.one_of(*strategies)
 
 
 PROPERTY_SETTINGS = settings(

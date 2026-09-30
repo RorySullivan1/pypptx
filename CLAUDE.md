@@ -29,7 +29,7 @@ pytest --cov=pptx --cov-report=term-missing
 sphinx-build -W -b html docs docs/_build/html
 ```
 
-Test discovery is non-default: classes match `Describe*`, functions match `it_*` or `test_*` (BDD style). Keep new tests in that shape or pytest will silently skip them.
+Test discovery is non-default: classes match `Describe*`, functions match `it_*`, `and_it_*`, `but_it_*` or `test_*` (BDD style). Keep new tests in that shape or pytest will silently skip them.
 
 ## Architecture
 
