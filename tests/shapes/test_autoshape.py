@@ -12,7 +12,6 @@ from pptx.dml.fill import FillFormat
 from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.exc import ShapeError
-from pptx.oxml import parse_xml
 from pptx.oxml.shapes.autoshape import CT_PresetGeometry2D, CT_Shape
 from pptx.shapes.autoshape import Adjustment, AdjustmentCollection, AutoShapeType, Shape
 from pptx.text.text import TextFrame
