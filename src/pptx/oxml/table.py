@@ -697,6 +697,12 @@ class CT_TableProperties(BaseOxmlElement):
     get_or_add_tableStyleId: Callable[[], BaseOxmlElement]
     _remove_tableStyleId: Callable[[], None]
 
+    # -- EG_EffectProperties (`a:effectLst` | `a:effectDag`) follows the fill and precedes the
+    # -- table style; only `a:effectLst` is modelled, as for shape properties --
+    effectLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:effectLst", successors=("a:tableStyle", "a:tableStyleId", "a:extLst")
+    )
+
     # `a:tableStyleId` shares a choice with `a:tblStyle`; either is followed only by `a:extLst`.
     tableStyleId: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
         "a:tableStyleId", successors=("a:extLst",)

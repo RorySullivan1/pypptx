@@ -21,13 +21,12 @@ from pptx.spec import (
     GRAPHIC_DATA_URI_TABLE,
 )
 from pptx.table import Table
-from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.chart.chart import Chart
     from pptx.chart.chartex import ChartEx
-    from pptx.dml.effect import ShadowFormat
     from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectData, CT_GraphicalObjectFrame
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.chart import ChartPart
     from pptx.parts.chartex import ChartExPart
     from pptx.parts.diagram import DiagramDataPart
@@ -129,14 +128,30 @@ class GraphicFrame(BaseShape):
             raise ShapeError("not an OLE-object shape")
         return _OleFormat(self._graphicFrame.graphicData, self._parent)
 
-    @lazyproperty
-    def shadow(self) -> ShadowFormat:
-        """Unconditionally raises |NotImplementedError|.
+    @property
+    def _effect_properties(self) -> BaseOxmlElement:
+        """Element holding the effects of this frame's content.
 
-        Access to the shadow effect for graphic-frame objects is content-specific (i.e. different
-        for charts, tables, etc.) and has not yet been implemented.
+        A graphic frame has no shape properties of its own, so its effects belong to its
+        content: the table's `a:tblPr` or the chart space's `c:spPr` in the chart part.
+        Accessing it adds an empty `a:tblPr` or `c:spPr` when there is none, which leaves the
+        rendering unchanged. Raises |ShapeError| for any other content (SmartArt, an OLE
+        object, a chartex chart, media), which has no single element to hold an effect.
         """
-        raise NotImplementedError("shadow property on GraphicFrame not yet supported")
+        if self.has_table:
+            return self._graphicFrame.graphic.graphicData.tbl.get_or_add_tblPr()
+        if self.has_chart:
+            return self.chart_part.chart._chartSpace.get_or_add_spPr()
+        raise ShapeError(
+            "effects are only supported for a graphic frame containing a table or a chart"
+        )
+
+    @property
+    def _three_d_properties(self) -> BaseOxmlElement:
+        """The chart space's `c:spPr`; a table's `a:tblPr` has no 3D shape properties."""
+        if self.has_chart:
+            return self.chart_part.chart._chartSpace.get_or_add_spPr()
+        raise ShapeError("3D formatting is only supported for a graphic frame containing a chart")
 
     @property
     def shape_type(self) -> MSO_SHAPE_TYPE:
