@@ -737,7 +737,7 @@ class SlideShapes(_BaseGroupShapes):
 
         * The size must be specified; no auto-scaling such as that provided by :meth:`add_picture`
           is performed.
-        * The MIME type of the video file should be specified, e.g. 'video/mp4'. The provided
+        * The MIME type of the video file should be specified as `mime_type`, e.g. 'video/mp4'. The provided
           video file is not interrogated for its type. The MIME type `video/unknown` is used by
           default (and works fine in tests as of this writing).
         * A poster frame image must be provided, it cannot be automatically extracted from the
@@ -804,8 +804,8 @@ class SlideShapes(_BaseGroupShapes):
     ) -> GraphicFrame:
         """Add a |GraphicFrame| object containing a table.
 
-        The table has the specified number of `rows` and `cols` and the specified position and
-        size. `width` is evenly distributed between the columns of the new table. Likewise,
+        The table has the specified number of `rows` and `cols`, its top-left corner at
+        (`left`, `top`), and the specified size. `width` is evenly distributed between the columns of the new table. Likewise,
         `height` is evenly distributed between the rows. Note that the `.table` property on the
         returned |GraphicFrame| shape must be used to access the enclosed |Table| object.
         """
@@ -927,8 +927,8 @@ class BasePlaceholders(_BaseShapes):
     """Base class for placeholder collections.
 
     Subclasses differentiate behaviors for a master, layout, and slide. By default, placeholder
-    shapes are constructed using |BaseShapeFactory|. Subclasses should override
-    :method:`_shape_factory` to use custom placeholder classes.
+    shapes are constructed using :func:`BaseShapeFactory`. Subclasses should override
+    :meth:`_shape_factory` to use custom placeholder classes.
     """
 
     @staticmethod
@@ -1025,7 +1025,11 @@ class SlidePlaceholders(ParentedElementProxy):
 
 
 def BaseShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShape:
-    """Return an instance of the appropriate shape proxy class for `shape_elm`."""
+    """Return an instance of the appropriate shape proxy class for `shape_elm`.
+
+    `parent` is the object the new shape proxy reports as its parent, usually a shapes
+    collection; the proxy reaches its part through it.
+    """
     tag = shape_elm.tag
 
     # -- a shape wrapped in mc:AlternateContent (3D model, zoom, equation) is read-only; a
@@ -1095,7 +1099,11 @@ def _SlidePlaceholderFactory(shape_elm: ShapeElement, parent: ProvidesPart):
 
 
 def SlideShapeFactory(shape_elm: ShapeElement, parent: ProvidesPart) -> BaseShape:
-    """Return appropriate shape object for `shape_elm` on a slide."""
+    """Return appropriate shape object for `shape_elm` on a slide.
+
+    Like :func:`BaseShapeFactory`, with `parent` as the new shape's parent, except that a
+    placeholder shape gets a slide-placeholder proxy.
+    """
     if shape_elm.has_ph_elm and alternate_content_of(shape_elm) is None:
         return _SlidePlaceholderFactory(shape_elm, parent)
     return BaseShapeFactory(shape_elm, parent)

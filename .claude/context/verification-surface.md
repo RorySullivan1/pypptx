@@ -50,7 +50,7 @@ via the workflow has not been run since adoption.
 | Output opens and renders correctly | open the saved `.pptx` in PowerPoint (or LibreOffice) and look | `human-gated` | No renderer is part of the project or reachable as a check; the human reports "opens without repair prompt / looks right" per file | — |
 | Real-world file compatibility | none yet — a PowerPoint-authored corpus arrives in v0.4.0 | `unverified` | Owner: v0.4.0 card; next: add the corpus + round-trip driver | — |
 | Type annotations (`py.typed`) | none — no mypy/pyright configured | `unverified` | Owner: v0.3.2 / v1.0.0 cards; next: configure a type checker in `pyproject.toml` | — |
-| API docs (Sphinx) | none — `docs/` does not exist yet | `unverified` | Owner: v0.3.2 card; next: `sphinx-build -W` once the scaffold lands | — |
+| API docs (Sphinx) | `pip install -e ".[docs]"` then `sphinx-build -W -E -b html docs docs/_build/html` — exit status is the verdict | `agent-runnable` | Warnings are errors, so a broken docstring (bad RST, an undefined `|Name|` substitution, a missing `:ref:` label) fails the build; intersphinx fetches the Python inventory, so the build needs network | 2026-09-30 — 0 warnings, Sphinx 9.0.4. Seen to fail: the first build of the new scaffold gave 600 warnings/errors, and 8 wrong docstring references still failed `-W` until fixed |
 | Asset shape (`.claude/`) | `asset_integrity.py` fed a git-commit hook payload — **advisory: reports, never vetoes; read the output** | `agent-runnable` | Pure file-shape analysis | 2026-09-24 — silent on the real tree; caught a deliberate `name:`/folder mismatch |
 
 **Reading `—` in *last-run*.** It means the tier is **claimed, not proved** — nobody has yet

@@ -756,7 +756,8 @@ class XySeriesData(_BaseSeriesData):
     def add_data_point(self, x, y, number_format=None):
         """
         Return an XyDataPoint object newly created with values *x* and *y*,
-        and appended to this sequence.
+        and appended to this sequence. The optional *number_format* is this data point's
+        number format; if not provided, it is inherited from the series data.
         """
         data_point = XyDataPoint(self, x, y, number_format)
         self.append(data_point)

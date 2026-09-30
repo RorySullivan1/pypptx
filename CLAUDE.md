@@ -24,6 +24,9 @@ pytest tests/test_slide.py::DescribeSlide::it_provides_access_to_its_shapes
 
 # Coverage
 pytest --cov=pptx --cov-report=term-missing
+
+# API docs (needs the docs extra: pip install -e ".[docs]"); -W makes any warning fatal
+sphinx-build -W -b html docs docs/_build/html
 ```
 
 Test discovery is non-default: classes match `Describe*`, functions match `it_*` or `test_*` (BDD style). Keep new tests in that shape or pytest will silently skip them.

@@ -170,6 +170,11 @@ class Bar3DPlot(_BasePlot):
 
     @property
     def gap_width(self):
+        """Width of the gap between the bars of neighbouring categories, as a percentage.
+
+        An integer percentage of the bar width, from `c:gapWidth`; 150 (1.5 bar widths) when
+        the element is absent, PowerPoint's default for a new chart. Read/write.
+        """
         gapWidth = self._element.gapWidth
         if gapWidth is None:
             return 150
@@ -584,7 +589,7 @@ class XyPlot(_BasePlot):
 def PlotFactory(xChart, chart):
     """
     Return an instance of the appropriate subclass of _BasePlot based on the
-    tagname of *xChart*.
+    tagname of *xChart*. *chart* is the |Chart| the plot belongs to.
     """
     try:
         PlotCls = {

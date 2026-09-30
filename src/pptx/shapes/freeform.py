@@ -75,10 +75,11 @@ class FreeformBuilder(Sequence[DrawingOperation]):
         x_scale: float,
         y_scale: float,
     ):
-        """Return a new |FreeformBuilder| object.
+        """Return a new |FreeformBuilder| object that adds its shape to `shapes`.
 
         The initial pen location is specified (in local coordinates) by
-        (`start_x`, `start_y`).
+        (`start_x`, `start_y`). `x_scale` and `y_scale` are the number of EMU per local unit
+        along each axis.
         """
         return cls(shapes, Emu(int(round(start_x))), Emu(int(round(start_y))), x_scale, y_scale)
 

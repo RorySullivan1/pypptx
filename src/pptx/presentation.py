@@ -308,7 +308,7 @@ class Section:
         return tuple(entry.id for entry in self._section_elm.sldId_lst)
 
     def add_slide_id(self, slide_id: int) -> None:
-        """Add a slide (by its slide ID) to this section."""
+        """Add the slide whose ID is `slide_id` to the end of this section (`p14:sldId`)."""
         from lxml import etree
 
         from pptx.oxml.ns import qn
