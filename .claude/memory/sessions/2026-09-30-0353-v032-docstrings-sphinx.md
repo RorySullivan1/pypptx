@@ -41,3 +41,4 @@
 ## Open threads
 - Card's broader bar ("references the OOXML element where it clarifies") is qualitative; measured
   checks are: 0 missing docstrings, 0 unnamed params, `-W` clean.
+- Shipped 2026-09-30: PR #120 merged (33a3e02); package bumped to 0.3.2, cursor moved to v0.4.0.

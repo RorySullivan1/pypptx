@@ -3,9 +3,10 @@
 ## State            (rewrite in place — current truth only, ≤ ~10 lines)
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
-- Package 0.3.1; v0.3.0/v0.3.1 shipped. Since then #114 (shape tags) and #115 (3D charts) merged — unreleased.
-- Cursor v0.3.2 (docstrings + Sphinx `docs/`) in progress; then v0.4.0 … v0.7.0. Only #51 open on GitHub.
-- No git tags or GitHub Releases yet: sessions can't push tags — the owner tags by hand.
+- Package 0.3.2; v0.3.0–v0.3.2 shipped. 0.3.2 also carries #114 (shape tags) and #115 (3D charts).
+- Cursor v0.4.0 (real-world round-trip; card still an overview — expand before building); then v0.5.0 … v0.7.0.
+- API reference: `sphinx-build -W -b html docs docs/_build/html` (docs extra). Only #51 open on GitHub.
+- No git tags or GitHub Releases yet (v0.3.0–v0.3.2): sessions can't push tags — the owner tags by hand.
 - Sessions push only to their assigned branch, not `vX.Y.Z`; `.meta/version` records the real branch.
 - **Actions is billing-blocked (since 2026-09-27): all evidence is local.** LF pinned; `tests.yml` covers 3.9–3.13/Win/macOS.
 
@@ -64,3 +65,4 @@
 - 2026-09-29 1211 | #114 shape tags (`BaseShape.tags`), slide tags keyed by cSld ref | sessions/2026-09-29-1211-issue-114-shape-tags.md
 - 2026-09-29 2205 | #115 3D chart authoring: 13 THREE_D_* types via add_chart | sessions/2026-09-29-2205-issue-115-3d-charts.md
 - 2026-09-30 0353 | v0.3.2 started: Sphinx scaffold, -W clean, docstring gaps closed | sessions/2026-09-30-0353-v032-docstrings-sphinx.md
+- 2026-09-30 | v0.3.2 shipped (PR #120, 33a3e02): package 0.3.2, cursor → v0.4.0 | .meta/version
