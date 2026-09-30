@@ -267,7 +267,7 @@ class _PackageLoader:
 
             # --- recursion stops when there are no unvisited partnames in rels ---
             for rel in rels.relationship_lst:
-                if rel.targetMode == RTM.EXTERNAL:
+                if rel.targetMode == RTM.EXTERNAL or _is_fragment(rel.target_ref):
                     continue
                 target_partname = PackURI.from_rel_ref(base_uri, rel.target_ref)
                 if target_partname in visited_partnames:
@@ -627,7 +627,9 @@ class _Relationships(Mapping[str, "_Relationship"]):
                 # --- a relationship simply by "voiding" its Target value, like making
                 # --- it "/ppt/slides/NULL". Skip any relationships linking to a
                 # --- partname that is not present in the package.
-                if rel_elm.targetMode == RTM.INTERNAL:
+                # --- An internal target that is only a fragment, like "#_ftn1" (a hyperlink
+                # --- to a place in the document), names no part and is kept as it is.
+                if rel_elm.targetMode == RTM.INTERNAL and not _is_fragment(rel_elm.target_ref):
                     partname = PackURI.from_rel_ref(base_uri, rel_elm.target_ref)
                     if partname not in parts:
                         continue
@@ -681,7 +683,9 @@ class _Relationships(Mapping[str, "_Relationship"]):
             return (self[rId] for _, rId in sorted_num_rId_pairs)
 
         for rel in iter_rels_in_numerical_order():
-            rels_elm.add_rel(rel.rId, rel.reltype, rel.target_ref, rel.is_external)
+            rels_elm.add_rel(
+                rel.rId, rel.reltype, rel.target_ref, rel.target_mode == RTM.EXTERNAL
+            )
 
         return rels_elm.xml_file_bytes
 
@@ -762,19 +766,26 @@ class _Relationship:
         """Return |_Relationship| object based on CT_Relationship element `rel`."""
         target = (
             rel.target_ref
-            if rel.targetMode == RTM.EXTERNAL
+            if rel.targetMode == RTM.EXTERNAL or _is_fragment(rel.target_ref)
             else parts[PackURI.from_rel_ref(base_uri, rel.target_ref)]
         )
         return cls(base_uri, rel.rId, rel.reltype, rel.targetMode, target)
 
     @lazyproperty
     def is_external(self) -> bool:
-        """True if target_mode is `RTM.EXTERNAL`.
+        """True when this relationship's target is not a part in this package.
 
-        An external relationship is a link to a resource outside the package, such as a
-        web-resource (URL).
+        Usually a resource outside the package, such as a web-resource (URL), with target-mode
+        `RTM.EXTERNAL`. It is also true of an internal relationship whose target is only a
+        fragment, like "#_ftn1", a hyperlink to a place in the document. Either way there is no
+        target part, and :attr:`target_ref` is the stored target string.
         """
-        return self._target_mode == RTM.EXTERNAL
+        return self._target_mode == RTM.EXTERNAL or isinstance(self._target, str)
+
+    @lazyproperty
+    def target_mode(self) -> str:
+        """`RTM.EXTERNAL` or `RTM.INTERNAL`, as this relationship is written to its `.rels` part."""
+        return self._target_mode
 
     @lazyproperty
     def reltype(self) -> str:
@@ -823,8 +834,15 @@ class _Relationship:
         For internal relationships this is the relative partname, suitable for serialization
         purposes. For an external relationship it is typically a URL.
         """
-        if self.is_external:
-            assert isinstance(self._target, str)
+        if isinstance(self._target, str):
             return self._target
 
         return self.target_partname.relative_ref(self._base_uri)
+
+
+def _is_fragment(target_ref: str) -> bool:
+    """True when an internal relationship target is only a fragment, like "#_ftn1".
+
+    Such a target is a place in the document, not a part, so it cannot be resolved to one.
+    """
+    return target_ref.startswith("#")

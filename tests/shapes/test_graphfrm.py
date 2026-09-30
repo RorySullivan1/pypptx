@@ -6,7 +6,7 @@ import pytest
 
 from pptx.chart.chart import Chart
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.parts.chart import ChartPart
 from pptx.parts.chartex import ChartExPart
 from pptx.parts.diagram import DiagramDataPart
@@ -198,39 +198,62 @@ class DescribeGraphicFrame:
             graphic_frame.ole_format
         assert str(e.value) == "not an OLE-object shape"
 
-    @pytest.mark.parametrize("name", ["shadow", "glow", "reflection", "soft_edge"])
-    def it_keeps_a_table_frames_effects_on_the_tables_tblPr(self, name: str):
+    def it_reads_a_table_frames_effects_without_changing_the_xml(self):
+        frame = _slide_with_table_and_chart().shapes[0]
+        tbl = frame.table._tbl
+        tbl.remove(tbl.tblPr)
+
+        assert frame.shadow.inherit is True
+        assert frame.glow.radius is None
+        assert tbl.tblPr is None
+
+    def and_it_writes_them_to_the_tables_tblPr(self):
         frame = _slide_with_table_and_chart().shapes[0]
 
-        effect = getattr(frame, name)
+        frame.shadow.inherit = False
 
-        assert effect._element is frame.table._tbl.tblPr
+        tblPr = frame.table._tbl.tblPr
+        assert tblPr.effectLst is not None
+        assert [child.tag.split("}")[1] for child in tblPr] == ["effectLst", "tableStyleId"]
 
-    @pytest.mark.parametrize("name", ["shadow", "glow", "reflection", "soft_edge"])
-    def and_a_chart_frames_effects_on_the_chart_spaces_spPr(self, name: str):
+    def it_reads_a_chart_frames_effects_without_changing_the_chart_part(self):
+        frame = _slide_with_table_and_chart().shapes[1]
+        chartSpace = frame.chart._chartSpace
+
+        assert frame.shadow.inherit is True
+        assert frame.soft_edge.radius is None
+        assert frame.three_d.extrusion_height is None
+        assert chartSpace.spPr is None
+
+    def and_it_writes_them_and_3D_to_the_chart_spaces_spPr(self):
         frame = _slide_with_table_and_chart().shapes[1]
 
-        effect = getattr(frame, name)
+        frame.shadow.inherit = False
+        frame.three_d.extrusion_height = 12700
 
-        assert effect._element is frame.chart._chartSpace.spPr
-
-    def and_it_gives_a_chart_frame_3D_formatting_on_the_same_spPr(self):
-        frame = _slide_with_table_and_chart().shapes[1]
-        assert frame.three_d._spPr is frame.chart._chartSpace.spPr
+        spPr = frame.chart._chartSpace.spPr
+        assert spPr.effectLst is not None
+        assert spPr.sp3d is not None
 
     def but_it_has_no_3D_formatting_for_a_table(self):
         frame = _slide_with_table_and_chart().shapes[0]
-        with pytest.raises(ShapeError, match="only supported for a graphic frame containing a chart"):
+        with pytest.raises(UnsupportedEffectError, match="only supported for a graphic frame containing a chart"):
             frame.three_d
 
     @pytest.mark.parametrize("name", ["shadow", "glow", "reflection", "soft_edge", "three_d"])
-    def but_it_raises_ShapeError_for_other_content(self, name: str):
+    def but_it_raises_UnsupportedEffectError_for_other_content(self, name: str):
         graphicFrame = element(
             "p:graphicFrame/a:graphic/a:graphicData{uri=http://schemas.openxmlformats.org/"
             "drawingml/2006/diagram}"
         )
-        with pytest.raises(ShapeError, match="only supported for a graphic frame containing"):
-            getattr(GraphicFrame(graphicFrame, None), name)
+        frame = GraphicFrame(graphicFrame, None)
+
+        with pytest.raises(UnsupportedEffectError, match="only supported for a graphic frame"):
+            getattr(frame, name)
+        # -- still what these raised before: NotImplementedError (shadow), AttributeError --
+        with pytest.raises(NotImplementedError):
+            getattr(frame, name)
+        assert hasattr(frame, name) is False
 
     def it_round_trips_a_table_shadow_and_a_chart_shadow(self):
         import io

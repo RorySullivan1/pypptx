@@ -37,6 +37,30 @@ def _canonical(xml: bytes) -> bytes:
     return etree.tostring(etree.fromstring(xml, _blankless), method="c14n")
 
 
+def _relationships(rels_xml: bytes) -> set[tuple[str | None, ...]]:
+    """The relationships in a `.rels` part, as a set: their order carries no meaning."""
+    return {
+        (rel.get("Id"), rel.get("Type"), rel.get("Target"), rel.get("TargetMode", "Internal"))
+        for rel in etree.fromstring(rels_xml)
+    }
+
+
+def _same_part(name: str, original: bytes, saved: bytes) -> bool:
+    """True when the part `name` is unchanged.
+
+    A `.rels` part compares as its set of relationships (pypptx writes them sorted by id), an
+    XML part as canonical XML ignoring whitespace between elements, anything else byte for byte.
+    """
+    if name.endswith(".rels"):
+        return _relationships(original) == _relationships(saved)
+    if name.endswith(".xml"):
+        try:
+            return _canonical(original) == _canonical(saved)
+        except etree.XMLSyntaxError:
+            pass
+    return original == saved
+
+
 def _content_types(zipf: zipfile.ZipFile) -> dict[str, str | None]:
     """Map each member's partname to the content type `[Content_Types].xml` gives it."""
     types = etree.fromstring(zipf.read("[Content_Types].xml"))
@@ -102,9 +126,9 @@ class DescribeRealWorldDeck:
             changed = [
                 name
                 for name in original.namelist()
-                if name.endswith(".xml")
+                if not name.endswith("/")
                 and name != "[Content_Types].xml"
-                and _canonical(original.read(name)) != _canonical(saved.read(name))
+                and not _same_part(name, original.read(name), saved.read(name))
             ]
             original_types = _content_types(original)
             saved_types = _content_types(saved)
@@ -147,12 +171,14 @@ class DescribeDamagedInput:
         with pytest.raises(InvalidPackageError, match="is not a valid .pptx package"):
             Presentation(str(path))
 
-    @pytest.mark.parametrize(
-        "data",
-        [b"", b"not a zip at all", (CORPUS_DIR / "bar-chart.pptx").read_bytes()[:5000]],
-        ids=["empty", "not-a-zip", "truncated"],
-    )
-    def it_rejects_a_damaged_stream(self, data: bytes):
+    @pytest.mark.parametrize("kind", ["empty", "not-a-zip", "truncated"])
+    def it_rejects_a_damaged_stream(self, kind: str):
+        data = {
+            "empty": lambda: b"",
+            "not-a-zip": lambda: b"not a zip at all",
+            "truncated": lambda: (CORPUS_DIR / "bar-chart.pptx").read_bytes()[:5000],
+        }[kind]()
+
         with pytest.raises(InvalidPackageError, match="the stream is not a valid .pptx package"):
             Presentation(io.BytesIO(data))
 
@@ -169,6 +195,15 @@ class DescribeDamagedInput:
 
         with pytest.raises(InvalidPackageError, match=message):
             Presentation(stream)
+
+    def it_does_not_disguise_a_closed_stream_as_a_damaged_package(self):
+        # -- a caller bug, not a bad file: the ValueError from the closed stream propagates --
+        stream = io.BytesIO((CORPUS_DIR / "bar-chart.pptx").read_bytes())
+        stream.close()
+
+        with pytest.raises(ValueError, match="closed file") as e:
+            Presentation(stream)
+        assert not isinstance(e.value, InvalidPackageError)
 
     def it_still_reports_a_missing_path_as_not_found(self, tmp_path: Path):
         with pytest.raises(PackageNotFoundError):

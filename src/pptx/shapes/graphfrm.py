@@ -6,10 +6,10 @@ objects.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.shapes.base import BaseShape
 from pptx.shared import ParentedElementProxy
 from pptx.smartart import SmartArt
@@ -133,16 +133,18 @@ class GraphicFrame(BaseShape):
         """Element holding the effects of this frame's content.
 
         A graphic frame has no shape properties of its own, so its effects belong to its
-        content: the table's `a:tblPr` or the chart space's `c:spPr` in the chart part.
-        Accessing it adds an empty `a:tblPr` or `c:spPr` when there is none, which leaves the
-        rendering unchanged. Raises |ShapeError| for any other content (SmartArt, an OLE
+        content: the table's `a:tblPr` or the chart space's `c:spPr` in the chart part. Reading
+        an effect leaves the XML untouched; the first write adds the `a:tblPr` or `c:spPr` if
+        there is none. Raises |UnsupportedEffectError| for any other content (SmartArt, an OLE
         object, a chartex chart, media), which has no single element to hold an effect.
         """
         if self.has_table:
-            return self._graphicFrame.graphic.graphicData.tbl.get_or_add_tblPr()
+            tbl = self._graphicFrame.graphic.graphicData.tbl
+            return _LazyChild(lambda: tbl.tblPr, tbl.get_or_add_tblPr)  # pyright: ignore
         if self.has_chart:
-            return self.chart_part.chart._chartSpace.get_or_add_spPr()
-        raise ShapeError(
+            chartSpace = self.chart_part.chart._chartSpace
+            return _LazyChild(lambda: chartSpace.spPr, chartSpace.get_or_add_spPr)  # pyright: ignore
+        raise UnsupportedEffectError(
             "effects are only supported for a graphic frame containing a table or a chart"
         )
 
@@ -150,8 +152,11 @@ class GraphicFrame(BaseShape):
     def _three_d_properties(self) -> BaseOxmlElement:
         """The chart space's `c:spPr`; a table's `a:tblPr` has no 3D shape properties."""
         if self.has_chart:
-            return self.chart_part.chart._chartSpace.get_or_add_spPr()
-        raise ShapeError("3D formatting is only supported for a graphic frame containing a chart")
+            chartSpace = self.chart_part.chart._chartSpace
+            return _LazyChild(lambda: chartSpace.spPr, chartSpace.get_or_add_spPr)  # pyright: ignore
+        raise UnsupportedEffectError(
+            "3D formatting is only supported for a graphic frame containing a chart"
+        )
 
     @property
     def shape_type(self) -> MSO_SHAPE_TYPE:
@@ -202,6 +207,28 @@ class GraphicFrame(BaseShape):
             raise ShapeError("shape does not contain a table")
         tbl = self._graphicFrame.graphic.graphicData.tbl
         return Table(tbl, self)
+
+
+class _LazyChild:
+    """Stands in for an optional child element that is added only when first written to.
+
+    The effect and 3D-format objects read a child such as `effectLst` or `sp3d`, and write
+    through `get_or_add_*()` / `_remove_*()`. Reads go to the element `get()` returns, or find
+    nothing when it is absent; `get_or_add_*()` first adds the element with `add()`. So reading
+    a graphic frame's shadow does not add an `a:tblPr` or `c:spPr` that was not there.
+    """
+
+    def __init__(self, get: Callable[[], Any], add: Callable[[], Any]):
+        self._get = get
+        self._add = add
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("get_or_add_"):
+            return getattr(self._add(), name)
+        element = self._get()
+        if name.startswith("_remove_"):
+            return getattr(element, name) if element is not None else (lambda: None)
+        return getattr(element, name) if element is not None else None
 
 
 class _OleFormat(ParentedElementProxy):

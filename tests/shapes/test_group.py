@@ -6,7 +6,7 @@ import pytest
 
 from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.shapes.group import GroupShape
 from pptx.shapes.shapetree import GroupShapes
 
@@ -40,8 +40,12 @@ class DescribeGroupShape:
         assert effect._element is grpSp.grpSpPr
 
     def but_it_has_no_3D_formatting(self):
-        with pytest.raises(ShapeError, match="3D formatting is not supported on a group"):
-            GroupShape(element("p:grpSp/p:grpSpPr"), None).three_d
+        group = GroupShape(element("p:grpSp/p:grpSpPr"), None)
+
+        with pytest.raises(UnsupportedEffectError, match="3D formatting is not supported on a group"):
+            group.three_d
+        # -- an AttributeError before, so duck-typing checks still see no `three_d` --
+        assert hasattr(group, "three_d") is False
 
     def it_knows_its_shape_type(self, shape_type_fixture):
         group = shape_type_fixture

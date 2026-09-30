@@ -50,6 +50,16 @@ ANY_VALUE = st.one_of(
     st.text(max_size=12),
     st.sampled_from(["0", "1", "true", "false", "FF0000", "50%", "12.5%", "-1", "3.2", "auto"]),
 )
+
+
+def values_for(cls) -> st.SearchStrategy:
+    """`ANY_VALUE`, plus the members of an enumeration type, which random text almost never hits."""
+    members = getattr(cls, "_members", None)
+    if members:
+        return st.one_of(st.sampled_from(sorted(members)), ANY_VALUE)
+    return ANY_VALUE
+
+
 PROPERTY_SETTINGS = settings(
     max_examples=200,
     derandomize=True,
@@ -64,7 +74,7 @@ class DescribeSimpleTypeProperties:
     @pytest.mark.parametrize("cls", WRITABLE_TYPES, ids=lambda cls: cls.__name__)
     def it_writes_a_valid_value_or_rejects_it_with_a_validation_error(self, cls):
         @PROPERTY_SETTINGS
-        @given(ANY_VALUE)
+        @given(values_for(cls))
         def check(value):
             try:
                 xml_value = cls.to_xml(value)
@@ -77,7 +87,7 @@ class DescribeSimpleTypeProperties:
     @pytest.mark.parametrize("cls", WRITABLE_TYPES, ids=lambda cls: cls.__name__)
     def it_reads_back_what_it_writes_and_writes_it_the_same_again(self, cls):
         @PROPERTY_SETTINGS
-        @given(ANY_VALUE)
+        @given(values_for(cls))
         def check(value):
             try:
                 xml_value = cls.to_xml(value)
@@ -139,6 +149,12 @@ class DescribeSimpleTypeRegressions:
         xml_value = simpletypes.ST_PositiveFixedAngle.to_xml(degrees)
 
         assert 0 <= int(xml_value) < 21600000
+
+    def it_writes_a_huge_int_angle_without_overflowing(self):
+        # -- `math.isfinite()` overflows on an int this large; only floats are checked --
+        assert simpletypes.ST_Angle.to_xml(10**400) == simpletypes.ST_Angle.to_xml(
+            10**400 % 360
+        )
 
     def it_rejects_a_universal_measure_with_an_unknown_unit(self):
         with pytest.raises(InvalidXmlError, match="universal measure must end in one of"):

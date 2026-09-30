@@ -821,6 +821,7 @@ class Describe_Relationships:
                 reltype=RT.SLIDE,
                 target_ref="../slides/slide1.xml",
                 is_external=False,
+                target_mode=RTM.INTERNAL,
             ),
             "rId2": instance_mock(
                 request,
@@ -829,6 +830,7 @@ class Describe_Relationships:
                 reltype=RT.HYPERLINK,
                 target_ref="http://url",
                 is_external=True,
+                target_mode=RTM.EXTERNAL,
             ),
             "foo7W": instance_mock(
                 request,
@@ -837,6 +839,7 @@ class Describe_Relationships:
                 reltype=RT.IMAGE,
                 target_ref="../media/image1.png",
                 is_external=False,
+                target_mode=RTM.INTERNAL,
             ),
         }
         relationships = _Relationships(None)
@@ -997,6 +1000,29 @@ class Describe_Relationships:
 class Describe_Relationship:
     """Unit-test suite for `pptx.opc.package._Relationship` objects."""
 
+
+    def it_keeps_an_internal_relationship_whose_target_is_a_fragment(self):
+        # -- a hyperlink to a place in the document, like a footnote; it names no part --
+        rels = CT_Relationships.new()
+        rel_elm = rels.add_rel("rId2", RT.HYPERLINK, "#_ftn1")
+
+        relationship = _Relationship.from_xml("/ppt/slides", rel_elm, parts={})
+
+        assert relationship.is_external is True  # -- no target part --
+        assert relationship.target_mode == RTM.INTERNAL
+        assert relationship.target_ref == "#_ftn1"
+
+    def and_it_writes_it_back_as_internal(self):
+        xml_rels = CT_Relationships.new()
+        xml_rels.add_rel("rId2", RT.HYPERLINK, "#_ftn1")
+        relationships = _Relationships("/ppt/slides")
+
+        relationships.load_from_xml("/ppt/slides", xml_rels, parts={})
+
+        saved = parse_xml(relationships.xml)
+        assert [(r.get("Id"), r.get("Target"), r.get("TargetMode")) for r in saved] == [
+            ("rId2", "#_ftn1", None)
+        ]
     def it_can_construct_from_xml(self, request, part_):
         _init_ = initializer_mock(request, _Relationship)
         rel_elm = instance_mock(

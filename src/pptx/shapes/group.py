@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.shapes.base import BaseShape
 from pptx.util import lazyproperty
 
@@ -48,7 +48,7 @@ class GroupShape(BaseShape):
     @property
     def _three_d_properties(self) -> CT_GroupShapeProperties:
         """A group has no 3D shape properties (`p:grpSpPr` has no `a:sp3d`)."""
-        raise ShapeError("3D formatting is not supported on a group shape")
+        raise UnsupportedEffectError("3D formatting is not supported on a group shape")
 
     @property
     def shape_type(self) -> MSO_SHAPE_TYPE:

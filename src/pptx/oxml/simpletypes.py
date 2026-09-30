@@ -33,7 +33,8 @@ class BaseSimpleType:
         """Note that int values are accepted; NaN and infinity are not."""
         if not isinstance(value, (int, float)):
             raise InvalidTypeError("value must be a number, got %s" % type(value))
-        if not math.isfinite(value):
+        # -- only a float can be NaN or infinite; `math.isfinite()` overflows on a huge int --
+        if isinstance(value, float) and not math.isfinite(value):
             raise InvalidValueError("value must be a finite number, got %r" % value)
 
     @classmethod

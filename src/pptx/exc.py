@@ -59,6 +59,15 @@ class ChartError(PyPptxError, ValueError):
     """
 
 
+class UnsupportedEffectError(ShapeError, NotImplementedError, AttributeError):
+    """Raised when a shape has nowhere to hold a visual effect or 3D formatting.
+
+    For example a group's `three_d`, or the shadow of a graphic frame holding SmartArt. Also a
+    ``NotImplementedError`` and an ``AttributeError``, which these properties raised before, so
+    ``hasattr(shape, "three_d")`` is still False for such a shape.
+    """
+
+
 class TableError(PyPptxError, ValueError):
     """Raised for table operation failures (cell access, merge).
 

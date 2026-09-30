@@ -182,7 +182,7 @@ class _ZipPkgReader(_PhysPkgReader):
     def __init__(self, pkg_file: str | IO[bytes]):
         try:
             self._zipf = zipfile.ZipFile(pkg_file, "r")
-        except (zipfile.BadZipFile, EOFError, ValueError) as e:
+        except (zipfile.BadZipFile, EOFError) as e:
             raise InvalidPackageError(
                 "%s is not a valid .pptx package: not a readable zip archive (%s)"
                 % (_describe(pkg_file), e)

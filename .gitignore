@@ -9,6 +9,8 @@ out.txt
 tags
 /tests/debug.py
 *.pptx
+# -- ...except test fixtures, which must be committed (the real-world corpus lives here) --
+!tests/test_files/**/*.pptx
 
 # Claude Code — personal, per-machine files (never committed)
 .claude/settings.local.json
