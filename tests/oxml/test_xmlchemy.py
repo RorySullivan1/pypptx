@@ -71,6 +71,38 @@ class DescribeCompiledXPath:
         assert compiled_xpath("./p:spPr") is here
 
 
+class DescribeBaseOxmlElementChildAccess:
+    """`first_child_found_in()` and `remove_all()`, which the generated accessors build on."""
+
+    def it_finds_the_first_child_by_the_order_of_the_tags_given(self):
+        # -- `a:ln` comes first in the document, but `a:solidFill` is asked for first --
+        spPr = element("p:spPr/(a:ln,a:solidFill)")
+
+        child = spPr.first_child_found_in("a:solidFill", "a:ln")
+
+        assert child.tag == qn("a:solidFill")
+
+    def and_it_finds_nothing_when_no_tag_matches_a_direct_child(self):
+        # -- a grandchild with a matching tag does not count --
+        spPr = element("p:spPr/a:ln/a:solidFill")
+
+        assert spPr.first_child_found_in("a:solidFill", "a:noFill") is None
+
+    def it_removes_every_child_with_any_of_the_tags_given(self):
+        spPr = element("p:spPr/(a:solidFill,a:ln,a:solidFill,a:effectLst)")
+
+        spPr.remove_all("a:solidFill", "a:effectLst")
+
+        assert [child.tag for child in spPr] == [qn("a:ln")]
+
+    def it_ignores_comments_and_grandchildren_in_the_generated_accessors(self):
+        txBody = element("p:txBody/(a:bodyPr,a:p/a:r,a:p)")
+        txBody.insert(1, etree.Comment(" a:p "))
+
+        assert len(txBody.p_lst) == 2
+        assert txBody.bodyPr is txBody[0]
+
+
 class DescribeCustomElementClass:
     def it_has_the_MetaOxmlElement_metaclass(self):
         assert type(CT_Parent).__name__ == "MetaOxmlElement"

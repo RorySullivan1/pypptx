@@ -379,8 +379,12 @@ class _BaseChildElement:
         present.
         """
 
+        # -- `iterchildren(tag)` finds a child faster than `find()`, which interprets an
+        # -- ElementPath expression on every call; the Clark-notation tag is computed once --
+        tag = qn(self._nsptagname)
+
         def get_child_element(obj: BaseOxmlElement) -> BaseOxmlElement | None:
-            return obj.find(qn(self._nsptagname))
+            return next(obj.iterchildren(tag), None)
 
         get_child_element.__doc__ = (
             "``<%s>`` child element or |None| if not present." % self._nsptagname
@@ -395,8 +399,10 @@ class _BaseChildElement:
     def _list_getter(self) -> Callable[[BaseOxmlElement], list[BaseOxmlElement]]:
         """Callable suitable for the "get" side of a list property descriptor."""
 
+        tag = qn(self._nsptagname)
+
         def get_child_element_list(obj: BaseOxmlElement) -> list[BaseOxmlElement]:
-            return cast("list[BaseOxmlElement]", obj.findall(qn(self._nsptagname)))
+            return cast("list[BaseOxmlElement]", list(obj.iterchildren(tag)))
 
         get_child_element_list.__doc__ = (
             "A list containing each of the ``<%s>`` child elements, in the o"
@@ -489,8 +495,10 @@ class OneAndOnlyOne(_BaseChildElement):
     def _getter(self) -> Callable[[BaseOxmlElement], BaseOxmlElement]:
         """Callable suitable for the "get" side of the property descriptor."""
 
+        tag = qn(self._nsptagname)
+
         def get_child_element(obj: BaseOxmlElement) -> BaseOxmlElement:
-            child = obj.find(qn(self._nsptagname))
+            child = next(obj.iterchildren(tag), None)
             if child is None:
                 raise InvalidXmlError(
                     "required ``<%s>`` child element not present" % self._nsptagname
@@ -700,8 +708,9 @@ class BaseOxmlElement(etree.ElementBase, metaclass=MetaOxmlElement):
 
     def first_child_found_in(self, *tagnames: str) -> _Element | None:
         """First child with tag in `tagnames`, or None if not found."""
+        # -- tags are tried in the order given, not document order --
         for tagname in tagnames:
-            child = self.find(qn(tagname))
+            child = next(self.iterchildren(qn(tagname)), None)
             if child is not None:
                 return child
         return None
@@ -717,7 +726,7 @@ class BaseOxmlElement(etree.ElementBase, metaclass=MetaOxmlElement):
     def remove_all(self, *tagnames: str) -> None:
         """Remove child elements with tagname (e.g. "a:p") in `tagnames`."""
         for tagname in tagnames:
-            matching = self.findall(qn(tagname))
+            matching = list(self.iterchildren(qn(tagname)))
             for child in matching:
                 self.remove(child)
 

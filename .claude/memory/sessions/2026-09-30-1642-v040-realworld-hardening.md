@@ -39,3 +39,4 @@
 ## Open threads
 - Human check: open 3 round-tripped corpus decks (one chart, one SmartArt) + a table/chart shadow in PowerPoint.
 - `AlternateContentShape` effects follow its represented element; not exercised.
+- Shipped 2026-10-01: owner merged PR #122 (2c64b2d), accepting the scope additions; package 0.4.0, cursor → v0.5.0.

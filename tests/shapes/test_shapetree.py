@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import io
+from unittest.mock import Mock
 
 import pytest
 
@@ -1777,21 +1778,46 @@ class DescribeLayoutPlaceholders:
         _LayoutShapeFactory_.assert_called_once_with(sp, placeholders)
         assert placeholder is placeholder_
 
-    def it_can_find_a_placeholder_by_idx_value(self, get_fixture):
-        placeholders, idx, placeholder_ = get_fixture
-        assert placeholders.get(idx) is placeholder_
+    @pytest.mark.parametrize(("idx", "expected_name"), [(0, "Title"), (1, "Body"), (13, "Footer")])
+    def it_can_find_a_placeholder_by_idx_value(
+        self, idx: int, expected_name: str, _shape_factory_: Mock
+    ):
+        spTree = element(_PLACEHOLDERS_SPTREE)
+        placeholders = LayoutPlaceholders(spTree, None)
 
-    def it_returns_default_on_ph_idx_not_found(self, default_fixture):
-        placeholders, default = default_fixture
-        assert placeholders.get(42, default) is default
+        placeholder = placeholders.get(idx)
+
+        assert placeholder is _shape_factory_.return_value
+        shape_elm = _shape_factory_.call_args.args[-1]
+        assert shape_elm.shape_name == expected_name
+
+    def it_returns_default_on_ph_idx_not_found(self, _shape_factory_: Mock):
+        placeholders = LayoutPlaceholders(element(_PLACEHOLDERS_SPTREE), None)
+
+        assert placeholders.get(42, "barfoo") == "barfoo"
+        _shape_factory_.assert_not_called()
+
+    def and_it_returns_the_first_of_two_placeholders_sharing_an_idx(self, _shape_factory_: Mock):
+        spTree = element(
+            "p:spTree/("
+            "p:sp/p:nvSpPr/(p:cNvPr{id=2,name=First},p:cNvSpPr,p:nvPr/p:ph{idx=3}),"
+            "p:sp/p:nvSpPr/(p:cNvPr{id=3,name=Second},p:cNvSpPr,p:nvPr/p:ph{idx=3}))"
+        )
+
+        LayoutPlaceholders(spTree, None).get(3)
+
+        shape_elm = _shape_factory_.call_args.args[-1]
+        assert shape_elm.shape_name == "First"
+
+    def and_it_finds_a_placeholder_wrapped_in_alternate_content(self, _shape_factory_: Mock):
+        spTree = element(_ALTERNATE_CONTENT_SPTREE)
+
+        LayoutPlaceholders(spTree, None).get(7)
+
+        shape_elm = _shape_factory_.call_args.args[-1]
+        assert shape_elm.shape_name == "Fallback 7"
 
     # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def default_fixture(self, _iter_):
-        placeholders = LayoutPlaceholders(None, None)
-        default = "barfoo"
-        return placeholders, default
 
     @pytest.fixture
     def factory_fixture(self, _LayoutShapeFactory_, placeholder_):
@@ -1799,24 +1825,11 @@ class DescribeLayoutPlaceholders:
         sp = element("p:sp")
         return placeholders, sp, _LayoutShapeFactory_, placeholder_
 
-    @pytest.fixture(params=[0, 1])
-    def get_fixture(self, request, _iter_, placeholder_, placeholder_2_):
-        idx = request.param
-        layout_placeholders = LayoutPlaceholders(None, None)
-        _placeholder_ = (placeholder_, placeholder_2_)[idx]
-        placeholder_.element.ph_idx, placeholder_2_.element.ph_idx = 0, 1
-        return layout_placeholders, idx, _placeholder_
-
     # fixture components ---------------------------------------------
 
     @pytest.fixture
-    def _iter_(self, request, placeholder_, placeholder_2_):
-        return method_mock(
-            request,
-            LayoutPlaceholders,
-            "__iter__",
-            return_value=iter([placeholder_, placeholder_2_]),
-        )
+    def _shape_factory_(self, request):
+        return method_mock(request, LayoutPlaceholders, "_shape_factory")
 
     @pytest.fixture
     def _LayoutShapeFactory_(self, request, placeholder_):
@@ -1831,9 +1844,6 @@ class DescribeLayoutPlaceholders:
     def placeholder_(self, request):
         return instance_mock(request, LayoutPlaceholder)
 
-    @pytest.fixture
-    def placeholder_2_(self, request):
-        return instance_mock(request, LayoutPlaceholder)
 
 
 class Describe_MasterShapeFactory:
@@ -1935,21 +1945,43 @@ class DescribeMasterPlaceholders:
         _MasterShapeFactory_.assert_called_once_with(sp, placeholders)
         assert placeholder is placeholder_
 
-    def it_can_find_a_placeholder_by_type(self, get_fixture):
-        placeholders, ph_type, placeholder_ = get_fixture
-        assert placeholders.get(ph_type) is placeholder_
+    @pytest.mark.parametrize(
+        ("ph_type", "expected_name"),
+        [
+            (PP_PLACEHOLDER.TITLE, "Title"),
+            (PP_PLACEHOLDER.BODY, "Body"),
+            (PP_PLACEHOLDER.FOOTER, "Footer"),
+        ],
+    )
+    def it_can_find_a_placeholder_by_type(
+        self, ph_type: PP_PLACEHOLDER, expected_name: str, _shape_factory_: Mock
+    ):
+        placeholders = MasterPlaceholders(element(_PLACEHOLDERS_SPTREE), None)
 
-    def it_returns_default_on_ph_type_not_found(self, default_fixture):
-        placeholders, default = default_fixture
-        assert placeholders.get(42, default) is default
+        placeholder = placeholders.get(ph_type)
+
+        assert placeholder is _shape_factory_.return_value
+        shape_elm = _shape_factory_.call_args.args[-1]
+        assert shape_elm.shape_name == expected_name
+
+    def it_returns_default_on_ph_type_not_found(self, _shape_factory_: Mock):
+        placeholders = MasterPlaceholders(element(_PLACEHOLDERS_SPTREE), None)
+
+        assert placeholders.get(PP_PLACEHOLDER.CHART, "barfoo") == "barfoo"
+        _shape_factory_.assert_not_called()
+
+    def and_it_treats_a_ph_without_a_type_as_an_object_placeholder(self, _shape_factory_: Mock):
+        # -- `p:ph@type` defaults to "obj" --
+        spTree = element(
+            "p:spTree/p:sp/p:nvSpPr/(p:cNvPr{id=2,name=Content},p:cNvSpPr,p:nvPr/p:ph{idx=1})"
+        )
+
+        MasterPlaceholders(spTree, None).get(PP_PLACEHOLDER.OBJECT)
+
+        shape_elm = _shape_factory_.call_args.args[-1]
+        assert shape_elm.shape_name == "Content"
 
     # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def default_fixture(self, _iter_):
-        placeholders = MasterPlaceholders(None, None)
-        default = "barfoo"
-        return placeholders, default
 
     @pytest.fixture
     def factory_fixture(self, _MasterShapeFactory_, placeholder_):
@@ -1957,23 +1989,11 @@ class DescribeMasterPlaceholders:
         sp = element("p:sp")
         return placeholders, sp, _MasterShapeFactory_, placeholder_
 
-    @pytest.fixture(params=["title", "body"])
-    def get_fixture(self, request, _iter_, placeholder_, placeholder_2_):
-        ph_type = request.param
-        placeholders = MasterPlaceholders(None, None)
-        _placeholder_ = {"title": placeholder_, "body": placeholder_2_}[ph_type]
-        return placeholders, ph_type, _placeholder_
-
     # fixture components ---------------------------------------------
 
     @pytest.fixture
-    def _iter_(self, request, placeholder_, placeholder_2_):
-        return method_mock(
-            request,
-            MasterPlaceholders,
-            "__iter__",
-            return_value=iter([placeholder_, placeholder_2_]),
-        )
+    def _shape_factory_(self, request):
+        return method_mock(request, MasterPlaceholders, "_shape_factory")
 
     @pytest.fixture
     def _MasterShapeFactory_(self, request, placeholder_):
@@ -1988,9 +2008,6 @@ class DescribeMasterPlaceholders:
     def placeholder_(self, request):
         return instance_mock(request, MasterPlaceholder, ph_type="title")
 
-    @pytest.fixture
-    def placeholder_2_(self, request):
-        return instance_mock(request, MasterPlaceholder, ph_type="body")
 
 
 class Describe_MoviePicElementCreator:
@@ -2924,3 +2941,54 @@ def _blank_slide():
 
     prs = Presentation()
     return prs.slides.add_slide(prs.slide_layouts[6])
+
+
+# -- a shape tree holding three placeholders and one ordinary shape, as on a layout or master --
+_PLACEHOLDERS_SPTREE = (
+    "p:spTree/("
+    "p:nvGrpSpPr/(p:cNvPr{id=1,name=Tree},p:cNvGrpSpPr,p:nvPr),"
+    "p:sp/p:nvSpPr/(p:cNvPr{id=2,name=Title},p:cNvSpPr,p:nvPr/p:ph{type=title}),"
+    "p:sp/p:nvSpPr/(p:cNvPr{id=3,name=Plain},p:cNvSpPr,p:nvPr),"
+    "p:sp/p:nvSpPr/(p:cNvPr{id=4,name=Body},p:cNvSpPr,p:nvPr/p:ph{type=body,idx=1}),"
+    "p:sp/p:nvSpPr/(p:cNvPr{id=5,name=Footer},p:cNvSpPr,p:nvPr/p:ph{type=ftr,idx=13}))"
+)
+
+# -- a placeholder that only an `mc:AlternateContent` holds, whose Fallback stands for it --
+_ALTERNATE_CONTENT_SPTREE = (
+    "p:spTree/("
+    "p:nvGrpSpPr/(p:cNvPr{id=1,name=Tree},p:cNvGrpSpPr,p:nvPr),"
+    "mc:AlternateContent/(mc:Choice{Requires=a14}/"
+    "p:sp/p:nvSpPr/(p:cNvPr{id=7,name=Choice 7},p:cNvSpPr,p:nvPr/p:ph{idx=7}),"
+    "mc:Fallback/p:sp/p:nvSpPr/(p:cNvPr{id=7,name=Fallback 7},p:cNvSpPr,p:nvPr/p:ph{idx=7})))"
+)
+
+
+class DescribePlaceholderLookup_on_real_decks:
+    """`get()` on layout and master placeholders agrees with a plain scan of every placeholder."""
+
+    def it_finds_the_same_placeholder_as_a_full_scan(self):
+        import pathlib
+
+        from pptx import Presentation
+
+        corpus = pathlib.Path(__file__).parent.parent / "test_files" / "real_world"
+        decks = [Presentation()] + [Presentation(str(p)) for p in sorted(corpus.glob("*.pptx"))]
+        checked = 0
+
+        for prs in decks:
+            for master in prs.slide_masters:
+                scan = list(master.placeholders)
+                for ph_type in {p.element.ph_type for p in scan} | {PP_PLACEHOLDER.CHART}:
+                    expected = next((p for p in scan if p.ph_type == ph_type), None)
+                    found = master.placeholders.get(ph_type)
+                    assert (found and found.element) is (expected and expected.element)
+                    checked += 1
+                for layout in master.slide_layouts:
+                    scan = list(layout.placeholders)
+                    for idx in {p.element.ph_idx for p in scan} | {999}:
+                        expected = next((p for p in scan if p.element.ph_idx == idx), None)
+                        found = layout.placeholders.get(idx)
+                        assert (found and found.element) is (expected and expected.element)
+                        checked += 1
+
+        assert checked > 100

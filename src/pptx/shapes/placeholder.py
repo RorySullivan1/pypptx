@@ -15,7 +15,7 @@ from pptx.oxml.shapes.picture import CT_Picture
 from pptx.shapes.autoshape import Shape
 from pptx.shapes.graphfrm import GraphicFrame
 from pptx.shapes.picture import Picture
-from pptx.util import Emu
+from pptx.util import Emu, lazyproperty
 
 if TYPE_CHECKING:
     from pptx.oxml.shapes.autoshape import CT_Shape
@@ -92,12 +92,18 @@ class _InheritsDimensions:
     def width(self, value):
         self._element.cx = value
 
-    @property
+    @lazyproperty
     def _base_placeholder(self):
         """
         Return the layout or master placeholder shape this placeholder
         inherits from. Not to be confused with an instance of
         |BasePlaceholder| (necessarily).
+
+        Looked up once per placeholder object and then reused, so reading
+        `left`, `top`, `width` and `height` in turn searches the layout once,
+        not four times. A placeholder object therefore keeps the base it found
+        for as long as it lives; one obtained after the layout or master
+        placeholder is deleted or re-indexed sees the change.
         """
         raise NotImplementedError("Must be implemented by all subclasses.")
 
@@ -147,7 +153,7 @@ class _BaseSlidePlaceholder(_InheritsDimensions, Shape):
         """
         return MSO_SHAPE_TYPE.PLACEHOLDER
 
-    @property
+    @lazyproperty
     def _base_placeholder(self):
         """
         Return the layout placeholder this slide placeholder inherits from.
@@ -221,7 +227,7 @@ class LayoutPlaceholder(_InheritsDimensions, Shape):
 
     element: CT_Shape  # pyright: ignore[reportIncompatibleMethodOverride]
 
-    @property
+    @lazyproperty
     def _base_placeholder(self):
         """
         Return the master placeholder this layout placeholder inherits from.
@@ -258,7 +264,7 @@ class NotesSlidePlaceholder(_InheritsDimensions, Shape):
     placeholder on the notes master that has the same type (e.g. 'body').
     """
 
-    @property
+    @lazyproperty
     def _base_placeholder(self):
         """
         Return the notes master placeholder this notes slide placeholder
@@ -366,7 +372,7 @@ class PlaceholderPicture(_InheritsDimensions, Picture):
     Placeholder shape populated with a picture.
     """
 
-    @property
+    @lazyproperty
     def _base_placeholder(self):
         """
         Return the layout placeholder this picture placeholder inherits from.
