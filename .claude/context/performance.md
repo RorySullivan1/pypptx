@@ -37,6 +37,10 @@ The v0.6.0 card sets the boundaries this work honors:
   getters: four inherited reads 449 → 157 µs (−65%), a read of the real-world corpus 787 →
   534 ms (−32%). A placeholder object keeps the base it found; one obtained after the layout
   placeholder is deleted sees the change.
+- **Enum `from_xml` through a dict** (2026-10-01). `BaseXmlEnum.from_xml()` looks the value up
+  in a per-class map built on first use, instead of scanning the members: 1.22 → 0.23 µs for
+  `MSO_LINE_DASH_STYLE`, 2.96 → 0.24 µs deep in `MSO_AUTO_SHAPE_TYPE`. Where two members share
+  an XML value, the first still wins. End to end it is within noise; the work count fell 0.8%.
 - **Work-count regression gate (Phase 5)** (2026-10-01). `tests/perf/test_workcount.py` runs in
   the normal suite. It opens, reads (`tests/unitutil/deckwalk.walk`) and saves every corpus deck
   once to warm the caches, then again under cProfile, and counts the calls made into `pptx/`
@@ -68,13 +72,12 @@ Measured on a synthetic text-heavy deck (CPython 3.11, 4 cores):
 - **A `compression` option on `save()` is low value.** zlib is ~9 ms of a ~50 ms save.
 - **Cython is not justified** by these numbers, and the v0.6.0 card excludes native code.
 
-## Remaining candidates (measured 2026-10-01; see the #51 comment of that date)
+## Measured and left out (2026-10-01; see the #51 comment of that date)
 
 On the v0.4.0 real-world corpus (24 PowerPoint-authored decks), the read side was dominated by
 **placeholder inheritance**, not `paragraphs`/`runs`: about 45% of read time before the fix under
 "Done so far".
 
-- **Enum `from_xml` through a dict**: 23× faster per call, end-to-end within noise. Optional.
 - **Not worth it** (measured): caching the `paragraphs`/`runs` tuples, checked against the child
   elements, gave `iter10x` −20% but `iter1x` +13–18%. Batch work reads once, and the
   `iterchildren()` getters help both. Walking to `p:ph` with `find()` instead of the compiled
