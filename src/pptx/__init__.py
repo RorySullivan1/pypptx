@@ -44,7 +44,7 @@ from pptx.parts.tags import TagsPart
 if TYPE_CHECKING:
     from pptx.opc.package import Part
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"
 
 sys.modules["pptx.exceptions"] = exceptions
 del sys

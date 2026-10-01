@@ -1,6 +1,7 @@
 # version: v0.4.0
-status: in-progress
+status: shipped
 started: 2026-09-30
+shipped: 2026-10-01
 branch: claude/epic-87-closeout-hfo5vj
 pr: https://github.com/RorySullivan1/pypptx/pull/122
 
