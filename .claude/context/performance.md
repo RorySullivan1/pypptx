@@ -37,6 +37,15 @@ The v0.6.0 card sets the boundaries this work honors:
   getters: four inherited reads 449 → 157 µs (−65%), a read of the real-world corpus 787 →
   534 ms (−32%). A placeholder object keeps the base it found; one obtained after the layout
   placeholder is deleted sees the change.
+- **Work-count regression gate (Phase 5)** (2026-10-01). `tests/perf/test_workcount.py` runs in
+  the normal suite. It opens, reads (`tests/unitutil/deckwalk.walk`) and saves every corpus deck
+  once to warm the caches, then again under cProfile, and counts the calls made into `pptx/`
+  code. It fails if the count exceeds `tests/perf/workcount_budget.json` by more than 2%. Runs
+  agree to within a call, so it does not flake as a timing gate would. The budget is pinned to
+  the Python it was measured on (3.11; the ubuntu 3.11 CI cell) and skips elsewhere, and skips
+  when the corpus is absent (sdist). When the count drops, or a rise is intended, rerun
+  `python -m tests.perf.workcount --update` and commit the budget. It cannot see C-level
+  changes (`find()` vs `iterchildren()`), so the wall-clock baseline stays as a report.
 
 ## What already exists (verify, do not reimplement)
 
@@ -70,11 +79,6 @@ On the v0.4.0 real-world corpus (24 PowerPoint-authored decks), the read side wa
   elements, gave `iter10x` −20% but `iter1x` +13–18%. Batch work reads once, and the
   `iterchildren()` getters help both. Walking to `p:ph` with `find()` instead of the compiled
   XPath was 2× slower.
-- **Regression gate (Phase 5)**: gate on work rather than time. Count calls into `pptx/` code
-  for a fixed corpus workload under cProfile. It is deterministic (identical across runs) and
-  moves on algorithmic regressions (the placeholder changes move it −35%). Check a budget into
-  `tests/perf/` with about 2% tolerance, run it in one CI cell, and keep wall-clock as a
-  non-blocking report.
 - The baseline's `save` column is a single run and swings about ±40%. Repeat a save timing
   before reading anything into it.
 
@@ -87,6 +91,8 @@ On the v0.4.0 real-world corpus (24 PowerPoint-authored decks), the read side wa
   `@pytest.mark.perf` benchmarks with generous ceilings (smoke checks, not regression gates).
 - `tests/perf/run_baseline.py` — writes `tests/perf/baseline.json` and replaces the Baseline
   section below: wall-clock, `tracemalloc` memory, cProfile top 20.
+- `tests/perf/workcount.py` + `test_workcount.py` + `workcount_budget.json` — the work-count
+  gate (see "Done so far"); `python -m tests.perf.workcount [--update]`.
 - `pyproject.toml` registers the `perf` marker and adds `-m 'not perf'` to `addopts`, so a
   plain `pytest` skips the benchmarks.
 

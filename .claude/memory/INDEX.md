@@ -31,6 +31,8 @@
   geometry-less `p:sp` → `shape_type` AUTO_SHAPE — .meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md
 - [2026-09-30] pytest collects `and_it_*`/`but_it_*` too (59 were silently skipped). pypptx domain errors keep the
   builtin they replaced (ShapeError etc. are ValueErrors) — sessions/2026-09-30-1642-v040-realworld-hardening.md
+- [2026-10-01] #51 perf gate counts WORK (cProfile calls into pptx/ over the corpus), not time; budget pinned to
+  py3.11 (skips elsewhere), +2% tolerance; lower it whenever it drops — sessions/2026-10-01-1546-issue-51-perf.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
@@ -40,14 +42,13 @@
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
 - Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
-- Issue #51 (re-measured 2026-10-01 on the corpus): P6 iterchildren getters + placeholder base caching / one-XPath `get()`
-  in PR #123; next = call-count CI gate (Phase 5). Proxy-tuple caching measured NOT worth it.
+- Issue #51 (re-measured 2026-10-01 on the corpus): P6 getters, placeholder caching and the work-count gate in PR #123.
+  Left: optional enum `from_xml` dict (P3); proxy-tuple caching measured NOT worth it. Then close #51.
 - `unverified` surfaces (verification-surface.md): type checker.
 - Anyone with a Windows clone predating `b64d2b9` needs `git add --renormalize .` once after pulling, or git
   reports every text file modified (its dirty check compares the size recorded in the index, not content).
 - `tests.yml` caveats: `paths-ignore` (md/.claude/.meta) must go if `tests` ever becomes a REQUIRED check, or
   docs-only PRs wait forever; ~17 billable min/run, 10 of them the single macOS cell (x10 multiplier).
-- The #51 perf gate is still absent, deliberately — shared-runner timing noise would make it flake.
 - **Actions billing blocks every job.** Fix the spending limit/payment, or cut cost: the lone macOS cell is
   ~10 of ~17 billable min per run. Until then no PR can be CI-verified.
 - #115 human check: new 3D charts (column/bar/line/pie/area) open without repair; camera/walls visibly change. No `series_axis` API.
@@ -73,5 +74,4 @@
 - 2026-09-30 | Release-tag commits recorded (.meta/release-tags.md); v0.4.0 card expanded from a POI-corpus pilot | .meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md
 - 2026-09-30 1642 | v0.4.0 built: POI corpus, InvalidPackageError, compatible errors, Hypothesis (5 bugs) | sessions/2026-09-30-1642-v040-realworld-hardening.md
 - 2026-10-01 | v0.4.0 shipped (PR #122, 2c64b2d): package 0.4.0, cursor → v0.5.0 | .meta/version
-- 2026-10-01 | #51 options measured on the corpus; P6 (xmlchemy iterchildren getters) implemented | .claude/context/performance.md
-- 2026-10-01 | #51 placeholder inheritance: cached base + one-XPath get() (corpus read −32% on top of P6) | .claude/context/performance.md
+- 2026-10-01 1546 | #51: P6 getters, placeholder caching (corpus read −32%), work-count gate | sessions/2026-10-01-1546-issue-51-perf.md
