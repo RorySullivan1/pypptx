@@ -6,10 +6,10 @@ objects.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.shapes.base import BaseShape
 from pptx.shared import ParentedElementProxy
 from pptx.smartart import SmartArt
@@ -21,13 +21,12 @@ from pptx.spec import (
     GRAPHIC_DATA_URI_TABLE,
 )
 from pptx.table import Table
-from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.chart.chart import Chart
     from pptx.chart.chartex import ChartEx
-    from pptx.dml.effect import ShadowFormat
     from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectData, CT_GraphicalObjectFrame
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.chart import ChartPart
     from pptx.parts.chartex import ChartExPart
     from pptx.parts.diagram import DiagramDataPart
@@ -129,14 +128,35 @@ class GraphicFrame(BaseShape):
             raise ShapeError("not an OLE-object shape")
         return _OleFormat(self._graphicFrame.graphicData, self._parent)
 
-    @lazyproperty
-    def shadow(self) -> ShadowFormat:
-        """Unconditionally raises |NotImplementedError|.
+    @property
+    def _effect_properties(self) -> BaseOxmlElement:
+        """Element holding the effects of this frame's content.
 
-        Access to the shadow effect for graphic-frame objects is content-specific (i.e. different
-        for charts, tables, etc.) and has not yet been implemented.
+        A graphic frame has no shape properties of its own, so its effects belong to its
+        content: the table's `a:tblPr` or the chart space's `c:spPr` in the chart part. Reading
+        an effect leaves the XML untouched; the first write adds the `a:tblPr` or `c:spPr` if
+        there is none. Raises |UnsupportedEffectError| for any other content (SmartArt, an OLE
+        object, a chartex chart, media), which has no single element to hold an effect.
         """
-        raise NotImplementedError("shadow property on GraphicFrame not yet supported")
+        if self.has_table:
+            tbl = self._graphicFrame.graphic.graphicData.tbl
+            return _LazyChild(lambda: tbl.tblPr, tbl.get_or_add_tblPr)  # pyright: ignore
+        if self.has_chart:
+            chartSpace = self.chart_part.chart._chartSpace
+            return _LazyChild(lambda: chartSpace.spPr, chartSpace.get_or_add_spPr)  # pyright: ignore
+        raise UnsupportedEffectError(
+            "effects are only supported for a graphic frame containing a table or a chart"
+        )
+
+    @property
+    def _three_d_properties(self) -> BaseOxmlElement:
+        """The chart space's `c:spPr`; a table's `a:tblPr` has no 3D shape properties."""
+        if self.has_chart:
+            chartSpace = self.chart_part.chart._chartSpace
+            return _LazyChild(lambda: chartSpace.spPr, chartSpace.get_or_add_spPr)  # pyright: ignore
+        raise UnsupportedEffectError(
+            "3D formatting is only supported for a graphic frame containing a chart"
+        )
 
     @property
     def shape_type(self) -> MSO_SHAPE_TYPE:
@@ -187,6 +207,28 @@ class GraphicFrame(BaseShape):
             raise ShapeError("shape does not contain a table")
         tbl = self._graphicFrame.graphic.graphicData.tbl
         return Table(tbl, self)
+
+
+class _LazyChild:
+    """Stands in for an optional child element that is added only when first written to.
+
+    The effect and 3D-format objects read a child such as `effectLst` or `sp3d`, and write
+    through `get_or_add_*()` / `_remove_*()`. Reads go to the element `get()` returns, or find
+    nothing when it is absent; `get_or_add_*()` first adds the element with `add()`. So reading
+    a graphic frame's shadow does not add an `a:tblPr` or `c:spPr` that was not there.
+    """
+
+    def __init__(self, get: Callable[[], Any], add: Callable[[], Any]):
+        self._get = get
+        self._add = add
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("get_or_add_"):
+            return getattr(self._add(), name)
+        element = self._get()
+        if name.startswith("_remove_"):
+            return getattr(element, name) if element is not None else (lambda: None)
+        return getattr(element, name) if element is not None else None
 
 
 class _OleFormat(ParentedElementProxy):

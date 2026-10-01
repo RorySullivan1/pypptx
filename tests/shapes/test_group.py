@@ -6,7 +6,7 @@ import pytest
 
 from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.shapes.group import GroupShape
 from pptx.shapes.shapetree import GroupShapes
 
@@ -30,6 +30,22 @@ class DescribeGroupShape:
 
         ShadowFormat_.assert_called_once_with(grpSpPr)
         assert shadow is shadow_
+
+    @pytest.mark.parametrize("name", ["glow", "reflection", "soft_edge"])
+    def it_keeps_its_other_effects_on_its_grpSpPr_too(self, name: str):
+        grpSp = element("p:grpSp/p:grpSpPr")
+
+        effect = getattr(GroupShape(grpSp, None), name)
+
+        assert effect._element is grpSp.grpSpPr
+
+    def but_it_has_no_3D_formatting(self):
+        group = GroupShape(element("p:grpSp/p:grpSpPr"), None)
+
+        with pytest.raises(UnsupportedEffectError, match="3D formatting is not supported on a group"):
+            group.three_d
+        # -- an AttributeError before, so duck-typing checks still see no `three_d` --
+        assert hasattr(group, "three_d") is False
 
     def it_knows_its_shape_type(self, shape_type_fixture):
         group = shape_type_fixture
@@ -71,4 +87,4 @@ class DescribeGroupShape:
 
     @pytest.fixture
     def ShadowFormat_(self, request):
-        return class_mock(request, "pptx.shapes.group.ShadowFormat")
+        return class_mock(request, "pptx.shapes.base.ShadowFormat")

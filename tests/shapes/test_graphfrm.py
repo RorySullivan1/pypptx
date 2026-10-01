@@ -6,6 +6,7 @@ import pytest
 
 from pptx.chart.chart import Chart
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.exc import UnsupportedEffectError
 from pptx.parts.chart import ChartPart
 from pptx.parts.chartex import ChartExPart
 from pptx.parts.diagram import DiagramDataPart
@@ -197,10 +198,91 @@ class DescribeGraphicFrame:
             graphic_frame.ole_format
         assert str(e.value) == "not an OLE-object shape"
 
-    def it_raises_on_shadow(self):
-        graphic_frame = GraphicFrame(None, None)
+    def it_reads_a_table_frames_effects_without_changing_the_xml(self):
+        frame = _slide_with_table_and_chart().shapes[0]
+        tbl = frame.table._tbl
+        tbl.remove(tbl.tblPr)
+
+        assert frame.shadow.inherit is True
+        assert frame.glow.radius is None
+        assert tbl.tblPr is None
+
+    def and_it_writes_them_to_the_tables_tblPr(self):
+        frame = _slide_with_table_and_chart().shapes[0]
+
+        frame.shadow.inherit = False
+
+        tblPr = frame.table._tbl.tblPr
+        assert tblPr.effectLst is not None
+        assert [child.tag.split("}")[1] for child in tblPr] == ["effectLst", "tableStyleId"]
+
+    def it_reads_a_chart_frames_effects_without_changing_the_chart_part(self):
+        frame = _slide_with_table_and_chart().shapes[1]
+        chartSpace = frame.chart._chartSpace
+
+        assert frame.shadow.inherit is True
+        assert frame.soft_edge.radius is None
+        assert frame.three_d.extrusion_height is None
+        assert chartSpace.spPr is None
+
+    def and_it_writes_them_and_3D_to_the_chart_spaces_spPr(self):
+        frame = _slide_with_table_and_chart().shapes[1]
+
+        frame.shadow.inherit = False
+        frame.three_d.extrusion_height = 12700
+
+        spPr = frame.chart._chartSpace.spPr
+        assert spPr.effectLst is not None
+        assert spPr.sp3d is not None
+
+    def but_it_has_no_3D_formatting_for_a_table(self):
+        frame = _slide_with_table_and_chart().shapes[0]
+        with pytest.raises(UnsupportedEffectError, match="only supported for a graphic frame containing a chart"):
+            frame.three_d
+
+    @pytest.mark.parametrize("name", ["shadow", "glow", "reflection", "soft_edge", "three_d"])
+    def but_it_raises_UnsupportedEffectError_for_other_content(self, name: str):
+        graphicFrame = element(
+            "p:graphicFrame/a:graphic/a:graphicData{uri=http://schemas.openxmlformats.org/"
+            "drawingml/2006/diagram}"
+        )
+        frame = GraphicFrame(graphicFrame, None)
+
+        with pytest.raises(UnsupportedEffectError, match="only supported for a graphic frame"):
+            getattr(frame, name)
+        # -- still what these raised before: NotImplementedError (shadow), AttributeError --
         with pytest.raises(NotImplementedError):
-            graphic_frame.shadow
+            getattr(frame, name)
+        assert hasattr(frame, name) is False
+
+    def it_round_trips_a_visible_table_shadow_and_chart_shadow(self):
+        import io
+
+        from pptx import Presentation
+        from pptx.dml.color import RGBColor
+        from pptx.util import Pt
+
+        slide = _slide_with_table_and_chart()
+        for frame in slide.shapes:
+            shadow = frame.shadow
+            shadow.blur_radius = Pt(4)
+            shadow.distance = Pt(3)
+            shadow.direction = 45.0
+            shadow.color.rgb = RGBColor(0x11, 0x22, 0x33)
+        stream = io.BytesIO()
+        slide.part.package.save(stream)
+        stream.seek(0)
+
+        frames = Presentation(stream).slides[0].shapes
+
+        for frame in frames:
+            shadow = frame.shadow
+            assert shadow.inherit is False
+            assert (shadow.blur_radius, shadow.distance, shadow.direction) == (Pt(4), Pt(3), 45.0)
+            assert shadow.color.rgb == RGBColor(0x11, 0x22, 0x33)
+        tblPr = frames[0].table._tbl.tblPr
+        assert [child.tag.split("}")[1] for child in tblPr] == ["effectLst", "tableStyleId"]
+        assert frames[1].chart._chartSpace.spPr.effectLst is not None
 
     @pytest.mark.parametrize(
         "uri, oleObj_child, expected_value",
@@ -259,3 +341,22 @@ class Describe_OleFormat:
     def it_knows_whether_to_show_the_OLE_object_as_an_icon(self):
         graphicData = element("a:graphicData/p:oleObj{showAsIcon=1}")
         assert _OleFormat(graphicData, None).show_as_icon is True
+
+
+def _slide_with_table_and_chart():
+    """A slide holding a table frame then a chart frame, built through the public API."""
+    from pptx import Presentation
+    from pptx.chart.data import CategoryChartData
+    from pptx.enum.chart import XL_CHART_TYPE
+    from pptx.util import Inches
+
+    prs = Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slide.shapes.add_table(2, 2, 0, 0, Inches(3), Inches(1))
+    chart_data = CategoryChartData()
+    chart_data.categories = ["a", "b"]
+    chart_data.add_series("s", (1, 2))
+    slide.shapes.add_chart(
+        XL_CHART_TYPE.COLUMN_CLUSTERED, 0, Inches(2), Inches(4), Inches(3), chart_data
+    )
+    return slide

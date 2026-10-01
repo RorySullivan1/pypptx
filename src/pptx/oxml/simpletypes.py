@@ -9,10 +9,11 @@ attributes. Naming generally corresponds to the simple type in the associated XM
 
 from __future__ import annotations
 
+import math
 import numbers
 from typing import Any
 
-from pptx.exc import InvalidXmlError
+from pptx.exc import InvalidTypeError, InvalidValueError, InvalidXmlError
 from pptx.util import Centipoints, Emu
 
 
@@ -29,20 +30,24 @@ class BaseSimpleType:
 
     @classmethod
     def validate_float(cls, value: Any):
-        """Note that int values are accepted."""
+        """Note that int values are accepted; NaN and infinity are not."""
         if not isinstance(value, (int, float)):
-            raise TypeError("value must be a number, got %s" % type(value))
+            raise InvalidTypeError("value must be a number, got %s" % type(value))
+        # -- only a float can be NaN or infinite; `math.isfinite()` overflows on a huge int --
+        if isinstance(value, float) and not math.isfinite(value):
+            raise InvalidValueError("value must be a finite number, got %r" % value)
 
     @classmethod
     def validate_int(cls, value):
-        if not isinstance(value, numbers.Integral):
-            raise TypeError("value must be an integral type, got %s" % type(value))
+        # -- bool is an Integral too, but would be written as "True"/"False" --
+        if not isinstance(value, numbers.Integral) or isinstance(value, bool):
+            raise InvalidTypeError("value must be an integral type, got %s" % type(value))
 
     @classmethod
     def validate_float_in_range(cls, value, min_inclusive, max_inclusive):
         cls.validate_float(value)
         if value < min_inclusive or value > max_inclusive:
-            raise ValueError(
+            raise InvalidValueError(
                 "value must be in range %s to %s inclusive, got %s"
                 % (min_inclusive, max_inclusive, value)
             )
@@ -51,7 +56,7 @@ class BaseSimpleType:
     def validate_int_in_range(cls, value, min_inclusive, max_inclusive):
         cls.validate_int(value)
         if value < min_inclusive or value > max_inclusive:
-            raise ValueError(
+            raise InvalidValueError(
                 "value must be in range %d to %d inclusive, got %d"
                 % (min_inclusive, max_inclusive, value)
             )
@@ -60,7 +65,7 @@ class BaseSimpleType:
     def validate_string(cls, value):
         if isinstance(value, str):
             return value
-        raise TypeError("value must be a string, got %s" % type(value))
+        raise InvalidTypeError("value must be a string, got %s" % type(value))
 
 
 class BaseFloatType(BaseSimpleType):
@@ -74,8 +79,7 @@ class BaseFloatType(BaseSimpleType):
 
     @classmethod
     def validate(cls, value):
-        if not isinstance(value, (int, float)):
-            raise TypeError("value must be a number, got %s" % type(value))
+        cls.validate_float(value)
 
 
 class BaseIntType(BaseSimpleType):
@@ -116,7 +120,7 @@ class BaseStringEnumerationType(BaseStringType):
     def validate(cls, value):
         cls.validate_string(value)
         if value not in cls._members:
-            raise ValueError("must be one of %s, got '%s'" % (cls._members, value))
+            raise InvalidValueError("must be one of %s, got '%s'" % (cls._members, value))
 
 
 class XsdAnyUri(BaseStringType):
@@ -143,7 +147,7 @@ class XsdBoolean(BaseSimpleType):
     @classmethod
     def validate(cls, value):
         if value not in (True, False):
-            raise TypeError(
+            raise InvalidTypeError(
                 "only True or False (and possibly None) may be assigned, got" " '%s'" % value
             )
 
@@ -233,8 +237,9 @@ class ST_Angle(XsdInt):
         Convert signed angle float like -42.42 to int 60000 per degree,
         normalized to positive value.
         """
-        # modulo normalizes negative and >360 degree values
-        rot = int(round(value * cls.DEGREE_INCREMENTS)) % cls.THREE_SIXTY
+        # -- reduce to [0, 360) degrees before scaling, so a huge value cannot overflow; the
+        # -- second modulo folds a value that rounds up to exactly 360 degrees back to 0 --
+        rot = int(round((value % 360) * cls.DEGREE_INCREMENTS)) % cls.THREE_SIXTY
         return str(rot)
 
     @classmethod
@@ -251,7 +256,7 @@ class ST_AxisUnit(XsdDouble):
     def validate(cls, value):
         super(ST_AxisUnit, cls).validate(value)
         if value <= 0.0:
-            raise ValueError("must be positive numeric value, got %s" % value)
+            raise InvalidValueError("must be positive numeric value, got %s" % value)
 
 
 class ST_BarDir(XsdStringEnumeration):
@@ -472,13 +477,13 @@ class ST_HexColorRGB(BaseStringType):
 
         # must be 6 chars long----------
         if len(str_value) != 6:
-            raise ValueError("RGB string must be six characters long, got '%s'" % str_value)
+            raise InvalidValueError("RGB string must be six characters long, got '%s'" % str_value)
 
         # must parse as hex int --------
         try:
             int(str_value, 16)
         except ValueError:
-            raise ValueError("RGB string must be valid hex string, got '%s'" % str_value)
+            raise InvalidValueError("RGB string must be valid hex string, got '%s'" % str_value)
 
 
 class ST_LayoutMode(XsdStringEnumeration):
@@ -519,7 +524,7 @@ class ST_LineWidth(XsdInt):
     def validate(cls, value):
         super(ST_LineWidth, cls).validate(value)
         if value < 0 or value > 20116800:
-            raise ValueError(
+            raise InvalidValueError(
                 "value must be in range 0-20116800 inclusive (0-1584 points)" ", got %d" % value
             )
 
@@ -633,15 +638,10 @@ class ST_PositiveFixedAngle(ST_Angle):
     def convert_to_xml(cls, degrees):
         """Convert signed angle float like -427.42 to int 60000 per degree.
 
-        Value is normalized to a positive value less than 360 degrees.
+        Value is normalized to a positive value less than 360 degrees; a value that rounds to
+        exactly 360 degrees is written as 0, since `a:lin@ang` must be less than 21600000.
         """
-        if degrees < 0.0:
-            degrees %= -360
-            degrees += 360
-        elif degrees > 0.0:
-            degrees %= 360
-
-        return str(int(round(degrees * cls.DEGREE_INCREMENTS)))
+        return super().convert_to_xml(degrees)
 
 
 class ST_PositiveFixedPercentage(ST_Percentage):
@@ -677,7 +677,7 @@ class ST_SlideSizeCoordinate(BaseIntType):
     def validate(cls, value):
         cls.validate_int(value)
         if value < 914400 or value > 51206400:
-            raise ValueError(
+            raise InvalidValueError(
                 "value must be in range(914400, 51206400) (1-56 inches), got" " %d" % value
             )
 
@@ -698,7 +698,7 @@ class ST_TargetMode(XsdString):
     def validate(cls, value):
         cls.validate_string(value)
         if value not in ("External", "Internal"):
-            raise ValueError("must be one of 'Internal' or 'External', got '%s'" % value)
+            raise InvalidValueError("must be one of 'Internal' or 'External', got '%s'" % value)
 
 
 class ST_TextFontScalePercentOrPercentString(BaseFloatType):
@@ -721,7 +721,7 @@ class ST_TextFontScalePercentOrPercentString(BaseFloatType):
     def validate(cls, value):
         BaseFloatType.validate(value)
         if value < 1.0 or value > 100.0:
-            raise ValueError("value must be in range 1.0..100.0 (percent), got %s" % value)
+            raise InvalidValueError("value must be in range 1.0..100.0 (percent), got %s" % value)
 
 
 class ST_TextFontSize(BaseIntType):
@@ -864,7 +864,7 @@ class ST_TextPoint(BaseSimpleType):
         emu = Emu(value)
         centipoints = emu.centipoints
         if centipoints < -400000 or centipoints > 400000:
-            raise ValueError(
+            raise InvalidValueError(
                 "value must be in range -400000 to 400000 centipoints, got %d" % centipoints
             )
 
@@ -889,13 +889,19 @@ class ST_UniversalMeasure(BaseSimpleType):
     def convert_from_xml(cls, str_value):
         float_part, units_part = str_value[:-2], str_value[-2:]
         quantity = float(float_part)
-        multiplier = {
+        multipliers = {
             "mm": 36000,
             "cm": 360000,
             "in": 914400,
             "pt": 12700,
             "pc": 152400,
             "pi": 152400,
-        }[units_part]
+        }
+        if units_part not in multipliers:
+            raise InvalidXmlError(
+                "universal measure must end in one of %s, got %r"
+                % (", ".join(sorted(multipliers)), str_value)
+            )
+        multiplier = multipliers[units_part]
         emu_value = Emu(int(round(quantity * multiplier)))
         return emu_value

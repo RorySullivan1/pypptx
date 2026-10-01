@@ -26,7 +26,7 @@ Scope and exclusions: `.claude/context/feature-manifest.md`.
 | v0.3.0  | 03    | Feature-gap epics: SmartArt, chartex, media, text styles… (recorded after the fact) | shipped |
 | v0.3.1  | 02    | Example scripts for under-demonstrated areas            | shipped |
 | v0.3.2  | 02    | Docstring audit & Sphinx scaffold                       | shipped |
-| v0.4.0  | 03    | Stability & real-world round-trip                       | planned ← cursor |
+| v0.4.0  | 03    | Stability & real-world round-trip                       | in-progress ← cursor |
 | v0.5.0  | 03    | Transitions, animations (read), custom layouts          | planned |
 | v0.6.0  | 03    | Performance & developer experience (harness done)       | planned |
 | v0.7.0  | 03    | Cross-run text find/replace & text helpers              | planned |

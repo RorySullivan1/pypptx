@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator, overload
 
+from pptx.exc import ShapeError
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -23,7 +25,7 @@ class ShapeRange:
     def __init__(self, shapes: Iterable[BaseShape]) -> None:
         self._shapes = tuple(shapes)
         if len(self._shapes) < 1:
-            raise ValueError("ShapeRange requires at least one shape")
+            raise ShapeError("ShapeRange requires at least one shape")
 
     def __len__(self) -> int:
         return len(self._shapes)
@@ -123,7 +125,7 @@ class ShapeRange:
         Raises ``ValueError`` if fewer than 3 shapes.
         """
         if len(self._shapes) < 3:
-            raise ValueError("distribute_horizontal requires at least 3 shapes")
+            raise ShapeError("distribute_horizontal requires at least 3 shapes")
         sorted_shapes = sorted(self._shapes, key=lambda s: s._element.x)
         total_width = sum(s._element.cx for s in sorted_shapes)
         bbox_extent = sorted_shapes[-1]._element.x + sorted_shapes[-1]._element.cx - sorted_shapes[0]._element.x
@@ -143,7 +145,7 @@ class ShapeRange:
         Raises ``ValueError`` if fewer than 3 shapes.
         """
         if len(self._shapes) < 3:
-            raise ValueError("distribute_vertical requires at least 3 shapes")
+            raise ShapeError("distribute_vertical requires at least 3 shapes")
         sorted_shapes = sorted(self._shapes, key=lambda s: s._element.y)
         total_height = sum(s._element.cy for s in sorted_shapes)
         bbox_extent = sorted_shapes[-1]._element.y + sorted_shapes[-1]._element.cy - sorted_shapes[0]._element.y

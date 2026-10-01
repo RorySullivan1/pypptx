@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, cast
 
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE, PP_PLACEHOLDER
+from pptx.exc import ShapeError
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.shapes.shared import BaseShapeElement
@@ -279,7 +280,7 @@ class CT_Shape(BaseShapeElement):
     def add_path(self, w: Length, h: Length) -> CT_Path2D:
         custGeom = self.spPr.custGeom
         if custGeom is None:
-            raise ValueError("shape must be freeform")
+            raise ShapeError("shape must be freeform")
         pathLst = custGeom.get_or_add_pathLst()
         return pathLst.add_path(w=w, h=h)
 

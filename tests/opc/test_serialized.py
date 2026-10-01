@@ -10,7 +10,7 @@ import zipfile
 
 import pytest
 
-from pptx.exc import PackageNotFoundError
+from pptx.exc import InvalidPackageError, PackageNotFoundError
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.package import Part, _Relationships
 from pptx.opc.packuri import CONTENT_TYPES_URI, PackURI
@@ -225,10 +225,20 @@ class Describe_PhysPkgReader:
         _ZipPkgReader_.assert_called_once_with(pkg_file_path)
         assert phys_reader is zip_pkg_reader_
 
-    def but_it_raises_when_pkg_path_is_not_a_package(self):
+    def but_it_raises_when_pkg_path_does_not_exist(self):
         with pytest.raises(PackageNotFoundError) as e:
             _PhysPkgReader.factory("foobar")
         assert str(e.value) == "Package not found at 'foobar'"
+
+    def and_it_raises_InvalidPackageError_when_the_file_exists_but_is_not_a_zip(self, tmp_path):
+        not_a_zip = tmp_path / "deck.pptx"
+        not_a_zip.write_bytes(b"this is not a zip archive")
+
+        with pytest.raises(InvalidPackageError) as e:
+            _PhysPkgReader.factory(str(not_a_zip))
+
+        assert "is not a valid .pptx package" in str(e.value)
+        assert str(not_a_zip) in str(e.value)
 
     # --- fixture components -------------------------------
 
@@ -283,6 +293,33 @@ class Describe_ZipPkgReader:
         with pytest.raises(KeyError) as e:
             zip_pkg_reader[PackURI("/ppt/foobar.xml")]
         assert str(e.value) == "\"no member '/ppt/foobar.xml' in package\""
+
+    def but_it_raises_InvalidPackageError_when_the_stream_is_not_a_zip(self):
+        with pytest.raises(InvalidPackageError) as e:
+            _ZipPkgReader(io.BytesIO(b"not a zip"))
+        assert str(e.value).startswith("the stream is not a valid .pptx package")
+
+    def and_it_does_not_fail_on_garbage_collection_after_that(self):
+        reader = _ZipPkgReader.__new__(_ZipPkgReader)
+
+        # -- as when `zipfile.ZipFile()` raised in `__init__()`, so `_zipf` was never set --
+        reader.__del__()
+
+    def and_it_raises_InvalidPackageError_when_a_member_is_corrupt(self):
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("ppt/presentation.xml", b"<p:presentation/>" * 200)
+        data = bytearray(stream.getvalue())
+        info = zipfile.ZipFile(io.BytesIO(bytes(data))).getinfo("ppt/presentation.xml")
+        start = info.header_offset + 30 + len(info.filename) + len(info.extra)
+        for i in range(start, start + 16):
+            data[i] ^= 0xFF
+        reader = _ZipPkgReader(io.BytesIO(bytes(data)))
+
+        with pytest.raises(InvalidPackageError) as e:
+            reader[PackURI("/ppt/presentation.xml")]
+
+        assert "part '/ppt/presentation.xml' of the package cannot be read" in str(e.value)
 
     def it_loads_the_member_names_on_first_access_to_help(self, zip_pkg_reader: _ZipPkgReader):
         member_names = zip_pkg_reader._member_names

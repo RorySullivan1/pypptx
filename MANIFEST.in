@@ -1,0 +1,3 @@
+# The real-world corpus is Apache POI test data, used here for testing only: keep it out of
+# every published artifact (setuptools-scm would otherwise put all tracked files in the sdist).
+prune tests/test_files/real_world

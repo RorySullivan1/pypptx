@@ -24,6 +24,8 @@ dev = [
     # and `removeQuotes`, which 3.x deprecates (the suite emits the warnings) and 4.x is
     # expected to remove.
     "pyparsing>=3.0,<4",
+    # tests/oxml/test_simpletypes_properties.py: property-based tests of the simple types.
+    "hypothesis>=6",
 ]
 # Builds the API reference in docs/: `sphinx-build -W -b html docs docs/_build/html`.
 docs = [
@@ -39,8 +41,9 @@ where = ["src"]
 testpaths = ["tests"]
 python_files = ["test_*.py", "bench_*.py"]
 python_classes = ["Describe*"]
-python_functions = ["it_*", "test_*", "bench_*"]
+python_functions = ["it_*", "and_it_*", "but_it_*", "test_*", "bench_*"]
 markers = [
     "perf: opt-in performance benchmark (run with `pytest -m perf`)",
+    "realworld: round-trip tests over the Apache POI corpus in tests/test_files/real_world/",
 ]
 addopts = "-m 'not perf'"

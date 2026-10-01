@@ -17,7 +17,7 @@ from pptx.enum.text import (
     MSO_VERTICAL_ANCHOR,
     PP_PARAGRAPH_ALIGNMENT,
 )
-from pptx.exc import InvalidXmlError
+from pptx.exc import InvalidValueError, InvalidXmlError
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
@@ -277,7 +277,7 @@ class CT_TextBodyProperties(BaseOxmlElement):
     @autofit.setter
     def autofit(self, value: MSO_AUTO_SIZE | None):
         if value is not None and value not in MSO_AUTO_SIZE:
-            raise ValueError(
+            raise InvalidValueError(
                 f"only None or a member of the MSO_AUTO_SIZE enumeration can be assigned to"
                 f" CT_TextBodyProperties.autofit, got {value}"
             )

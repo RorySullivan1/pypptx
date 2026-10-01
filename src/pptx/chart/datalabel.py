@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pptx.dml.chtfmt import ChartFormat
+from pptx.exc import ChartError
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
@@ -39,7 +40,7 @@ class DataLabels:
         """
         leaderLines = self._element.leaderLines
         if leaderLines is None:
-            raise ValueError("plot has no leader lines; set show_leader_lines = True first")
+            raise ChartError("plot has no leader lines; set show_leader_lines = True first")
         return ChartFormat(leaderLines)
 
     @property

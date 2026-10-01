@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Iterator, cast
 
 from pptx.enum.text import MSO_TEXT_VERTICAL_TYPE, MSO_VERTICAL_ANCHOR
+from pptx.exc import InvalidValueError
 from pptx.oxml import parse_xml
 from pptx.oxml.dml.fill import CT_GradientFillProperties
 from pptx.oxml.ns import nsdecls
@@ -324,7 +325,7 @@ class CT_Table(BaseOxmlElement):
         its effective value.
         """
         if value not in (True, False):
-            raise ValueError("assigned value must be either True or False, got %s" % value)
+            raise InvalidValueError("assigned value must be either True or False, got %s" % value)
         tblPr = self.get_or_add_tblPr()
         setattr(tblPr, propname, value)
 
@@ -696,6 +697,12 @@ class CT_TableProperties(BaseOxmlElement):
     lastCol = OptionalAttribute("lastCol", XsdBoolean, default=False)
     get_or_add_tableStyleId: Callable[[], BaseOxmlElement]
     _remove_tableStyleId: Callable[[], None]
+
+    # -- EG_EffectProperties (`a:effectLst` | `a:effectDag`) follows the fill and precedes the
+    # -- table style; only `a:effectLst` is modelled, as for shape properties --
+    effectLst: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "a:effectLst", successors=("a:tableStyle", "a:tableStyleId", "a:extLst")
+    )
 
     # `a:tableStyleId` shares a choice with `a:tblStyle`; either is followed only by `a:extLst`.
     tableStyleId: BaseOxmlElement | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]

@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.exc import ShapeError
+from pptx.exc import ShapeError, UnsupportedEffectError
 from pptx.shapes.base import BaseShape
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.action import ActionSetting
-    from pptx.oxml.shapes.groupshape import CT_GroupShape
+    from pptx.oxml.shapes.groupshape import CT_GroupShape, CT_GroupShapeProperties
     from pptx.shapes.shapetree import GroupShapes
     from pptx.types import ProvidesPart
 
@@ -41,14 +40,15 @@ class GroupShape(BaseShape):
         """
         return False
 
-    @lazyproperty
-    def shadow(self) -> ShadowFormat:
-        """|ShadowFormat| object representing shadow effect for this group.
+    @property
+    def _effect_properties(self) -> CT_GroupShapeProperties:
+        """A group's effects are on its `p:grpSpPr`."""
+        return self._grpSp.grpSpPr
 
-        A |ShadowFormat| object is always returned, even when no shadow is explicitly defined on
-        this group shape (i.e. when the group inherits its shadow behavior).
-        """
-        return ShadowFormat(self._grpSp.grpSpPr)
+    @property
+    def _three_d_properties(self) -> CT_GroupShapeProperties:
+        """A group has no 3D shape properties (`p:grpSpPr` has no `a:sp3d`)."""
+        raise UnsupportedEffectError("3D formatting is not supported on a group shape")
 
     @property
     def shape_type(self) -> MSO_SHAPE_TYPE:

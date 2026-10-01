@@ -12,6 +12,7 @@ from pptx.shared import ElementProxy
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
     from pptx.oxml.shapes import ShapeElement
     from pptx.oxml.shapes.shared import CT_Placeholder
@@ -282,33 +283,61 @@ class BaseShape:
 
         A |ShadowFormat| object is always returned, even when no shadow is
         explicitly defined on this shape (i.e. it inherits its shadow
-        behavior).
+        behavior). For a group the shadow is on its `p:grpSpPr`; for a graphic
+        frame it belongs to the table or chart it contains, and other graphic
+        frames raise |ShapeError|.
         """
-        return ShadowFormat(self._element.spPr)
+        return ShadowFormat(self._effect_properties)
 
     @lazyproperty
     def glow(self) -> GlowFormat:
-        """|GlowFormat| object providing access to glow effect properties."""
-        return GlowFormat(self._element.spPr)
+        """|GlowFormat| object providing access to glow effect properties.
+
+        Held where :attr:`shadow` is; raises |ShapeError| where :attr:`shadow` does.
+        """
+        return GlowFormat(self._effect_properties)
 
     @lazyproperty
     def reflection(self) -> ReflectionFormat:
-        """|ReflectionFormat| object providing access to reflection effect properties."""
-        return ReflectionFormat(self._element.spPr)
+        """|ReflectionFormat| object providing access to reflection effect properties.
+
+        Held where :attr:`shadow` is; raises |ShapeError| where :attr:`shadow` does.
+        """
+        return ReflectionFormat(self._effect_properties)
 
     @lazyproperty
     def soft_edge(self) -> SoftEdgeFormat:
-        """|SoftEdgeFormat| object providing access to soft edge effect properties."""
-        return SoftEdgeFormat(self._element.spPr)
+        """|SoftEdgeFormat| object providing access to soft edge effect properties.
+
+        Held where :attr:`shadow` is; raises |ShapeError| where :attr:`shadow` does.
+        """
+        return SoftEdgeFormat(self._effect_properties)
 
     @lazyproperty
     def three_d(self) -> ThreeDFormat:
         """|ThreeDFormat| object providing access to 3D formatting.
 
         Controls extrusion depth, contour, material, bevels, and 3D scene
-        (camera and lighting). A |ThreeDFormat| object is always returned.
+        (camera and lighting). A |ThreeDFormat| object is always returned for a
+        shape with its own shape properties and for a graphic frame holding a
+        chart; a group, or a graphic frame holding anything else, raises
+        |ShapeError| because the schema gives it no place for 3D shape
+        properties.
         """
-        return ThreeDFormat(self._element.spPr)
+        return ThreeDFormat(self._three_d_properties)
+
+    @property
+    def _effect_properties(self) -> BaseOxmlElement:
+        """The element whose `a:effectLst` holds this shape's effects: its `p:spPr`.
+
+        Overridden by shapes whose effects live elsewhere.
+        """
+        return self._element.spPr  # pyright: ignore[reportAttributeAccessIssue]
+
+    @property
+    def _three_d_properties(self) -> BaseOxmlElement:
+        """The element holding this shape's `a:scene3d` and `a:sp3d`: its `p:spPr`."""
+        return self._element.spPr  # pyright: ignore[reportAttributeAccessIssue]
 
     @property
     def shape_id(self) -> int:
