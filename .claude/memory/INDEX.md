@@ -40,8 +40,8 @@
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
 - Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
-- Issue #51 (checklist trimmed 2026-09-25): open items are proxy-tuple caching (paragraphs/runs/shapes) and a "no slower than
-  baseline" `pytest -m perf` gate in CI; plan + baseline in `.claude/context/performance.md`.
+- Issue #51 (re-measured 2026-10-01 on the corpus): P6 iterchildren getters in PR; next = cache `_base_placeholder` +
+  one-XPath placeholder `get()` (−65% inherited geometry), then a call-count CI gate. Proxy-tuple caching measured NOT worth it.
 - `unverified` surfaces (verification-surface.md): type checker.
 - Anyone with a Windows clone predating `b64d2b9` needs `git add --renormalize .` once after pulling, or git
   reports every text file modified (its dirty check compares the size recorded in the index, not content).
@@ -73,3 +73,4 @@
 - 2026-09-30 | Release-tag commits recorded (.meta/release-tags.md); v0.4.0 card expanded from a POI-corpus pilot | .meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md
 - 2026-09-30 1642 | v0.4.0 built: POI corpus, InvalidPackageError, compatible errors, Hypothesis (5 bugs) | sessions/2026-09-30-1642-v040-realworld-hardening.md
 - 2026-10-01 | v0.4.0 shipped (PR #122, 2c64b2d): package 0.4.0, cursor → v0.5.0 | .meta/version
+- 2026-10-01 | #51 options measured on the corpus; P6 (xmlchemy iterchildren getters) implemented | .claude/context/performance.md

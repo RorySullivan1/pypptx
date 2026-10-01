@@ -21,6 +21,14 @@ The v0.6.0 card sets the boundaries this work honors:
   open → read-all-runs → edit → save job went from ~658 ms to ~400 ms (-39%).
 - **Process fan-out recipe** (PR #108): `examples/batch_process.py`. 16 such decks: 10.6 s in a
   plain loop, 3.2 s with 4 worker processes, 2.0 s with 4 processes after the caches.
+- **Generated child getters use `iterchildren()`** (2026-10-01). The `xmlchemy` accessors
+  (`ZeroOrOne`, `OneAndOnlyOne`, `ZeroOrMore`/`OneOrMore`, choice groups through
+  `first_child_found_in()`, and `remove_all()`) call `next(iterchildren(tag), None)` /
+  `list(iterchildren(tag))` with the Clark tag computed once, instead of `find(qn(...))` /
+  `findall(...)`. lxml's `find()` interprets an ElementPath expression on every call. Per lookup
+  this is about 40% faster: a present child 2.06 → 1.27 µs, a missing one 1.57 → 0.88 µs. Text
+  iteration on the synthetic decks is 19–34% faster, and a read of the real-world corpus about
+  20% faster. Save is unchanged.
 
 ## What already exists (verify, do not reimplement)
 
@@ -43,18 +51,31 @@ Measured on a synthetic text-heavy deck (CPython 3.11, 4 cores):
 - **A `compression` option on `save()` is low value.** zlib is ~9 ms of a ~50 ms save.
 - **Cython is not justified** by these numbers, and the v0.6.0 card excludes native code.
 
-## Remaining candidates for v0.6.0
+## Remaining candidates (measured 2026-10-01; see the #51 comment of that date)
 
-- `TextFrame.paragraphs` and `_Paragraph.runs` (`src/pptx/text/text.py`) are plain properties
-  that rebuild a tuple of proxies on each access; the `iter1x` vs `iter10x` columns below
-  isolate that cost. Caching them needs invalidation on `add_paragraph` / `add_run` / text
-  assignment.
-- `_BaseShapes.__getitem__` / `__iter__` / `__len__` rebuild `list(_iter_member_elms())` per
-  call.
-- Child-element accessors (`xmlchemy` `get_child_element` / `get_child_element_list`) now
-  lead the profile at ~3 µs a call, close to lxml's own floor.
-- Benchmark against the v0.4.0 real-world corpus once it exists — image-heavy decks weight
-  open and save, which the caches barely moved.
+On the v0.4.0 real-world corpus (24 PowerPoint-authored decks), the read side is dominated by
+**placeholder inheritance**, not `paragraphs`/`runs`. Each inherited `left`/`top`/`width`/
+`height` read looks up the layout placeholder (then the master's) again, and each lookup builds
+a proxy per placeholder and evaluates two XPaths per shape: about 45% of read time.
+
+- **Cache `_base_placeholder` on placeholder proxies** (`@lazyproperty`, 5 sites): inherited
+  geometry −58%. A held proxy goes stale only if its layout/master placeholder is deleted.
+- **One-XPath placeholder `get()`**: `LayoutPlaceholders.get` / `MasterPlaceholders.get` find all
+  `p:ph` at once and compare `idx`/`type` on the elements (the existing scan stays for trees
+  holding `mc:AlternateContent`): −23% alone, −65% with the cache. Six mock-based unit tests
+  stub `__iter__` and need rewriting.
+- **Enum `from_xml` through a dict**: 23× faster per call, end-to-end within noise. Optional.
+- **Not worth it** (measured): caching the `paragraphs`/`runs` tuples, checked against the child
+  elements, gave `iter10x` −20% but `iter1x` +13–18%. Batch work reads once, and the
+  `iterchildren()` getters help both. Walking to `p:ph` with `find()` instead of the compiled
+  XPath was 2× slower.
+- **Regression gate (Phase 5)**: gate on work rather than time. Count calls into `pptx/` code
+  for a fixed corpus workload under cProfile. It is deterministic (identical across runs) and
+  moves on algorithmic regressions (the placeholder changes move it −35%). Check a budget into
+  `tests/perf/` with about 2% tolerance, run it in one CI cell, and keep wall-clock as a
+  non-blocking report.
+- The baseline's `save` column is a single run and swings about ±40%. Repeat a save timing
+  before reading anything into it.
 
 ## Harness
 
@@ -77,7 +98,7 @@ python -m tests.perf.run_baseline    # refresh baseline.json and the section bel
 
 ## Baseline
 
-Captured: `2026-09-25T17:24:48.947516+00:00`
+Captured: `2026-10-01T15:25:24.410339+00:00`
 Platform: `CPython 3.11.15` on `Linux / x86_64`
 
 ### Corpus
@@ -99,47 +120,47 @@ Open is median of 5 cold opens.
 
 | fixture | open | iter1x | iter10x | save |
 | --- | --- | --- | --- | --- |
-| small | 5.79 | 1.33 | 4.87 | 6.48 |
-| medium | 15.35 | 21.20 | 143.65 | 13.73 |
-| large | 60.74 | 133.72 | 963.12 | 47.07 |
+| small | 5.77 | 1.02 | 3.17 | 6.15 |
+| medium | 15.40 | 24.86 | 127.50 | 15.34 |
+| large | 66.62 | 93.48 | 655.98 | 45.97 |
 
 ### Memory on open (KiB, tracemalloc)
 
 | fixture | current | peak |
 | --- | --- | --- |
-| small | 108.6 | 153.0 |
+| small | 108.4 | 153.0 |
 | medium | 198.7 | 221.8 |
-| large | 237.2 | 447.0 |
+| large | 237.3 | 447.0 |
 
 ### cProfile top 20 (medium fixture, open + iterate + save)
 
 ```
-317091 function calls (315712 primitive calls) in 0.285 seconds
+337351 function calls (336070 primitive calls) in 0.238 seconds
 
    Ordered by: cumulative time
-   List reduced from 335 to 20 due to restriction <20>
+   List reduced from 337 to 20 due to restriction <20>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.023    0.023    0.237    0.237 run_baseline.py:69(_bench_iterate_text)
-    18000    0.021    0.000    0.095    0.000 text.py:909(runs)
-    18000    0.007    0.000    0.064    0.000 text.py:1023(text)
-    22610    0.059    0.000    0.062    0.000 xmlchemy.py:398(get_child_element_list)
-    18000    0.010    0.000    0.057    0.000 text.py:71(text)
-    18060    0.048    0.000    0.048    0.000 xmlchemy.py:492(get_child_element)
-     4500    0.004    0.000    0.040    0.000 text.py:221(paragraphs)
-    36000    0.011    0.000    0.027    0.000 text.py:912(<genexpr>)
-2919/1807    0.002    0.000    0.027    0.000 util.py:166(__get__)
-        1    0.000    0.000    0.024    0.024 presentation.py:93(save)
-        1    0.000    0.000    0.024    0.024 presentation.py:429(save)
-        1    0.000    0.000    0.024    0.024 package.py:152(save)
-        1    0.000    0.000    0.024    0.024 api.py:22(Presentation)
-        1    0.000    0.000    0.024    0.024 package.py:80(open)
-        1    0.000    0.000    0.024    0.024 package.py:159(_load)
-        1    0.000    0.000    0.024    0.024 package.py:178(load)
-        1    0.000    0.000    0.023    0.023 package.py:193(_load)
-        1    0.000    0.000    0.023    0.023 serialized.py:70(write)
-        1    0.000    0.000    0.023    0.023 serialized.py:81(_write)
-     4500    0.006    0.000    0.021    0.000 text.py:227(<listcomp>)
+        1    0.022    0.022    0.190    0.190 run_baseline.py:69(_bench_iterate_text)
+    18000    0.019    0.000    0.076    0.000 text.py:910(runs)
+    18000    0.007    0.000    0.043    0.000 text.py:1024(text)
+    22610    0.040    0.000    0.042    0.000 xmlchemy.py:404(get_child_element_list)
+    18000    0.009    0.000    0.037    0.000 text.py:71(text)
+     4500    0.004    0.000    0.035    0.000 text.py:222(paragraphs)
+    18060    0.026    0.000    0.028    0.000 xmlchemy.py:500(get_child_element)
+2821/1807    0.003    0.000    0.025    0.000 util.py:166(__get__)
+    36000    0.010    0.000    0.025    0.000 text.py:913(<genexpr>)
+        1    0.000    0.000    0.025    0.025 presentation.py:94(save)
+        1    0.000    0.000    0.025    0.025 presentation.py:440(save)
+        1    0.000    0.000    0.025    0.025 package.py:158(save)
+        1    0.000    0.000    0.024    0.024 serialized.py:71(write)
+        1    0.000    0.000    0.024    0.024 serialized.py:82(_write)
+        1    0.000    0.000    0.023    0.023 api.py:22(Presentation)
+        1    0.000    0.000    0.023    0.023 package.py:80(open)
+        1    0.000    0.000    0.023    0.023 package.py:165(_load)
+        1    0.000    0.000    0.022    0.022 package.py:184(load)
+        1    0.000    0.000    0.022    0.022 package.py:199(_load)
+        1    0.000    0.000    0.021    0.021 serialized.py:100(_write_parts)
 ```
 
 ### Reproducing
