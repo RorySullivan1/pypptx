@@ -29,6 +29,14 @@ The v0.6.0 card sets the boundaries this work honors:
   this is about 40% faster: a present child 2.06 → 1.27 µs, a missing one 1.57 → 0.88 µs. Text
   iteration on the synthetic decks is 19–34% faster, and a read of the real-world corpus about
   20% faster. Save is unchanged.
+- **Placeholder inheritance** (2026-10-01). A placeholder caches its `_base_placeholder` (a
+  `@lazyproperty`), so reading `left`/`top`/`width`/`height` searches the layout once rather
+  than four times. `LayoutPlaceholders.get` / `MasterPlaceholders.get` find every `p:ph` with
+  one XPath and compare `idx`/`type` on the elements, building a proxy only for the match. A
+  tree holding `mc:AlternateContent` keeps the general scan. On top of the `iterchildren()`
+  getters: four inherited reads 449 → 157 µs (−65%), a read of the real-world corpus 787 →
+  534 ms (−32%). A placeholder object keeps the base it found; one obtained after the layout
+  placeholder is deleted sees the change.
 
 ## What already exists (verify, do not reimplement)
 
@@ -53,17 +61,10 @@ Measured on a synthetic text-heavy deck (CPython 3.11, 4 cores):
 
 ## Remaining candidates (measured 2026-10-01; see the #51 comment of that date)
 
-On the v0.4.0 real-world corpus (24 PowerPoint-authored decks), the read side is dominated by
-**placeholder inheritance**, not `paragraphs`/`runs`. Each inherited `left`/`top`/`width`/
-`height` read looks up the layout placeholder (then the master's) again, and each lookup builds
-a proxy per placeholder and evaluates two XPaths per shape: about 45% of read time.
+On the v0.4.0 real-world corpus (24 PowerPoint-authored decks), the read side was dominated by
+**placeholder inheritance**, not `paragraphs`/`runs`: about 45% of read time before the fix under
+"Done so far".
 
-- **Cache `_base_placeholder` on placeholder proxies** (`@lazyproperty`, 5 sites): inherited
-  geometry −58%. A held proxy goes stale only if its layout/master placeholder is deleted.
-- **One-XPath placeholder `get()`**: `LayoutPlaceholders.get` / `MasterPlaceholders.get` find all
-  `p:ph` at once and compare `idx`/`type` on the elements (the existing scan stays for trees
-  holding `mc:AlternateContent`): −23% alone, −65% with the cache. Six mock-based unit tests
-  stub `__iter__` and need rewriting.
 - **Enum `from_xml` through a dict**: 23× faster per call, end-to-end within noise. Optional.
 - **Not worth it** (measured): caching the `paragraphs`/`runs` tuples, checked against the child
   elements, gave `iter10x` −20% but `iter1x` +13–18%. Batch work reads once, and the

@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes import ShapeElement
     from pptx.oxml.shapes.connector import CT_Connector
     from pptx.oxml.shapes.groupshape import CT_GroupShape
+    from pptx.oxml.shapes.shared import CT_Placeholder
     from pptx.parts.image import ImagePart
     from pptx.parts.slide import SlidePart
     from pptx.parts.tags import TagsPart
@@ -938,6 +939,24 @@ class BasePlaceholders(_BaseShapes):
         """True if `shape_elm` is a placeholder shape, False otherwise."""
         return shape_elm.has_ph_elm
 
+    def _iter_ph_pairs(self) -> Iterator[tuple[ShapeElement, CT_Placeholder]]:
+        """Generate `(shape_elm, ph)` for each placeholder shape, in document order.
+
+        Looking a placeholder up by `idx` or type reads every placeholder's `p:ph`, and this
+        happens on every inherited `left`/`top`/`width`/`height`. One XPath query finds all of
+        them at once, where reading each shape's `p:ph` separately costs an XPath per shape. A
+        tree holding `mc:AlternateContent` takes the general path, which unwraps those.
+        """
+        spTree = self._spTree
+        if spTree.find(qn("mc:AlternateContent")) is not None:
+            for shape_elm in self._iter_member_elms():
+                yield shape_elm, cast("CT_Placeholder", shape_elm.ph)
+            return
+        for ph in spTree.xpath("./*/*[1]/p:nvPr/p:ph"):
+            shape_elm = ph.getparent().getparent().getparent()
+            if shape_elm.tag in spTree._shape_tags:
+                yield shape_elm, ph
+
 
 class LayoutPlaceholders(BasePlaceholders):
     """Sequence of |LayoutPlaceholder| instance for each placeholder shape on a slide layout."""
@@ -948,9 +967,9 @@ class LayoutPlaceholders(BasePlaceholders):
 
     def get(self, idx: int, default: LayoutPlaceholder | None = None) -> LayoutPlaceholder | None:
         """The first placeholder shape with matching `idx` value, or `default` if not found."""
-        for placeholder in self:
-            if placeholder.element.ph_idx == idx:
-                return placeholder
+        for shape_elm, ph in self._iter_ph_pairs():
+            if ph.idx == idx:
+                return cast(LayoutPlaceholder, self._shape_factory(shape_elm))
         return default
 
     def _shape_factory(self, shape_elm: ShapeElement) -> BaseShape:
@@ -970,9 +989,9 @@ class MasterPlaceholders(BasePlaceholders):
 
         Returns `default` if no such placeholder shape is present in the collection.
         """
-        for placeholder in self:
-            if placeholder.ph_type == ph_type:
-                return placeholder
+        for shape_elm, ph in self._iter_ph_pairs():
+            if ph.type == ph_type:
+                return self._shape_factory(cast("CT_Shape", shape_elm))
         return default
 
     def _shape_factory(  # pyright: ignore[reportIncompatibleMethodOverride]

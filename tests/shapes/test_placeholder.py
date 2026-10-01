@@ -562,3 +562,48 @@ class DescribeTablePlaceholder:
         graphicFrame = table_ph._new_placeholder_table(1, 1)
 
         assert graphicFrame.xml == snippet_seq("placeholders")[0]
+
+
+class Describe_InheritsDimensions_base_placeholder:
+    """A placeholder looks its base placeholder up once and reuses it (issue #51)."""
+
+    def it_searches_the_layout_once_for_all_four_inherited_dimensions(self, request):
+        from pptx import Presentation
+        from pptx.shapes.shapetree import LayoutPlaceholders
+
+        prs = Presentation()
+        placeholder = prs.slides.add_slide(prs.slide_layouts[1]).placeholders[1]
+        get_ = method_mock(
+            request, LayoutPlaceholders, "get", autospec=True, side_effect=LayoutPlaceholders.get
+        )
+
+        placeholder.left, placeholder.top, placeholder.width, placeholder.height
+
+        assert get_.call_count == 1
+
+    def it_reads_the_same_dimensions_as_a_placeholder_with_no_cached_base(self):
+        from pptx import Presentation
+
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        held = slide.placeholders[1]
+        held.left  # -- caches its base --
+
+        for fresh in (slide.placeholders[1], slide.placeholders[1]):
+            assert (fresh.left, fresh.top, fresh.width, fresh.height) == (
+                held.left,
+                held.top,
+                held.width,
+                held.height,
+            )
+
+    def but_it_sees_a_deleted_layout_placeholder_when_obtained_afterwards(self):
+        from pptx import Presentation
+
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        assert slide.placeholders[1].left is not None
+        layout_ph = slide.slide_layout.placeholders.get(idx=1)
+        layout_ph.element.getparent().remove(layout_ph.element)
+
+        assert slide.placeholders[1].left is None
