@@ -67,11 +67,7 @@ class BaseXmlEnum(int, enum.Enum):
 
         """
         # -- the empty string never maps to a member --
-        member = (
-            next((member for member in cls if member.xml_value == xml_value), None)
-            if xml_value
-            else None
-        )
+        member = _xml_value_map(cls).get(xml_value) if xml_value else None
 
         if member is None:
             raise ValueError(f"{cls.__name__} has no XML mapping for {repr(xml_value)}")
@@ -173,3 +169,22 @@ class DocsPageFormatter:
         """
         title_underscore = "=" * (len(self._clsname) + 4)
         return "``%s``\n%s" % (self._clsname, title_underscore)
+
+
+_XML_VALUE_MAPS: dict[type, dict[str, Any]] = {}
+
+
+def _xml_value_map(enum_cls: type) -> dict[str, Any]:
+    """Map each XML attribute value of `enum_cls` to its first member, built on first use.
+
+    Enumerations are fixed once defined, so the map never goes stale. The first member wins,
+    matching the linear scan this replaces, for the rare value two members share.
+    """
+    mapping = _XML_VALUE_MAPS.get(enum_cls)
+    if mapping is None:
+        mapping = {}
+        for member in enum_cls:  # pyright: ignore[reportGeneralTypeIssues]
+            if member.xml_value and member.xml_value not in mapping:
+                mapping[member.xml_value] = member
+        _XML_VALUE_MAPS[enum_cls] = mapping
+    return mapping

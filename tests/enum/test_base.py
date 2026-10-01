@@ -2,10 +2,27 @@
 
 from __future__ import annotations
 
+import importlib
+import pkgutil
+
 import pytest
 
+import pptx.enum
+
 from pptx.enum.action import PP_ACTION, PP_ACTION_TYPE
+from pptx.enum.base import BaseXmlEnum
 from pptx.enum.dml import MSO_LINE_DASH_STYLE
+
+
+def _xml_enums() -> list[type[BaseXmlEnum]]:
+    """Every XML-mapped enumeration defined in `pptx.enum`."""
+    found: dict[str, type[BaseXmlEnum]] = {}
+    for info in pkgutil.iter_modules(pptx.enum.__path__):
+        module = importlib.import_module("pptx.enum.%s" % info.name)
+        for obj in vars(module).values():
+            if isinstance(obj, type) and issubclass(obj, BaseXmlEnum) and obj is not BaseXmlEnum:
+                found[obj.__name__] = obj
+    return sorted(found.values(), key=lambda cls: cls.__name__)
 
 
 class DescribeBaseEnum:
@@ -57,6 +74,14 @@ class DescribeBaseXmlEnum:
     def and_the_empty_string_never_maps_to_a_member(self):
         with pytest.raises(ValueError, match="MSO_LINE_DASH_STYLE has no XML mapping for ''"):
             MSO_LINE_DASH_STYLE.from_xml("")
+
+    @pytest.mark.parametrize("enum_cls", _xml_enums(), ids=lambda cls: cls.__name__)
+    def and_it_maps_each_XML_value_to_the_first_member_that_has_it(self, enum_cls):
+        # -- e.g. MSO_AUTO_SHAPE_TYPE and MSO_LANGUAGE_ID give the same XML value to two members --
+        for member in enum_cls:
+            if member.xml_value:
+                first = next(m for m in enum_cls if m.xml_value == member.xml_value)
+                assert enum_cls.from_xml(member.xml_value) is first
 
     def it_knows_the_XML_attribute_value_for_each_member_that_has_one(self):
         assert MSO_LINE_DASH_STYLE.to_xml(MSO_LINE_DASH_STYLE.SOLID) == "solid"

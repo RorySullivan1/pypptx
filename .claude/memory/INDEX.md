@@ -42,8 +42,7 @@
 - Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
 - Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
 - Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
-- Issue #51 (re-measured 2026-10-01 on the corpus): P6 getters, placeholder caching and the work-count gate in PR #123.
-  Left: optional enum `from_xml` dict (P3); proxy-tuple caching measured NOT worth it. Then close #51.
+- Issue #51: all planned work merged (PR #123) or in the enum `from_xml` PR; close #51 once that merges.
 - `unverified` surfaces (verification-surface.md): type checker.
 - Anyone with a Windows clone predating `b64d2b9` needs `git add --renormalize .` once after pulling, or git
   reports every text file modified (its dirty check compares the size recorded in the index, not content).
@@ -75,3 +74,4 @@
 - 2026-09-30 1642 | v0.4.0 built: POI corpus, InvalidPackageError, compatible errors, Hypothesis (5 bugs) | sessions/2026-09-30-1642-v040-realworld-hardening.md
 - 2026-10-01 | v0.4.0 shipped (PR #122, 2c64b2d): package 0.4.0, cursor → v0.5.0 | .meta/version
 - 2026-10-01 1546 | #51: P6 getters, placeholder caching (corpus read −32%), work-count gate | sessions/2026-10-01-1546-issue-51-perf.md
+- 2026-10-01 | #51 last item: enum `from_xml` dict lookup; v0.6.0 card records the #51 outcomes | .claude/context/performance.md
