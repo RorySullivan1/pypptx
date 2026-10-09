@@ -68,11 +68,28 @@ The codebase is organized in four layers, from low-level to high-level:
 
 ### Slide Hierarchy
 - Slide masters and slide layouts (read, iterate, remove layouts)
+- Custom layouts — `SlideLayouts.add_slide_layout(name, *, blank=False)` adds a layout as PowerPoint's
+  Insert Layout does (title, date, footer and slide-number placeholders positioned by the master);
+  `LayoutShapes.add_placeholder(ph_type, ...)` adds a placeholder that inherits the master's geometry or
+  takes an explicit one; `SlideLayouts.duplicate(layout, name=None)` copies a layout after itself
+  ("1_<name>"). Master and layout ids are allocated in their shared range, also by `import_slide`
+- Handout master — `Presentation.handout_master` (read-only; `None` when absent, never created)
 - Notes master and notes slides (create, read, access notes text)
 - Layout-to-master and slide-to-layout relationships
 - Placeholder inheritance chain (master → layout → slide)
 - Master text styles — `SlideMaster.text_styles.title/body/other[level]` (alignment, indent, margins, spacing, `font`) and `Presentation.default_text_style`
 - Headers & footers — `header_footer` on slide, layout, master, and notes master; per-slide show/hide of date, footer, slide number; date format (read-only field-type string) and auto-vs-fixed mode; footer text r/w
+
+### Transitions & Animations (read-only)
+- Transitions — `Slide.transition` (also on `SlideLayout` and `SlideMaster`, as stored there):
+  `type` (`PP_TRANSITION_TYPE`: the 21 ECMA effects, 19 PowerPoint 2010 effects, PowerPoint 2013
+  presets and Morph), `speed`, `duration` (`p14:dur`), `advance_on_click`, `advance_after`,
+  `direction`, `preset`, `has_sound`. Transitions in `mc:AlternateContent` are read from the
+  richer `mc:Choice`
+- Animations — `Slide.animations`: each effect in play order (main sequence, then triggered
+  sequences) with `preset_class`, `preset_id`/`preset_subtype`, `effect_type` (named entrance/exit
+  effects, preset IDs 1–31), `trigger`/`trigger_shape`, `delay`, `duration`, `shape` and
+  `paragraphs`. Authoring transitions or animations is not supported
 
 ### Sections, Tags & Comments
 - Sections — `Presentation.sections` with add, remove, rename, iterate, and per-section slide-ID enumeration (`p14:sectionLst`)
@@ -230,14 +247,6 @@ These are inherent constraints of a file-format library that edits XML. They can
 ## Feature Gaps
 
 These are features that **are representable in the OOXML schema** and are therefore implementable, but are not yet present in the library.
-
-### Custom Slide Layouts
-- Create new slide layout parts and link to a slide master
-- Define placeholder positions and types on custom layouts
-
-### Transitions & Animations (read-only target — see `.meta/roadmap/stages/03-hardening-and-gaps/v0.5.0.md`)
-- Slide transition timing and effect parameters (`p:transition`)
-- Read access to the animation timing tree on a slide
 
 ### Cross-run Text Operations (see `.meta/roadmap/stages/03-hardening-and-gaps/v0.7.0.md`)
 - Find / replace across runs within a paragraph

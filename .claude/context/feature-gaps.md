@@ -780,6 +780,29 @@ for a demonstration of "slide **and shape** tags", and only the slide half exist
 
 ---
 
+## 29. Python API — Transitions & Animations (read), Custom Layouts, Handout Master (DONE, v0.5.0)
+
+Schema: ECMA-376 Part 1 PresentationML `p:transition`, the `p:timing` time-node tree,
+`p:sldLayout`, `p:sldLayoutId` / `p:sldMasterId` and `p:handoutMaster`; [MS-PPTX] §2.3 for the
+`p14` transitions and `p14:dur`; `p15:prstTrans`; `p159:morph`.
+
+- [x] OXML: `CT_SlideTransition` + `effective_transition()` (resolves `mc:AlternateContent`);
+  time-node tree read accessors in `oxml/timing.py`; `ST_TLTime`, preset-class and node-type tokens,
+  `ST_SlideLayoutId`/`ST_SlideMasterId`; `CT_HandoutMaster`; `CT_SlideLayout.new()`
+- [x] Enums: `PP_TRANSITION_TYPE`, `PP_TRANSITION_SPEED`, `PP_ANIMATION_CLASS`,
+  `MSO_ANIMATION_TRIGGER`, `MSO_ANIMATION_EFFECT` (entrance/exit preset IDs 1–31)
+- [x] API: `SlideTransition` (slides, layouts, masters), `Slide.animations` / `Animation`,
+  `Presentation.handout_master`, `SlideLayouts.add_slide_layout` / `duplicate`,
+  `LayoutShapes.add_placeholder`; master/layout ids allocated (also fixes `import_slide`)
+- [ ] Deferred — authoring transitions and animations; resolving whether a layout or master
+  transition applies to a slide; names for emphasis, motion-path and entrance/exit IDs above 31;
+  motion-path geometry and behavior values; non-placeholder shapes on layouts; handout authoring
+- [ ] Human check — `examples/custom_layouts.py` output opens without repair, both layouts show in
+  the Layout gallery and the slides show their placeholders; the duplicate's "1_" name matches
+  PowerPoint's; values read from `customGeo.pptx` and `bug68703.pptx` match PowerPoint's panes
+
+---
+
 ## Out of Scope
 
 The following are **not planned** as they require capabilities beyond XML file manipulation:

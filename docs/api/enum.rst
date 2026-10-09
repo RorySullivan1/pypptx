@@ -18,6 +18,59 @@ PP_ACTION_TYPE
    :undoc-members:
    :no-show-inheritance:
 
+``pptx.enum.animation``
+-----------------------
+
+.. _MsoAnimEffect:
+
+MSO_ANIMATION_EFFECT
+~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: pptx.enum.animation.MSO_ANIMATION_EFFECT
+   :members:
+   :undoc-members:
+   :no-show-inheritance:
+
+.. _MsoAnimTriggerType:
+
+MSO_ANIMATION_TRIGGER
+~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: pptx.enum.animation.MSO_ANIMATION_TRIGGER
+   :members:
+   :undoc-members:
+   :no-show-inheritance:
+
+.. _PpAnimationClass:
+
+PP_ANIMATION_CLASS
+~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: pptx.enum.animation.PP_ANIMATION_CLASS
+   :members:
+   :undoc-members:
+   :no-show-inheritance:
+
+.. _PpTransitionSpeed:
+
+PP_TRANSITION_SPEED
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: pptx.enum.animation.PP_TRANSITION_SPEED
+   :members:
+   :undoc-members:
+   :no-show-inheritance:
+
+.. _PpTransitionType:
+
+PP_TRANSITION_TYPE
+~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: pptx.enum.animation.PP_TRANSITION_TYPE
+   :members:
+   :undoc-members:
+   :no-show-inheritance:
+
 ``pptx.enum.chart``
 -------------------
 

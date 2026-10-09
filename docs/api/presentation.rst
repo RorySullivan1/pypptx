@@ -16,6 +16,16 @@ Presentation and slides
 
 .. automodule:: pptx.slide
 
+``pptx.transition``
+-------------------
+
+.. automodule:: pptx.transition
+
+``pptx.animation``
+------------------
+
+.. automodule:: pptx.animation
+
 Objects the API returns from private classes
 --------------------------------------------
 
