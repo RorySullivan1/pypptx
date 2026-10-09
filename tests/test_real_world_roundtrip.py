@@ -57,13 +57,15 @@ def _same_part(name: str, original: bytes, saved: bytes) -> bool:
 
     A `.rels` part compares as its set of relationships (pypptx writes them sorted by id), an
     XML part as canonical XML ignoring whitespace between elements, anything else byte for byte.
+    XML that lxml can't parse or canonicalize (e.g. the SharePoint content-type schema in
+    `bug68703.pptx`'s `customXml/item3.xml`) also compares byte for byte.
     """
     if name.endswith(".rels"):
         return _relationships(original) == _relationships(saved)
     if name.endswith(".xml"):
         try:
             return _canonical(original) == _canonical(saved)
-        except etree.XMLSyntaxError:
+        except (etree.XMLSyntaxError, etree.C14NError):
             pass
     return original == saved
 

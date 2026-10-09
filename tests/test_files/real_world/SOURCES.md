@@ -14,10 +14,12 @@ excluded. Fetch one again with:
 curl -O 'https://svn.apache.org/repos/asf/!svn/bc/1938723/poi/trunk/test-data/slideshow/<file>'
 ```
 
-Authoring application is read from each file's `docProps/app.xml`.
+Authoring application is read from each file's `docProps/app.xml`. `2411-Performance_Up`, `bug68703`,
+`customGeo` and `EmbeddedVideo` were added in v0.5.0 (same revision) for transitions and animations.
 
 | File | KB | Saved by | Exercises | SHA-256 |
 |---|---|---|---|---|
+| `2411-Performance_Up.pptx` | 633 | Microsoft PowerPoint 12.0001 | transition, animation (after-previous, by paragraph), 48 slides | `a387861a0066ad11ba85aba9572830c1ec1ab9a24380728ead34d2b5b26662c0` |
 | `45545_Comment.pptx` | 301 | Microsoft PowerPoint 7.0 12.0000 | comments, notes, transition, animation, 11 slides | `0295a51f63150e3ee680154d07dab88062ba2306030b790561f85436f3ded7c8` |
 | `54542_cropped_bitmap.pptx` | 97 | Microsoft Office PowerPoint 14.0000 | picture, group, 1 slide | `fa219615dae3cd01f62e8449f7b477bebadd53d3cfba3348ada6377098d8c65e` |
 | `backgrounds.pptx` | 61 | Microsoft Office PowerPoint 14.0000 | background, 4 slides | `6d1e661c87b072a701e02e28f9d2c9bb43c6bfe0ad5acd02811a0382bab769b7` |
@@ -26,8 +28,11 @@ Authoring application is read from each file's `docProps/app.xml`.
 | `bug60715.pptx` | 72 | Microsoft Office PowerPoint 16.0000 | transition, 1 slide | `d560102b417036323dd21781b13e86b326e3d4d13ece3419aaf7c55a9c22b8d4` |
 | `bug60993.pptx` | 21 | LibreOffice/5.3.2.2$Linux_X86_64 LibreOffice_project/30m0$Build-2 | table, animation, 1 slide | `ad54b71b1deeec29d9e5e6d8d81ae4590b5ffafb906ea738aebe347336189364` |
 | `bug65523.pptx` | 49 | Microsoft Office PowerPoint 14.0000 | media, picture, 1 slide | `a37c15125aa21ac5226bac07f4459a200cf8070040c06093c1dc1db19e28c12c` |
+| `bug68703.pptx` | 59 | Microsoft Macintosh PowerPoint 16.0000 | transition in `mc:AlternateContent` (p14), animation, 1 slide | `f232d0dc390c741855b4395f74a11d2610243fffd8699f72dd3185ad5f930852` |
 | `chart-slide-bg.pptx` | 55 | Microsoft Office PowerPoint 16.0000 | chart, background, 1 slide | `1e57296fdac894c239ed47e4fc9521da59ab26c34f4d28ec2036f0befbc5fd74` |
+| `customGeo.pptx` | 1022 | Microsoft Office PowerPoint 14.0000 | transition, animation (click, with-previous, after-previous, by paragraph), 48 slides | `9baa7f4554cbaddfcebcc431432268ea34f20c02787172bb0a7d12d640e7e84f` |
 | `EmbeddedAudio.pptx` | 87 | Microsoft Macintosh PowerPoint 16.0000 | media, picture, animation, 1 slide | `c5ae4274e2bf5504a56aef9c8d7c5d2381ece69c9bf68f7749ad5eae3e675edb` |
+| `EmbeddedVideo.pptx` | 197 | Microsoft Office PowerPoint 16.0000 | media, animation (triggered sequence), 1 slide | `7940e3b1a339db11f00b65399a2fe77e0e85a5da3a30ac8d6c8a0a77527b2ab2` |
 | `layouts.pptx` | 61 | Microsoft Office PowerPoint 14.0000 | picture, notes, 10 slides | `9c3d53afa3115de2ba72ec77637a616aeed505a6ff3b30a46db871c4edd32be5` |
 | `line-chart.pptx` | 43 | Microsoft Macintosh PowerPoint 15.0033 | chart, 1 slide | `a2319540fb096629874e8c2baf91b9f8afd1386bfba411efff503b96dce9e9a1` |
 | `missing-blip-fill.pptx` | 39 | Microsoft Macintosh PowerPoint 16.0000 | picture, notes, transition, background, 1 slide | `00b19b1ba0f3b399dd3c3c0de906b8cfeca5cda9425d481c2d75f5d74790c004` |
