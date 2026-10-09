@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from pptx.oxml.slide import CT_Slide
     from pptx.oxml.timing import (
         CT_TLCommonTimeNodeData,
-        CT_TLTimeNodeContainer,
         CT_TLTimeTargetElement,
     )
     from pptx.shapes.base import BaseShape
@@ -71,10 +70,10 @@ class SlideAnimations(ParentedElementProxy):
         effect_cTns = timing.xpath("./p:tnLst//p:cTn[@presetClass]")
 
         def sort_key(cTn: CT_TLCommonTimeNodeData) -> int:
-            seq = _owning_sequence(cTn)
-            if seq is None:
+            seq_cTn = _sequence_cTn(cTn)
+            if seq_cTn is None:
                 return 2
-            return 0 if _node_type(seq.cTn) == "mainSeq" else 1
+            return 0 if _node_type(seq_cTn) == "mainSeq" else 1
 
         # -- `sorted()` is stable, so document order holds within the main sequence and across
         # -- the triggered sequences --
@@ -203,9 +202,9 @@ class Animation(ParentedElementProxy):
         `ON_MEDIA_BOOKMARK` when a media bookmark starts it. An effect that doesn't say how it
         starts is taken as `ON_PAGE_CLICK`.
         """
-        seq = _owning_sequence(self._element)
-        if seq is not None and _node_type(seq.cTn) == "interactiveSeq":
-            evts = [cond.evt for cond in _start_conditions(seq.cTn)]
+        seq_cTn = _sequence_cTn(self._element)
+        if seq_cTn is not None and _node_type(seq_cTn) == "interactiveSeq":
+            evts = [_safe(lambda: cond.evt, None) for cond in _start_conditions(seq_cTn)]
             if "onMediaBookmark" in evts:
                 return MSO_ANIMATION_TRIGGER.ON_MEDIA_BOOKMARK
             return MSO_ANIMATION_TRIGGER.ON_SHAPE_CLICK
@@ -222,10 +221,10 @@ class Animation(ParentedElementProxy):
     @property
     def trigger_shape_id(self) -> int | None:
         """The id of the shape whose click starts the effect, or |None|."""
-        seq = _owning_sequence(self._element)
-        if seq is None or _node_type(seq.cTn) != "interactiveSeq":
+        seq_cTn = _sequence_cTn(self._element)
+        if seq_cTn is None or _node_type(seq_cTn) != "interactiveSeq":
             return None
-        for cond in _start_conditions(seq.cTn):
+        for cond in _start_conditions(seq_cTn):
             tgtEl = cond.tgtEl
             spTgt = None if tgtEl is None else tgtEl.spTgt
             if spTgt is not None:
@@ -259,10 +258,14 @@ def _node_type(cTn: CT_TLCommonTimeNodeData) -> str | None:
     return _safe(lambda: cTn.nodeType, None)
 
 
-def _owning_sequence(cTn: CT_TLCommonTimeNodeData) -> CT_TLTimeNodeContainer | None:
-    """The nearest `p:seq` that contains `cTn`, or None."""
-    seqs = cTn.xpath("ancestor::p:seq[1]")
-    return seqs[0] if seqs else None
+def _sequence_cTn(cTn: CT_TLCommonTimeNodeData) -> CT_TLCommonTimeNodeData | None:
+    """The `p:cTn` of the nearest `p:seq` that contains `cTn`, or None.
+
+    None also when that sequence lacks its `p:cTn`, which the schema requires but a damaged
+    file may omit.
+    """
+    seq_cTns = cTn.xpath("ancestor::p:seq[1]/p:cTn")
+    return seq_cTns[0] if seq_cTns else None
 
 
 def _safe(read: Callable[[], _T], default: _T) -> _T:

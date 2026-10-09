@@ -5,8 +5,9 @@ slide-number placeholders, each positioned by the master), gives it a body place
 inherits the master's body position and a picture placeholder placed explicitly, and duplicates
 an existing layout under a new name. Then adds a slide on each new layout and saves.
 
-Open the result in PowerPoint and look at View > Slide Master: both layouts appear after the
-originals, and the slides show the layouts' placeholders.
+Open the result in PowerPoint and look at View > Slide Master: the new layouts appear among the
+originals, and the slides show the layouts' placeholders. "1_Quote" is the name pypptx gives an
+unnamed duplicate; compare it with what PowerPoint's own Duplicate Layout produces.
 
 Demonstrates: feature-manifest.md "Slide Masters & Layouts" (custom layouts).
 Saves to custom_layouts.pptx.
@@ -14,6 +15,7 @@ Saves to custom_layouts.pptx.
 
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.shapes.placeholder import SlidePlaceholder
 from pptx.util import Inches
 
 FILENAME = "custom_layouts.pptx"
@@ -39,12 +41,16 @@ assert two_content is not None
 copy = layouts.duplicate(two_content, "Two Content (wide gap)")
 copy.placeholders[1].width = Inches(3.5)  # editing the copy leaves the original as it was
 print(f"duplicated {two_content.name!r} as {copy.name!r} at position {layouts.index(copy)}")
+default_copy = layouts.duplicate(quote)  # unnamed: PowerPoint's own "1_" naming
+print(f"duplicated {quote.name!r} as {default_copy.name!r}")
 
 # --- Slides on the new layouts ---------------------------------------------------------------
 slide = prs.slides.add_slide(quote)
 assert slide.shapes.title is not None
 slide.shapes.title.text_frame.text = "On simplicity"
-slide.placeholders[13].text_frame.text = "Simplicity is the ultimate sophistication."
+body = slide.placeholders[13]
+assert isinstance(body, SlidePlaceholder)
+body.text_frame.text = "Simplicity is the ultimate sophistication."
 
 slide = prs.slides.add_slide(copy)
 assert slide.shapes.title is not None

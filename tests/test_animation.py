@@ -292,6 +292,18 @@ class DescribeAnimation:
         assert animation.paragraphs is None
         assert animation.trigger == MSO_ANIMATION_TRIGGER.ON_PAGE_CLICK
 
+    def and_it_reads_effects_in_a_sequence_that_lacks_its_own_timing(self):
+        # -- schema-invalid: a `p:seq` must hold a `p:cTn`; a damaged file may not --
+        seq = f"<p:seq>{_effect(12, 'clickEffect', 3)}</p:seq>"
+        slide = _slide(seq)
+
+        (animation,) = slide.animations
+
+        assert len(slide.animations) == 1
+        assert animation.shape_id == 3
+        assert animation.trigger == MSO_ANIMATION_TRIGGER.ON_PAGE_CLICK
+        assert animation.trigger_shape_id is None
+
     def it_does_not_change_the_xml_when_read(self):
         slide = _slide(
             _main_seq(_click_group(10, _effect(12, "clickEffect", 4, pRg=(0, 0)))),

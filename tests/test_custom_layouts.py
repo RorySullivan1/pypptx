@@ -293,6 +293,15 @@ class DescribePresentationPart_next_master_or_layout_id:
 
         assert prs.part.next_master_or_layout_id() == max(_master_and_layout_ids(prs)) + 1
 
+    def and_it_does_not_reuse_an_id_below_a_gap(self):
+        prs = Presentation()
+        entries = prs.slide_masters[0]._element.sldLayoutIdLst.sldLayoutId_lst
+        entries[2].id = 2147490000  # -- leaves a gap below it --
+
+        next_id = prs.part.next_master_or_layout_id()
+
+        assert next_id == 2147490001
+
     def but_it_finds_a_free_id_below_once_the_top_of_the_range_is_taken(self):
         prs = Presentation()
         entries = prs.slide_masters[0]._element.sldLayoutIdLst.sldLayoutId_lst
