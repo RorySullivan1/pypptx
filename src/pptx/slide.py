@@ -21,9 +21,11 @@ from pptx.shapes.shapetree import (
 )
 from pptx.shared import ElementProxy, ParentedElementProxy, PartElementProxy
 from pptx.theme import Theme
+from pptx.transition import SlideTransition
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.animation import SlideAnimations
     from pptx.oxml.presentation import CT_SlideIdList, CT_SlideMasterIdList
     from pptx.oxml.slide import (
         CT_CommonSlideData,
@@ -202,6 +204,16 @@ class Slide(_BaseSlide):
     part: SlidePart  # pyright: ignore[reportIncompatibleMethodOverride]
 
     @property
+    def animations(self) -> SlideAnimations:
+        """|SlideAnimations| of the animation effects on this slide, in play order. Read only.
+
+        Empty when the slide has no animations.
+        """
+        from pptx.animation import SlideAnimations
+
+        return SlideAnimations(self._element, self)
+
+    @property
     def comments(self) -> SlideComments:
         """Access to comments on this slide.
 
@@ -283,6 +295,15 @@ class Slide(_BaseSlide):
     def shapes(self) -> SlideShapes:
         """Sequence of shape objects appearing on this slide."""
         return SlideShapes(self._element.spTree, self)
+
+    @property
+    def transition(self) -> SlideTransition:
+        """|SlideTransition| describing the transition into this slide, read only.
+
+        Always returns a |SlideTransition|; its `type` is `PP_TRANSITION_TYPE.NONE` when the
+        slide has no transition.
+        """
+        return SlideTransition(self._element)
 
     @property
     def slide_id(self) -> int:
@@ -479,6 +500,17 @@ class SlideLayout(_BaseSlide):
         return self.part.slide_master
 
     @property
+    def transition(self) -> SlideTransition:
+        """|SlideTransition| describing the transition into this layout, read only.
+
+        Always returns a |SlideTransition|; its `type` is `PP_TRANSITION_TYPE.NONE` when the
+        layout has no transition.
+        This is the transition stored on the layout itself; pypptx does not resolve whether
+        PowerPoint applies it to slides that have none.
+        """
+        return SlideTransition(self._element)
+
+    @property
     def used_by_slides(self) -> tuple[Slide, ...]:
         """Tuple of slide objects based on this slide layout."""
         # ---getting Slides collection requires going around the horn a bit---
@@ -595,6 +627,17 @@ class SlideMaster(_BaseMaster):
         if theme_part is None:
             return None
         return Theme(theme_part._element)
+
+    @property
+    def transition(self) -> SlideTransition:
+        """|SlideTransition| describing the transition into this master, read only.
+
+        Always returns a |SlideTransition|; its `type` is `PP_TRANSITION_TYPE.NONE` when the
+        master has no transition.
+        This is the transition stored on the master itself; pypptx does not resolve whether
+        PowerPoint applies it to slides that have none.
+        """
+        return SlideTransition(self._element)
 
     def apply_theme(
         self, source: Presentation | SlideMaster | str | os.PathLike[str] | IO[bytes]
