@@ -4,16 +4,15 @@
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
 - Package 0.4.0; v0.3.0–v0.4.0 shipped (v0.4.0 = PR #122: real-world corpus, InvalidPackageError, compatible errors).
-- Cursor v0.5.0 (transitions/animations read, custom layouts): card expanded 2026-10-09; 5 owner decisions open
-  (see the card). Then v0.6.0 … v0.7.0.
+- v0.5.0 IN PROGRESS (started 2026-10-09; transitions/animations read, custom layouts, handout master). Then v0.6.0 … v0.7.0.
 - API reference: `sphinx-build -W -b html docs docs/_build/html` (docs extra). No open issues (#51 closed by PR #124).
 - No git tags or Releases yet: sessions can't push tags. Owner tags by hand from `.meta/release-tags.md` (v0.1.0–v0.4.0).
 - Sessions push only to their assigned branch, not `vX.Y.Z`; `.meta/version` records the real branch.
 - **Actions is billing-blocked (since 2026-09-27): all evidence is local.** LF pinned; `tests.yml` covers 3.9–3.13/Win/macOS.
 
 ## Decisions        (append-only; supersede, never delete)
-- [2026-09-24..25] 10 earlier decisions (claudeBrain adoption, text styles, arcs, element-class keying, SmartArt,
-  chartex, AlternateContent, hot-path caches) — sessions/ARCHIVE-2026.md
+- [2026-09-24..29] 12 earlier decisions (claudeBrain adoption, text styles, arcs, element-class keying, SmartArt,
+  chartex, AlternateContent, hot-path caches, tag parts, 3D chart axes) — sessions/ARCHIVE-2026.md
 - [2026-09-26] Roadmap renumbered: shipped epics = v0.3.0; docs versions v0.2.1/v0.2.2 → v0.3.1/v0.3.2; stage-03 plans
   v0.3.0–v0.6.0 → v0.4.0–v0.7.0 (package versions must increase) — .meta/roadmap/stages/03-hardening-and-gaps/v0.3.0.md
 - [2026-09-26] Pin `* text=auto eol=lf` repo-wide + explicit `binary` fixtures: the snippet loaders are
@@ -21,11 +20,6 @@
 
 "`) so a CRLF tree breaks 51 tests; `osx_dirs_fixture` injects `posixpath`
   rather than skipping on Windows — sessions/2026-09-26-2219-windows-crlf-acceptance.md
-- [2026-09-29] Tags are one part PER owner, referenced from its `p:custDataLst/p:tags` (`p:nvPr` for a shape,
-  `p:cSld` for the slide), related from the slide part; slide tags resolve by that reference, not by reltype
-  — sessions/2026-09-29-1211-issue-114-shape-tags.md
-- [2026-09-29] 3D chart writers share `_Base3DChartXmlWriter`; only THREE_D_COLUMN/AREA/LINE get a `c:serAx` + perspective
-  camera. New chart XML uses POSITIVE axis ids (`unsignedInt`) — sessions/2026-09-29-2205-issue-115-3d-charts.md
 - [2026-09-30] Sphinx `|Name|` substitutions are GENERATED in docs/conf.py from pptx's classes (no hand list); enum `:ref:`
   labels live on docs/api/enum.rst; `-W` is the docs gate — sessions/2026-09-30-0353-v032-docstrings-sphinx.md
 - [2026-09-30] v0.4.0 owner decisions: Apache POI corpus files are OK for TESTING ONLY (MANIFEST.in prunes them from the sdist);
@@ -34,6 +28,10 @@
   builtin they replaced (ShapeError etc. are ValueErrors) — sessions/2026-09-30-1642-v040-realworld-hardening.md
 - [2026-10-01] #51 perf gate counts WORK (cProfile calls into pptx/ over the corpus), not time; budget pinned to
   py3.11 (skips elsewhere), +2% tolerance; lower it whenever it drops — sessions/2026-10-01-1546-issue-51-perf.md
+
+- [2026-10-09] v0.5.0 owner decisions (all recommendations): +4 POI decks (test only); effect names only for entr/exit
+  presetID 1–31 (MsoAnimEffect values); new layout = PowerPoint Insert Layout; no layout shapes yet; transitions read as stored
+  — .meta/roadmap/stages/03-hardening-and-gaps/v0.5.0.md
 
 ## Threads          (open items; remove when closed)
 - Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.

@@ -1,24 +1,21 @@
-# version: v0.4.0
-status: shipped
-started: 2026-09-30
-shipped: 2026-10-01
+# version: v0.5.0
+status: in-progress
+started: 2026-10-09
 branch: claude/epic-87-closeout-hfo5vj
-pr: https://github.com/RorySullivan1/pypptx/pull/122
+pr:
 
-Branch note: the convention is `v0.4.0` (CLAUDE.md § Roadmap), but this session can push only
+Branch note: the convention is `v0.5.0` (CLAUDE.md § Roadmap), but this session can push only
 to its assigned branch, so the work lands there.
 
 ## Goals
-- A curated, test-only corpus of ~24 PowerPoint-authored files (Apache POI, Apache 2.0) with
-  provenance, plus a malformed set.
-- Round-trip and fidelity tests over the corpus.
-- Damaged input raises `InvalidPackageError`; no leaked `BadZipFile`, no `__del__` noise.
-- `Shape.shape_type` is `AUTO_SHAPE` for a geometry-less `p:sp`.
-- `GraphicFrame.shadow` for tables and charts; `ShapeError` for other kinds.
-- Bare `ValueError`/`TypeError` at API-reachable sites become pypptx exceptions that keep the
-  builtin base: `InvalidValueError` / `InvalidTypeError`, or `ShapeError` / `ChartError` where
-  that fits (both now also `ValueError`).
-- Hypothesis property tests for `oxml/simpletypes.py`.
+- Read-only transitions: `SlideTransition` on slides, layouts and masters, resolving
+  `mc:AlternateContent` (`p14`, `p15`, `p159` Morph).
+- Read-only animations: `Slide.animations` in play order, with trigger, timing, target and preset
+  IDs; `effect_type` only for entrance/exit IDs 1–31.
+- Custom layouts: `SlideLayouts.add_slide_layout`, `LayoutShapes.add_placeholder`,
+  `SlideLayouts.duplicate`, and correct `p:sldLayoutId@id` allocation (also for `import_slide`).
+- Read-only handout master: `Presentation.handout_master`.
+- Four more POI decks in the test-only corpus.
 
 ## Objectives / acceptance
-- See the card, `.meta/roadmap/stages/03-hardening-and-gaps/v0.4.0.md`, "Objectives / acceptance".
+- See the card, `.meta/roadmap/stages/03-hardening-and-gaps/v0.5.0.md`, "Objectives / acceptance".
