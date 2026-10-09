@@ -51,7 +51,8 @@ The v0.6.0 card sets the boundaries this work honors:
   `python -m tests.perf.workcount --update` and commit the budget. It cannot see C-level
   changes (`find()` vs `iterchildren()`), so the wall-clock baseline stays as a report.
   Budget history: 669,982 calls over 24 decks (gate added); 664,557 (enum `from_xml` dict);
-  972,035 over 28 decks (v0.5.0 added four animation-heavy decks, 2026-10-09).
+  972,035 over 28 decks (v0.5.0 added four animation-heavy decks, 2026-10-09); 1,009,255 once
+  the walk also read transitions, animations and handout masters.
 
 ## What already exists (verify, do not reimplement)
 

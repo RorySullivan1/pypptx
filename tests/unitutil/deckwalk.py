@@ -4,7 +4,8 @@ Used by the real-world corpus tests: a file saved by PowerPoint should be readab
 public API without any property access raising. The walk visits the slide masters, their
 layouts, the slides and their notes, recursing into group shapes, and reads each shape's
 geometry, type, placeholder format, text (paragraphs, runs, basic font properties), table
-cells, chart type/categories/series values and fill type.
+cells, chart type/categories/series values and fill type. It also reads the transition of every
+master, layout and slide, every property of each slide's animations, and the handout master.
 """
 
 from __future__ import annotations
@@ -36,7 +37,74 @@ def walk(prs: Presentation) -> List[Failure]:
         _walk_shapes(slide.shapes, where, attempt)
         attempt(where + "/notes", lambda slide=slide: _read_notes(slide))
 
+    return failures + walk_timing(prs)
+
+
+def walk_timing(prs: Presentation) -> List[Failure]:
+    """Like `walk()`, but reads only transitions, animations and the handout master.
+
+    Unlike some older read paths (`Font.color` makes a font's fill solid, `_Paragraph.alignment`
+    adds an empty `a:pPr`, both inherited from python-pptx), these reads never change the XML,
+    so a deck read this way saves unchanged.
+    """
+    failures: List[Failure] = []
+
+    def attempt(where: str, read: Callable[[], object]) -> None:
+        try:
+            read()
+        except Exception as e:  # noqa: BLE001 -- the point is to report any exception
+            failures.append((where, "%s: %s" % (type(e).__name__, e)))
+
+    for m_idx, master in enumerate(prs.slide_masters):
+        attempt("master[%d].transition" % m_idx, lambda m=master: _read_transition(m))
+        for l_idx, layout in enumerate(master.slide_layouts):
+            where = "master[%d]/layout[%d]" % (m_idx, l_idx)
+            attempt(where + ".transition", lambda layout=layout: _read_transition(layout))
+
+    for s_idx, slide in enumerate(prs.slides):
+        where = "slide[%d]" % s_idx
+        attempt(where + ".transition", lambda slide=slide: _read_transition(slide))
+        attempt(where + ".animations", lambda slide=slide: _read_animations(slide))
+
+    attempt("handout_master", lambda: _read_handout_master(prs))
+
     return failures
+
+
+def _read_animations(slide) -> None:
+    for animation in slide.animations:
+        animation.preset_class
+        animation.preset_id
+        animation.preset_subtype
+        animation.effect_type
+        animation.trigger
+        animation.trigger_shape
+        animation.delay
+        animation.duration
+        animation.shape
+        animation.paragraphs
+
+
+def _read_handout_master(prs: Presentation) -> None:
+    handout_master = prs.handout_master
+    if handout_master is not None:
+        for shape in handout_master.shapes:
+            shape.name
+            shape.left, shape.top, shape.width, shape.height
+            if shape.is_placeholder:
+                shape.placeholder_format.type
+
+
+def _read_transition(owner) -> None:
+    transition = owner.transition
+    transition.type
+    transition.speed
+    transition.duration
+    transition.advance_on_click
+    transition.advance_after
+    transition.direction
+    transition.preset
+    transition.has_sound
 
 
 def _read_notes(slide) -> None:

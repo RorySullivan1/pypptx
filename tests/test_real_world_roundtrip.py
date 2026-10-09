@@ -18,11 +18,21 @@ from pathlib import Path
 import pytest
 from lxml import etree
 
+import datetime as dt
+from collections import Counter
+
 from pptx import Presentation
+from pptx.enum.animation import (
+    MSO_ANIMATION_EFFECT,
+    MSO_ANIMATION_TRIGGER,
+    PP_ANIMATION_CLASS,
+    PP_TRANSITION_SPEED,
+    PP_TRANSITION_TYPE,
+)
 from pptx.exc import InvalidPackageError, PackageNotFoundError
 from pptx.util import Inches
 
-from .unitutil.deckwalk import walk
+from .unitutil.deckwalk import walk, walk_timing
 
 CORPUS_DIR = Path(__file__).parent / "test_files" / "real_world"
 CORPUS = sorted(CORPUS_DIR.glob("*.pptx"), key=lambda p: p.name.lower())
@@ -126,6 +136,24 @@ class DescribeRealWorldDeck:
         with zipfile.ZipFile(path) as original, zipfile.ZipFile(stream) as saved:
             missing = set(original.namelist()) - set(saved.namelist())
         assert missing == set()
+
+    def it_changes_no_xml_when_transitions_and_animations_are_read(self, path: Path):
+        """Reading transitions, animations and the handout master must not edit the XML."""
+        prs = Presentation(str(path))
+        assert walk_timing(prs) == []
+        stream = io.BytesIO()
+        prs.save(stream)
+
+        with zipfile.ZipFile(path) as original, zipfile.ZipFile(stream) as saved:
+            changed = [
+                name
+                for name in original.namelist()
+                if not name.endswith("/")
+                and name != "[Content_Types].xml"
+                and not _same_part(name, original.read(name), saved.read(name))
+            ]
+
+        assert changed == []
 
     def it_changes_no_xml_on_a_plain_open_and_save(self, path: Path):
         stream = io.BytesIO()
@@ -251,3 +279,80 @@ def it_keeps_in_document_hyperlinks_internal_when_a_slide_is_duplicated():
     # -- and every relationship the duplicated slide refers to exists --
     referenced = set(re.findall(rb'r:(?:id|embed|link)="(rId\d+)"', slide_xml))
     assert referenced <= {rel.get("Id").encode() for rel in rels}
+
+
+@pytest.mark.realworld
+class DescribeTransitionsAndAnimationsOnRealDecks:
+    """Facts pinned from PowerPoint-saved decks, cross-checked against their raw XML."""
+
+    def it_reads_a_PowerPoint_2010_transition_and_an_entrance_effect(self):
+        slide = Presentation(str(CORPUS_DIR / "bug68703.pptx")).slides[0]
+
+        transition = slide.transition
+        assert transition.type == PP_TRANSITION_TYPE.FADE
+        assert transition.duration == dt.timedelta(milliseconds=100)
+        assert transition.speed == PP_TRANSITION_SPEED.FAST
+        (animation,) = slide.animations
+        assert animation.preset_class == PP_ANIMATION_CLASS.ENTRANCE
+        assert animation.effect_type == MSO_ANIMATION_EFFECT.APPEAR
+        assert animation.trigger == MSO_ANIMATION_TRIGGER.ON_PAGE_CLICK
+        assert animation.shape is not None
+        assert animation.shape.name == "Tabel 5"
+
+    def it_reads_every_trigger_of_a_deck_in_play_order(self):
+        prs = Presentation(str(CORPUS_DIR / "customGeo.pptx"))
+
+        animations = [a for slide in prs.slides for a in slide.animations]
+
+        # -- 28 clickEffect, 14 withEffect and 1 afterEffect nodes in the XML --
+        assert Counter(a.trigger for a in animations) == {
+            MSO_ANIMATION_TRIGGER.ON_PAGE_CLICK: 28,
+            MSO_ANIMATION_TRIGGER.WITH_PREVIOUS: 14,
+            MSO_ANIMATION_TRIGGER.AFTER_PREVIOUS: 1,
+        }
+        assert {slide.transition.type for slide in prs.slides} == {PP_TRANSITION_TYPE.FADE}
+        assert [a.paragraphs for a in prs.slides[17].animations] == [
+            range(i, i + 1) for i in range(6)
+        ]
+
+    def it_reads_an_after_previous_effect_and_an_empty_transition(self):
+        prs = Presentation(str(CORPUS_DIR / "2411-Performance_Up.pptx"))
+
+        (after,) = [
+            a
+            for slide in prs.slides
+            for a in slide.animations
+            if a.trigger == MSO_ANIMATION_TRIGGER.AFTER_PREVIOUS
+        ]
+
+        assert after.delay == dt.timedelta(seconds=5)
+        assert after.duration == dt.timedelta(milliseconds=500)
+        # -- slide 13 has `<p:transition/>`: a transition with no effect, at the default speed --
+        transition = prs.slides[12].transition
+        assert transition.type == PP_TRANSITION_TYPE.NONE
+        assert transition.speed == PP_TRANSITION_SPEED.FAST
+
+    def it_reads_a_triggered_sequence_and_media_effects(self):
+        slide = Presentation(str(CORPUS_DIR / "EmbeddedVideo.pptx")).slides[0]
+
+        play, triggered = slide.animations
+
+        assert play.preset_class == PP_ANIMATION_CLASS.MEDIA
+        assert play.trigger == MSO_ANIMATION_TRIGGER.ON_PAGE_CLICK
+        assert triggered.trigger == MSO_ANIMATION_TRIGGER.ON_SHAPE_CLICK
+        assert triggered.trigger_shape_id == 2
+        assert triggered.trigger_shape is not None
+        assert triggered.trigger_shape == triggered.shape
+
+    def it_reads_the_handout_master_of_each_deck_that_has_one(self):
+        with_handout_master = [
+            p.name for p in CORPUS if Presentation(str(p)).handout_master is not None
+        ]
+
+        assert with_handout_master == [
+            "45545_Comment.pptx",
+            "bug58144-headers-footers-2007.pptx",
+            "bug60715.pptx",
+            "customGeo.pptx",
+            "prProps.pptx",
+        ]
