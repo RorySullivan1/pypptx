@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from pptx.oxml.presentation import CT_SlideIdList, CT_SlideMasterIdList
     from pptx.oxml.slide import (
         CT_CommonSlideData,
+        CT_HandoutMaster,
         CT_NotesMaster,
         CT_NotesSlide,
         CT_Slide,
@@ -107,6 +108,16 @@ class _BaseMaster(_BaseSlide):
         appearing on this slide.
         """
         return MasterShapes(self._element.spTree, self)
+
+
+class HandoutMaster(_BaseMaster):
+    """The handout master, which lays out the pages printed as audience handouts. Read only.
+
+    Obtained from `Presentation.handout_master`. Provides access to its shapes and placeholders
+    (header, date, footer and page number), as |SlideMaster| does.
+    """
+
+    _element: CT_HandoutMaster  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class NotesMaster(_BaseMaster):

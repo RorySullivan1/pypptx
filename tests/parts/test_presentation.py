@@ -11,7 +11,7 @@ from pptx.opc.packuri import PackURI
 from pptx.package import Package
 from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.presentation import PresentationPart
-from pptx.parts.slide import NotesMasterPart, SlideMasterPart, SlidePart
+from pptx.parts.slide import HandoutMasterPart, NotesMasterPart, SlideMasterPart, SlidePart
 from pptx.presentation import Presentation
 from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
@@ -42,6 +42,22 @@ class DescribePresentationPart:
         prs_part = PresentationPart(None, None, package_, None)
 
         assert prs_part.core_properties is core_properties_
+
+    def it_provides_access_to_its_handout_master_part(self, request, part_related_by_):
+        handout_master_part_ = instance_mock(request, HandoutMasterPart)
+        part_related_by_.return_value = handout_master_part_
+        prs_part = PresentationPart(None, None, None, None)
+
+        handout_master_part = prs_part.handout_master_part
+
+        prs_part.part_related_by.assert_called_once_with(prs_part, RT.HANDOUT_MASTER)
+        assert handout_master_part is handout_master_part_
+
+    def but_it_has_no_handout_master_part_when_there_is_none(self, part_related_by_):
+        part_related_by_.side_effect = KeyError
+        prs_part = PresentationPart(None, None, None, None)
+
+        assert prs_part.handout_master_part is None
 
     def it_provides_access_to_an_existing_notes_master_part(
         self, notes_master_part_, part_related_by_

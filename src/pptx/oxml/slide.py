@@ -196,6 +196,17 @@ class CT_HeaderFooter(BaseOxmlElement):
     )
 
 
+class CT_HandoutMaster(_BaseSlideElement):
+    """`p:handoutMaster` element, root of a handout master part."""
+
+    _tag_seq = ("p:cSld", "p:clrMap", "p:hf", "p:extLst")
+    cSld: CT_CommonSlideData = OneAndOnlyOne("p:cSld")  # pyright: ignore[reportAssignmentType]
+    hf: CT_HeaderFooter | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
+        "p:hf", successors=_tag_seq[3:]
+    )
+    del _tag_seq
+
+
 class CT_NotesMaster(_BaseSlideElement):
     """`p:notesMaster` element, root of a notes master part."""
 

@@ -13,7 +13,7 @@ from pptx.oxml.ns import nsdecls
 from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.presentation import PresentationPart
 from pptx.parts.presprops import PresPropsPart
-from pptx.parts.slide import NotesMasterPart
+from pptx.parts.slide import HandoutMasterPart, NotesMasterPart
 from pptx.parts.tablestyles import TableStylesPart
 from pptx.presentation import Presentation, Section, Sections, SlideShowSettings, TableStyles
 from pptx.slide import SlideLayouts, SlideMaster, SlideMasters, Slides
@@ -133,6 +133,19 @@ class DescribePresentation:
 
         assert isinstance(table_styles, TableStyles)
         assert table_styles._table_styles_part is table_styles_part_
+
+    def it_provides_access_to_its_handout_master(self, request, prs_part_):
+        handout_master_part_ = instance_mock(request, HandoutMasterPart)
+        prs_part_.handout_master_part = handout_master_part_
+        prs = Presentation(None, prs_part_)
+
+        assert prs.handout_master is handout_master_part_.handout_master
+
+    def but_it_has_no_handout_master_when_there_is_none(self, prs_part_):
+        prs_part_.handout_master_part = None
+        prs = Presentation(None, prs_part_)
+
+        assert prs.handout_master is None
 
     def it_provides_access_to_its_notes_master(self, notes_master_fixture):
         prs, notes_master_ = notes_master_fixture

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from pptx.parts.coreprops import CorePropertiesPart
     from pptx.parts.presprops import PresPropsPart
     from pptx.parts.tablestyles import TableStylesPart
+    from pptx.parts.slide import HandoutMasterPart
     from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
 
 
@@ -354,6 +355,17 @@ class PresentationPart(XmlPart):
             if sldId.id == slide_id:
                 return self.related_part(sldId.rId).slide
         return None
+
+    @property
+    def handout_master_part(self) -> HandoutMasterPart | None:
+        """The |HandoutMasterPart| of this presentation, or |None| when it has none.
+
+        Unlike `notes_master_part`, this never creates one.
+        """
+        try:
+            return self.part_related_by(RT.HANDOUT_MASTER)  # pyright: ignore[reportReturnType]
+        except KeyError:
+            return None
 
     @lazyproperty
     def notes_master(self) -> NotesMaster:

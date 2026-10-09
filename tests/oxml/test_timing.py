@@ -86,7 +86,7 @@ class DescribeCT_SlideTiming:
         assert isinstance(timing.tnLst, CT_TimeNodeList)
         assert isinstance(timing.bldLst, CT_BuildList)
 
-    def and_both_are_optional(self):
+    def and_it_works_without_either(self):
         timing = element("p:timing")
 
         assert timing.tnLst is None
@@ -138,7 +138,7 @@ class DescribeCT_TLCommonTimeNodeData:
         assert stCondLst is not None
         assert [cond.delay for cond in stCondLst.cond_lst] == [250]
 
-    def and_its_child_time_nodes(self):
+    def and_it_provides_access_to_its_child_time_nodes(self):
         cTn = _effect_cTn(_timing())
 
         behaviors = cTn.child_time_nodes
@@ -212,5 +212,5 @@ class DescribeCT_BuildList:
 
         assert (bldP.spid, bldP.grpId, bldP.build) == ("3", 0, "p")
 
-    def and_a_build_is_whole_by_default(self):
+    def and_it_defaults_a_build_to_whole(self):
         assert element("p:bldP{spid=3,grpId=0}").build == "whole"

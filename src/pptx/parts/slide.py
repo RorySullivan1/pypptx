@@ -17,7 +17,7 @@ from pptx.parts.chart import ChartPart
 from pptx.parts.comments import CommentsPart, ModernCommentsPart
 from pptx.parts.embeddedpackage import EmbeddedPackagePart
 from pptx.parts.tags import TagsPart
-from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
+from pptx.slide import HandoutMaster, NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
@@ -75,6 +75,18 @@ class BaseSlidePart(XmlPart):
     def name(self) -> str:
         """Internal name of this slide."""
         return self._element.cSld.name
+
+
+class HandoutMasterPart(BaseSlidePart):
+    """Handout master part, the layout of printed handouts.
+
+    Corresponds to package file `ppt/handoutMasters/handoutMaster1.xml`.
+    """
+
+    @lazyproperty
+    def handout_master(self) -> HandoutMaster:
+        """The |HandoutMaster| object that proxies this handout master part."""
+        return HandoutMaster(self._element, self)
 
 
 class NotesMasterPart(BaseSlidePart):

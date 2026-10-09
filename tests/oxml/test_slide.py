@@ -2,9 +2,21 @@
 
 from __future__ import annotations
 
-from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide
+from pptx.oxml.slide import CT_HandoutMaster, CT_NotesMaster, CT_NotesSlide
 
+from ..unitutil.cxml import element
 from ..unitutil.file import snippet_text
+
+
+class DescribeCT_HandoutMaster:
+    """Unit-test suite for `pptx.oxml.slide.CT_HandoutMaster` objects."""
+
+    def it_is_the_element_class_for_a_handout_master(self):
+        handoutMaster = element("p:handoutMaster/(p:cSld/p:spTree,p:clrMap,p:hf)")
+
+        assert isinstance(handoutMaster, CT_HandoutMaster)
+        assert handoutMaster.cSld.spTree is not None
+        assert handoutMaster.hf is not None
 
 
 class DescribeCT_NotesMaster:

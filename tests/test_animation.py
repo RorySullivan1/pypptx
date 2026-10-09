@@ -223,7 +223,7 @@ class DescribeAnimation:
             ("0", "indefinite", dt.timedelta(0), None),
         ],
     )
-    def and_an_indefinite_time_is_None(
+    def and_it_reads_an_indefinite_time_as_None(
         self, delay, behavior_dur, expected_delay, expected_duration
     ):
         behaviors = (
@@ -261,7 +261,7 @@ class DescribeAnimation:
         assert animation.shape.name == "Inner"
         assert animation.paragraphs is None
 
-    def but_its_shape_is_None_when_the_target_is_not_on_the_slide(self):
+    def but_it_has_no_shape_when_the_target_is_not_on_the_slide(self):
         slide = _slide(_main_seq(_click_group(10, _effect(12, "clickEffect", 42))))
 
         (animation,) = slide.animations

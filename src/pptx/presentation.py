@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from pptx.parts.custprops import CustomPropertiesPart
     from pptx.parts.presentation import PresentationPart
     from pptx.parts.tablestyles import TableStylesPart
-    from pptx.slide import NotesMaster, SlideLayouts, SlideMaster
+    from pptx.slide import HandoutMaster, NotesMaster, SlideLayouts, SlideMaster
     from pptx.text.styles import TextListStyle
     from pptx.theme import Theme
     from pptx.util import Length
@@ -81,6 +81,15 @@ class Presentation(PartElementProxy):
         Values can be str, int, float, or bool.
         """
         return self.part.package.custom_properties
+
+    @property
+    def handout_master(self) -> HandoutMaster | None:
+        """The |HandoutMaster| of this presentation, or |None| when it has none. Read only.
+
+        Unlike `notes_master`, this never creates a handout master.
+        """
+        handout_master_part = self.part.handout_master_part
+        return None if handout_master_part is None else handout_master_part.handout_master
 
     @property
     def notes_master(self) -> NotesMaster:

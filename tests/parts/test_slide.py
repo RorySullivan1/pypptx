@@ -22,6 +22,7 @@ from pptx.parts.media import MediaPart
 from pptx.parts.presentation import PresentationPart
 from pptx.parts.slide import (
     BaseSlidePart,
+    HandoutMasterPart,
     NotesMasterPart,
     NotesSlidePart,
     SlideLayoutPart,
@@ -29,7 +30,7 @@ from pptx.parts.slide import (
     SlidePart,
 )
 from pptx.parts.tags import TagsPart
-from pptx.slide import NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
+from pptx.slide import HandoutMaster, NotesMaster, NotesSlide, Slide, SlideLayout, SlideMaster
 
 from ..unitutil.cxml import element
 from ..unitutil.file import absjoin, test_file_dir
@@ -80,6 +81,23 @@ class DescribeBaseSlidePart:
     @pytest.fixture
     def image_part_(self, request):
         return instance_mock(request, ImagePart)
+
+
+class DescribeHandoutMasterPart:
+    """Unit-test suite for `pptx.parts.slide.HandoutMasterPart` objects."""
+
+    def it_provides_access_to_its_handout_master(self, request):
+        handout_master_ = instance_mock(request, HandoutMaster)
+        HandoutMaster_ = class_mock(
+            request, "pptx.parts.slide.HandoutMaster", return_value=handout_master_
+        )
+        handoutMaster = element("p:handoutMaster")
+        handout_master_part = HandoutMasterPart(None, None, None, handoutMaster)
+
+        handout_master = handout_master_part.handout_master
+
+        HandoutMaster_.assert_called_once_with(handoutMaster, handout_master_part)
+        assert handout_master is handout_master_
 
 
 class DescribeNotesMasterPart:
