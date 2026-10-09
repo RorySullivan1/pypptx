@@ -9,6 +9,7 @@ from typing import IO, TYPE_CHECKING, Callable, Iterable, Iterator, cast
 
 from pptx.chart.chartexwriter import chartex_type, is_chartex_type
 from pptx.enum.shapes import PP_PLACEHOLDER, PROG_ID
+from pptx.exc import ShapeError
 from pptx.media import SPEAKER_IMAGE_BYTES, Video
 from pptx.media import Audio as _AudioMedia
 from pptx.opc.constants import CONTENT_TYPE as CT
@@ -19,6 +20,7 @@ from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
 from pptx.oxml.shapes.picture import CT_Picture
 from pptx.oxml.shapes.shared import alternate_content_of, tree_elm
 from pptx.oxml.simpletypes import ST_Direction
+from pptx.oxml.text import CT_TextBody
 from pptx.shapes.altcontent import AlternateContentShape
 from pptx.shapes.autoshape import AutoShapeType, Shape
 from pptx.shapes.base import BaseShape
@@ -28,6 +30,7 @@ from pptx.shapes.graphfrm import GraphicFrame
 from pptx.shapes.group import GroupShape
 from pptx.shapes.picture import Audio, Movie, Picture
 from pptx.shapes.placeholder import (
+    LAYOUT_PLACEHOLDER_BASE_TYPES,
     ChartPlaceholder,
     LayoutPlaceholder,
     MasterPlaceholder,
@@ -881,6 +884,112 @@ class LayoutShapes(_BaseShapes):
     The first shape in the sequence is the backmost in z-order and the last shape is topmost.
     Supports indexed access, len(), index(), and iteration.
     """
+
+    parent: SlideLayout  # pyright: ignore[reportIncompatibleMethodOverride]
+
+    # -- the `idx` PowerPoint gives a layout's date, footer and slide-number placeholders --
+    _FOOTER_IDXS = {
+        PP_PLACEHOLDER.DATE: 10,
+        PP_PLACEHOLDER.FOOTER: 11,
+        PP_PLACEHOLDER.SLIDE_NUMBER: 12,
+    }
+
+    def add_placeholder(
+        self,
+        ph_type: PP_PLACEHOLDER,
+        left: Length | None = None,
+        top: Length | None = None,
+        width: Length | None = None,
+        height: Length | None = None,
+        *,
+        idx: int | None = None,
+        name: str | None = None,
+    ) -> LayoutPlaceholder:
+        """Add a placeholder of `ph_type` to this layout and return it.
+
+        Slides made from the layout get a placeholder of the same type and `idx`. With no
+        position and size, the placeholder takes them from the master's placeholder it
+        inherits from (a title from the master's title, a content or picture placeholder from
+        its body, and so on), as PowerPoint does. Give all four of `left`, `top`, `width` and
+        `height` to place it yourself.
+
+        `idx` identifies the placeholder to slides. By default a title has none (it is 0), the
+        date, footer and slide number get 10, 11 and 12 as in PowerPoint's own layouts, and any
+        other placeholder the next free number above 12. `name` defaults to e.g.
+        "Picture Placeholder 3".
+
+        Raises |ShapeError| when only some of the four dimensions are given, when there are none
+        and the master has no placeholder to inherit them from, when `idx` is already in use,
+        when the layout already has a title and `ph_type` is a title, or when `ph_type` is not
+        a slide-layout placeholder type (such as `HEADER`, which only notes and handouts use).
+        """
+        base_type = LAYOUT_PLACEHOLDER_BASE_TYPES.get(ph_type)
+        if base_type is None:
+            raise ShapeError("%s is not a slide-layout placeholder type" % ph_type.name)
+        dimensions = (left, top, width, height)
+        if any(d is None for d in dimensions) and any(d is not None for d in dimensions):
+            raise ShapeError("give all of left, top, width and height, or none of them")
+
+        base = self.parent.slide_master.placeholders.get(base_type)
+        if left is None and base is None:
+            raise ShapeError(
+                "the slide master has no %s placeholder to take a position from; give left,"
+                " top, width and height" % base_type.name
+            )
+
+        idx = self._placeholder_idx(ph_type, idx)
+        id_ = self._next_shape_id
+        orient = ST_Direction.HORZ
+        sz = base.element.ph_sz if base is not None else "full"
+        sp = self._spTree.add_placeholder(
+            id_, name or self._next_ph_name(ph_type, id_, orient), ph_type, orient, sz, idx
+        )
+        if sp.txBody is None:
+            sp.append(self._placeholder_txBody(ph_type, base))
+        self._invalidate_shape_cache()
+
+        placeholder = cast(LayoutPlaceholder, self._shape_factory(sp))
+        if left is not None:
+            placeholder.left, placeholder.top = left, top
+            placeholder.width, placeholder.height = width, height
+        return placeholder
+
+    def _placeholder_idx(self, ph_type: PP_PLACEHOLDER, idx: int | None) -> int:
+        """The `idx` for a new placeholder of `ph_type`, checking a requested `idx` is free."""
+        existing = list(self._spTree.iter_ph_elms())
+        if ph_type in (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE):
+            titles = (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE)
+            if any(sp.ph_type in titles for sp in existing):
+                raise ShapeError("this layout already has a title placeholder")
+            if idx not in (None, 0):
+                raise ShapeError("a title placeholder has no idx; got %d" % idx)
+            return 0
+        used = {sp.ph_idx for sp in existing}
+        if idx is None:
+            idx = self._FOOTER_IDXS.get(ph_type)
+            if idx is None or idx in used:
+                idx = max(used | {12}) + 1
+        elif idx == 0 or idx in used:
+            raise ShapeError("idx %d is already in use on this layout" % idx)
+        return idx
+
+    @staticmethod
+    def _placeholder_txBody(ph_type: PP_PLACEHOLDER, base: MasterPlaceholder | None):
+        """A `p:txBody` for a new layout placeholder of `ph_type`.
+
+        A date, footer or slide-number placeholder takes the master's text, such as its
+        slide-number field; any other gets an empty paragraph.
+        """
+        if ph_type in LayoutShapes._FOOTER_IDXS and base is not None:
+            base_txBody = base.element.txBody
+            if base_txBody is not None:
+                txBody = deepcopy(base_txBody)
+                for child in list(txBody):
+                    if child.tag in (qn("a:bodyPr"), qn("a:lstStyle")):
+                        child.clear()
+                        child.attrib.clear()
+                return txBody
+        return CT_TextBody.new()
 
     def _shape_factory(self, shape_elm: ShapeElement) -> BaseShape:
         """Return an instance of the appropriate shape proxy class for `shape_elm`."""

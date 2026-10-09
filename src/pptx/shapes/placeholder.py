@@ -218,6 +218,25 @@ class BasePlaceholder(Shape):
         return self._sp.ph_sz
 
 
+# -- the master placeholder type each layout placeholder type inherits its properties from --
+LAYOUT_PLACEHOLDER_BASE_TYPES = {
+    PP_PLACEHOLDER.BODY: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.CHART: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.BITMAP: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.CENTER_TITLE: PP_PLACEHOLDER.TITLE,
+    PP_PLACEHOLDER.ORG_CHART: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.DATE: PP_PLACEHOLDER.DATE,
+    PP_PLACEHOLDER.FOOTER: PP_PLACEHOLDER.FOOTER,
+    PP_PLACEHOLDER.MEDIA_CLIP: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.OBJECT: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.PICTURE: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.SLIDE_NUMBER: PP_PLACEHOLDER.SLIDE_NUMBER,
+    PP_PLACEHOLDER.SUBTITLE: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.TABLE: PP_PLACEHOLDER.BODY,
+    PP_PLACEHOLDER.TITLE: PP_PLACEHOLDER.TITLE,
+}
+
+
 class LayoutPlaceholder(_InheritsDimensions, Shape):
     """Placeholder shape on a slide layout.
 
@@ -232,22 +251,7 @@ class LayoutPlaceholder(_InheritsDimensions, Shape):
         """
         Return the master placeholder this layout placeholder inherits from.
         """
-        base_ph_type = {
-            PP_PLACEHOLDER.BODY: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.CHART: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.BITMAP: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.CENTER_TITLE: PP_PLACEHOLDER.TITLE,
-            PP_PLACEHOLDER.ORG_CHART: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.DATE: PP_PLACEHOLDER.DATE,
-            PP_PLACEHOLDER.FOOTER: PP_PLACEHOLDER.FOOTER,
-            PP_PLACEHOLDER.MEDIA_CLIP: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.OBJECT: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.PICTURE: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.SLIDE_NUMBER: PP_PLACEHOLDER.SLIDE_NUMBER,
-            PP_PLACEHOLDER.SUBTITLE: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.TABLE: PP_PLACEHOLDER.BODY,
-            PP_PLACEHOLDER.TITLE: PP_PLACEHOLDER.TITLE,
-        }[self._element.ph_type]
+        base_ph_type = LAYOUT_PLACEHOLDER_BASE_TYPES[self._element.ph_type]
         slide_master = self.part.slide_master
         return slide_master.placeholders.get(base_ph_type, None)
 

@@ -532,10 +532,12 @@ class SlideLayout(_BaseSlide):
 class SlideLayouts(ParentedElementProxy):
     """Sequence of slide layouts belonging to a slide-master.
 
-    Supports indexed access, len(), iteration, index() and remove().
+    Supports indexed access, len(), iteration, index(), remove(), add_slide_layout() and
+    duplicate().
     """
 
     part: SlideMasterPart  # pyright: ignore[reportIncompatibleMethodOverride]
+    parent: SlideMaster  # pyright: ignore[reportIncompatibleMethodOverride]
 
     def __init__(self, sldLayoutIdLst: CT_SlideLayoutIdList, parent: SlideMaster):
         super(SlideLayouts, self).__init__(sldLayoutIdLst, parent)
@@ -557,6 +559,46 @@ class SlideLayouts(ParentedElementProxy):
     def __len__(self) -> int:
         """Support len() built-in function, e.g. `len(slides) == 4`."""
         return len(self._sldLayoutIdLst)
+
+    def add_slide_layout(self, name: str, *, blank: bool = False) -> SlideLayout:
+        """Add a new layout named `name` to the end of this master's layouts and return it.
+
+        Like PowerPoint's *Insert Layout*, the new layout has a title placeholder and date,
+        footer and slide-number placeholders, each taking its position from the master's
+        placeholder of that type (one the master lacks is left out). With `blank=True` it has no
+        placeholders. Add more with `layout.shapes.add_placeholder()`, then add slides on the
+        layout with `prs.slides.add_slide(layout)`. The layout is kept even while no slide uses
+        it.
+        """
+        slide_layout = self.part.add_slide_layout_part(name).slide_layout
+        if not blank:
+            master_placeholders = self.parent.placeholders
+            for ph_type in (
+                PP_PLACEHOLDER.TITLE,
+                PP_PLACEHOLDER.DATE,
+                PP_PLACEHOLDER.FOOTER,
+                PP_PLACEHOLDER.SLIDE_NUMBER,
+            ):
+                if master_placeholders.get(ph_type) is not None:
+                    slide_layout.shapes.add_placeholder(ph_type)
+        return slide_layout
+
+    def duplicate(self, slide_layout: SlideLayout, name: str | None = None) -> SlideLayout:
+        """Add a copy of `slide_layout`, one of these layouts, directly after it; return it.
+
+        The copy is named `name`, by default PowerPoint's "1_<name>" (or "2_<name>" and so on,
+        until the name is free). It shares the original's images, and has its own copy of its
+        placeholders and other shapes, so changing one layout leaves the other as it was. Raises
+        |SlideError| when `slide_layout` belongs to another master.
+        """
+        self.index(slide_layout)
+        if name is None:
+            names = {layout.name for layout in self}
+            n = 1
+            while "%d_%s" % (n, slide_layout.name) in names:
+                n += 1
+            name = "%d_%s" % (n, slide_layout.name)
+        return self.part.duplicate_slide_layout_part(slide_layout.part, name).slide_layout
 
     def get_by_name(self, name: str, default: SlideLayout | None = None) -> SlideLayout | None:
         """Return SlideLayout object having `name`, or `default` if not found."""

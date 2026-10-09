@@ -210,10 +210,14 @@ class PresentationPart(XmlPart):
             master_rId_map[rId] = new_rId
         _remap_rIds(new_master_element, master_rId_map)
 
+        # --- the copied master lists the source's layouts, by relationships not imported; it
+        # --- will list only the imported layout ---
+        new_master_element.get_or_add_sldLayoutIdLst().remove_all("p:sldLayoutId")
+
         # --- register the master in presentation.xml ---
         master_rId = self.relate_to(new_master_part, RT.SLIDE_MASTER)
         sldMasterIdLst = self._element.get_or_add_sldMasterIdLst()
-        sldMasterIdLst.add_sldMasterId(master_rId)
+        sldMasterIdLst.add_sldMasterId(master_rId, id=self.next_master_or_layout_id())
 
         # --- import the layout ---
         layout_partname = self.package.next_partname("/ppt/slideLayouts/slideLayout%d.xml")
@@ -240,7 +244,9 @@ class PresentationPart(XmlPart):
 
         # --- register layout under the new master ---
         layout_rId = new_master_part.relate_to(new_layout_part, RT.SLIDE_LAYOUT)
-        new_master_part._element.get_or_add_sldLayoutIdLst().add_sldLayoutId(layout_rId)
+        new_master_part._element.get_or_add_sldLayoutIdLst().add_sldLayoutId(
+            layout_rId, id=self.next_master_or_layout_id()
+        )
 
         return new_layout_part
 
@@ -366,6 +372,24 @@ class PresentationPart(XmlPart):
             return self.part_related_by(RT.HANDOUT_MASTER)  # pyright: ignore[reportReturnType]
         except KeyError:
             return None
+
+    def next_master_or_layout_id(self) -> int:
+        """The next free id for a `p:sldMasterId` or `p:sldLayoutId` in this presentation.
+
+        Slide masters and layouts share one id space, 2147483648 to 4294967295. This is one more
+        than the highest id in use, or the lowest free id once the top of the range is taken.
+        """
+        used = {int(id) for id in self._element.xpath("./p:sldMasterIdLst/p:sldMasterId/@id")}
+        for rel in self.rels.values():
+            if rel.reltype == RT.SLIDE_MASTER and not rel.is_external:
+                master_elm = rel.target_part._element  # pyright: ignore[reportAttributeAccessIssue]
+                used.update(
+                    int(id) for id in master_elm.xpath("./p:sldLayoutIdLst/p:sldLayoutId/@id")
+                )
+        next_id = max(used, default=2147483647) + 1
+        if next_id <= 4294967295:
+            return next_id
+        return next(id for id in range(2147483648, 4294967296) if id not in used)
 
     @lazyproperty
     def notes_master(self) -> NotesMaster:

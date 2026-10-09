@@ -11,7 +11,7 @@ from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
 from pptx.opc.packuri import PackURI
-from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide, CT_Slide
+from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide, CT_Slide, CT_SlideLayout
 from pptx.oxml.theme import CT_OfficeStyleSheet
 from pptx.parts.chart import ChartPart
 from pptx.parts.comments import CommentsPart, ModernCommentsPart
@@ -416,12 +416,77 @@ class SlideMasterPart(BaseSlidePart):
         """Return |SlideLayout| related to this slide-master by key `rId`."""
         return self.related_part(rId).slide_layout
 
+    def add_slide_layout_part(self, name: str) -> SlideLayoutPart:
+        """Add and return a new, empty slide-layout part named `name` under this master.
+
+        The layout is related to this master and back, and listed last in its
+        `p:sldLayoutIdLst` with a fresh id.
+        """
+        package = self.package
+        layout_part = SlideLayoutPart(
+            package.next_partname("/ppt/slideLayouts/slideLayout%d.xml"),
+            CT.PML_SLIDE_LAYOUT,
+            package,
+            CT_SlideLayout.new(name),
+        )
+        layout_part.relate_to(self, RT.SLIDE_MASTER)
+        self._list_layout(layout_part)
+        return layout_part
+
+    def duplicate_slide_layout_part(
+        self, source_part: SlideLayoutPart, name: str
+    ) -> SlideLayoutPart:
+        """Add and return a copy of `source_part`, one of this master's layouts, named `name`.
+
+        The copy is listed directly after its source. Like a duplicated slide it shares the
+        source's images and media, and gets its own copy of each chart and tags part.
+        """
+        from pptx.parts.presentation import _PartCopier, _remap_rIds
+
+        package = self.package
+        new_element = deepcopy(source_part._element)
+        layout_part = SlideLayoutPart(
+            package.next_partname("/ppt/slideLayouts/slideLayout%d.xml"),
+            CT.PML_SLIDE_LAYOUT,
+            package,
+            new_element,
+        )
+        copier = _PartCopier(package, dedup=False)
+        rId_map: dict[str, str] = {}
+        for rId, rel in source_part.rels.items():
+            if rel.is_external:
+                new_rId = layout_part.relate_to(rel.target_ref, rel.reltype, is_external=True)
+            elif rel.reltype in (RT.CHART, RT.TAGS):
+                new_rId = layout_part.relate_to(copier.copy(rel.target_part), rel.reltype)
+            else:
+                new_rId = layout_part.relate_to(rel.target_part, rel.reltype)
+            rId_map[rId] = new_rId
+        _remap_rIds(new_element, rId_map)
+        new_element.cSld.name = name
+        new_element.cSld.renew_creation_id()
+
+        source_entry = next(
+            entry
+            for entry in self._element.get_or_add_sldLayoutIdLst().sldLayoutId_lst
+            if self.related_part(entry.rId) is source_part
+        )
+        self._list_layout(layout_part, after=source_entry)
+        return layout_part
+
     @lazyproperty
     def slide_master(self) -> SlideMaster:
         """
         The |SlideMaster| object representing this part.
         """
         return SlideMaster(self._element, self)
+
+    def _list_layout(self, layout_part: SlideLayoutPart, after=None) -> None:
+        """Relate `layout_part` and list it in `p:sldLayoutIdLst`, last or after `after`."""
+        presentation_part = cast("PresentationPart", self.package.presentation_part)
+        rId = self.relate_to(layout_part, RT.SLIDE_LAYOUT)
+        self._element.get_or_add_sldLayoutIdLst().add_sldLayoutId(
+            rId, id=presentation_part.next_master_or_layout_id(), after=after
+        )
 
     @property
     def theme_part(self) -> XmlPart | None:

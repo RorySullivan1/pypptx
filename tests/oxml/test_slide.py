@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
-from pptx.oxml.slide import CT_HandoutMaster, CT_NotesMaster, CT_NotesSlide
+import pytest
 
-from ..unitutil.cxml import element
+from pptx.exc import InvalidValueError
+from pptx.oxml.slide import (
+    CT_HandoutMaster,
+    CT_NotesMaster,
+    CT_NotesSlide,
+    CT_SlideLayout,
+    CT_SlideLayoutIdList,
+)
+
+from ..unitutil.cxml import element, xml
 from ..unitutil.file import snippet_text
 
 
@@ -145,3 +154,55 @@ class DescribeCT_CommonSlideData:
         cSld.renew_creation_id()
 
         assert cSld.creation_id is None
+
+
+class DescribeCT_SlideLayout:
+    """Unit-test suite for `pptx.oxml.slide.CT_SlideLayout` objects."""
+
+    def it_can_create_a_new_layout_as_PowerPoint_writes_a_user_made_one(self):
+        sldLayout = CT_SlideLayout.new("Quote")
+
+        assert isinstance(sldLayout, CT_SlideLayout)
+        assert sldLayout.cSld.name == "Quote"
+        assert sldLayout.preserve is True
+        assert sldLayout.userDrawn is True
+        assert sldLayout.get("type") is None
+        assert list(sldLayout.cSld.spTree.iter_shape_elms()) == []
+        assert sldLayout.xpath("./p:clrMapOvr/a:masterClrMapping")
+
+    def and_it_has_its_flags_off_by_default(self):
+        sldLayout = element("p:sldLayout/p:cSld/p:spTree")
+
+        assert sldLayout.preserve is False
+        assert sldLayout.userDrawn is False
+
+
+class DescribeCT_SlideLayoutIdList:
+    """Unit-test suite for `pptx.oxml.slide.CT_SlideLayoutIdList` objects."""
+
+    def it_can_append_an_entry_with_an_id(self):
+        sldLayoutIdLst = element("p:sldLayoutIdLst/p:sldLayoutId{r:id=rId1,id=2147483649}")
+        assert isinstance(sldLayoutIdLst, CT_SlideLayoutIdList)
+
+        sldLayoutIdLst.add_sldLayoutId("rId2", id=2147483650)
+
+        assert sldLayoutIdLst.xml == xml(
+            "p:sldLayoutIdLst/(p:sldLayoutId{r:id=rId1,id=2147483649}"
+            ",p:sldLayoutId{r:id=rId2,id=2147483650})"
+        )
+
+    def and_it_can_insert_one_after_a_given_entry(self):
+        sldLayoutIdLst = element(
+            "p:sldLayoutIdLst/(p:sldLayoutId{r:id=rId1},p:sldLayoutId{r:id=rId2})"
+        )
+        first = sldLayoutIdLst.sldLayoutId_lst[0]
+
+        sldLayoutIdLst.add_sldLayoutId("rId3", id=2147483651, after=first)
+
+        assert [e.rId for e in sldLayoutIdLst.sldLayoutId_lst] == ["rId1", "rId3", "rId2"]
+
+    def but_it_rejects_an_id_outside_the_shared_range(self):
+        sldLayoutIdLst = element("p:sldLayoutIdLst")
+
+        with pytest.raises(InvalidValueError):
+            sldLayoutIdLst.add_sldLayoutId("rId1", id=256)

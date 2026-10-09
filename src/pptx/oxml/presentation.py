@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Callable, cast
 
 from pptx.oxml.simpletypes import (
     ST_SlideId,
+    ST_SlideMasterId,
     ST_SlideSizeCoordinate,
     XsdBoolean,
     XsdInt,
@@ -190,9 +191,12 @@ class CT_SlideMasterIdList(BaseOxmlElement):
 
     sldMasterId = ZeroOrMore("p:sldMasterId")
 
-    def add_sldMasterId(self, rId: str) -> CT_SlideMasterIdListEntry:
-        """Create and return a new `p:sldMasterId` child element with `rId`."""
-        return self._add_sldMasterId(rId=rId)
+    def add_sldMasterId(self, rId: str, id: int | None = None) -> CT_SlideMasterIdListEntry:
+        """Create and return a new `p:sldMasterId` child element with `rId` and `id`."""
+        sldMasterId = self._add_sldMasterId(rId=rId)
+        if id is not None:
+            sldMasterId.id = id
+        return sldMasterId
 
 
 class CT_SlideMasterIdListEntry(BaseOxmlElement):
@@ -202,6 +206,7 @@ class CT_SlideMasterIdListEntry(BaseOxmlElement):
     """
 
     rId: str = RequiredAttribute("r:id", XsdString)  # pyright: ignore[reportAssignmentType]
+    id: int | None = OptionalAttribute("id", ST_SlideMasterId)  # pyright: ignore
 
 
 class CT_SlideSize(BaseOxmlElement):

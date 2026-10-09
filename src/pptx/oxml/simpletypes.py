@@ -679,6 +679,10 @@ class ST_SlideLayoutId(XsdUnsignedInt):
         cls.validate_int_in_range(value, 2147483648, 4294967295)
 
 
+class ST_SlideMasterId(ST_SlideLayoutId):
+    """Valid values for `p:sldMasterId@id`, the range slide-layout ids share."""
+
+
 class ST_SlideSizeCoordinate(BaseIntType):
     @classmethod
     def convert_from_xml(cls, str_value):
