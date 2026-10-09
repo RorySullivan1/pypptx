@@ -48,7 +48,7 @@ via the workflow has not been run since adoption.
 | Public API as used (`examples/`) | `python examples/<script>.py` — exit status is the verdict; CI runs all of them in the ubuntu/py3.13 cell | `agent-runnable` | Scripts build and save a `.pptx` end to end; outputs are gitignored — run from a scratch cwd | 2026-09-27 — all 15 runnable scripts exit 0 in CI and locally on Windows (`batch_process.py` excluded: it takes IN_DIR/OUT_DIR). Seen to fail: 2026-09-24 a bad layout index raised `SlideError` |
 | Declared dependencies are complete | `python -m venv <tmp> && <tmp>/pip install -e ".[dev]" && pytest -q`; every CI cell does exactly this | `agent-runnable` | A developer machine carries packages the wheel never declares, so an undeclared test dep stays invisible until a clean install | 2026-09-27 — clean venv (lxml 6.1.3, pillow 12.3.0, pyparsing 3.3.3, xlsxwriter 3.2.9, pytest 9.1.1): 3657 passed. Seen to fail: 2026-09-27, `pyparsing` undeclared → all 7 CI cells failed at collection (run 36290495812) |
 | Output opens and renders correctly | open the saved `.pptx` in PowerPoint (or LibreOffice) and look | `human-gated` | No renderer is part of the project or reachable as a check; the human reports "opens without repair prompt / looks right" per file | — |
-| Real-world file compatibility | `pytest -q -m realworld` — 24 PowerPoint-authored decks (Apache POI test data, test-only) in `tests/test_files/real_world/`: deep read walk, edit/save/reload, and an unedited save that must change no XML; plus 4 malformed files | `agent-runnable` | Covers what pypptx reads and writes; whether PowerPoint opens the result without repair is still the `human-gated` row above | 2026-09-30 — every `realworld` test passes (86 at the v0.4.0 review). Seen to fail: the walker reports `shape_type` NotImplementedError on a POI deck outside the curated set (fixed in v0.4.0), and the garbage-collection test failed against the old `_ZipPkgReader.__del__` |
+| Real-world file compatibility | `pytest -q -m realworld` — 28 PowerPoint-authored decks (Apache POI test data, test-only) in `tests/test_files/real_world/`: deep read walk, edit/save/reload, an unedited save that must change no XML, and a save after reading every transition, animation and handout master that must change none either; plus 4 malformed files | `agent-runnable` | Covers what pypptx reads and writes; whether PowerPoint opens the result without repair is still the `human-gated` row above | 2026-09-30 — every `realworld` test passes (86 at the v0.4.0 review). Seen to fail: the walker reports `shape_type` NotImplementedError on a POI deck outside the curated set (fixed in v0.4.0), and the garbage-collection test failed against the old `_ZipPkgReader.__del__` |
 | Type annotations (`py.typed`) | none — no mypy/pyright configured | `unverified` | Owner: v0.3.2 / v1.0.0 cards; next: configure a type checker in `pyproject.toml` | — |
 | API docs (Sphinx) | `pip install -e ".[docs]"` then `sphinx-build -W -E -b html docs docs/_build/html` — exit status is the verdict | `agent-runnable` | Warnings are errors, so a broken docstring (bad RST, an undefined `|Name|` substitution, a missing `:ref:` label) fails the build; intersphinx fetches the Python inventory, so the build needs network | 2026-09-30 — 0 warnings, Sphinx 9.0.4. Seen to fail: the first build of the new scaffold gave 600 warnings/errors, and 8 wrong docstring references still failed `-W` until fixed |
 | Asset shape (`.claude/`) | `asset_integrity.py` fed a git-commit hook payload — **advisory: reports, never vetoes; read the output** | `agent-runnable` | Pure file-shape analysis | 2026-09-24 — silent on the real tree; caught a deliberate `name:`/folder mismatch |
@@ -61,3 +61,18 @@ watched that command fail on broken input. Treat such a row as `unverified` unti
 - **`establish-verification`** workflow — how the rows get produced and refreshed.
 - **`claim-grounding`** skill — the same question asked of an asset's *claims* rather than the
   project's *work*.
+
+## Pending human checks
+
+Each needs someone with PowerPoint; report "opens without repair / looks right" or what differs.
+
+- Epic #87 human checks: master text styles rendering in PowerPoint; `apply_theme` with a real PowerPoint .thmx.
+- Epic #79 human checks: picture/tiled fill, radial gradient, elliptical arc, table insert inside a merge.
+- Epic #56 human checks: custom show plays the right slides; loop/kiosk take effect; last-embedded-font removal opens cleanly.
+- Epic #62 human check: edited SmartArt node text shows in PowerPoint (use a PowerPoint-authored deck).
+- Epic #66 human checks: each added chartex type opens without repair (examples/modern_charts.py); data table renders.
+- Epic #75 human checks: added audio plays; trim/fade take effect; 3D model/zoom deck matches the selection pane.
+- v0.5.0 human checks: custom_layouts.py output in PowerPoint (gallery, no repair, "1_" name); transition/animation
+  values vs PowerPoint panes (customGeo, bug68703); do master/layout transitions apply to slides?
+- #115 human check: new 3D charts (column/bar/line/pie/area) open without repair; camera/walls visibly change. No `series_axis` API.
+- #114 human check: shape-tagged deck opens in PowerPoint without repair. Follow-up idea: `has_tags` (reading creates a part).
