@@ -27,7 +27,7 @@ Scope and exclusions: `.claude/context/feature-manifest.md`.
 | v0.3.1  | 02    | Example scripts for under-demonstrated areas            | shipped |
 | v0.3.2  | 02    | Docstring audit & Sphinx scaffold                       | shipped |
 | v0.4.0  | 03    | Stability & real-world round-trip                       | shipped |
-| v0.5.0  | 03    | Transitions, animations (read), custom layouts          | planned ← cursor |
+| v0.5.0  | 03    | Transitions, animations (read), custom layouts          | planned, card expanded (5 owner decisions open) ← cursor |
 | v0.6.0  | 03    | Performance & developer experience (harness done)       | planned |
 | v0.7.0  | 03    | Cross-run text find/replace & text helpers              | planned |
 | v1.0.0  | 04    | API freeze, comprehensive docs, SemVer commitment       | planned (sketch) |
