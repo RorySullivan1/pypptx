@@ -127,7 +127,7 @@ class DescribeChartExXmlWriter:
         with pytest.raises(ChartError, match=message):
             ChartExXmlWriter(chart_type, chart_data).xml
 
-    def but_treemap_and_sunburst_need_categories(self):
+    def but_it_needs_categories_for_treemap_and_sunburst(self):
         chart_data = CategoryChartData()
         chart_data.add_series("Sales", (1, 2))
 

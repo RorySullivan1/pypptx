@@ -32,11 +32,11 @@ class DescribeBaseEnum:
         assert PP_ACTION_TYPE.END_SHOW == 6
         assert PP_ACTION_TYPE.NONE == 0
 
-    def but_member_reprs_are_a_str_indicating_the_enum_and_member_name(self):
+    def but_it_gives_members_a_repr_naming_the_enum_and_member(self):
         assert repr(PP_ACTION_TYPE.END_SHOW) == "<PP_ACTION_TYPE.END_SHOW: 6>"
         assert repr(PP_ACTION_TYPE.RUN_MACRO) == "<PP_ACTION_TYPE.RUN_MACRO: 8>"
 
-    def and_member_str_values_are_a_str_indicating_the_member_name(self):
+    def and_it_gives_members_a_str_naming_the_member(self):
         assert str(PP_ACTION_TYPE.FIRST_SLIDE) == "FIRST_SLIDE (3)"
         assert str(PP_ACTION_TYPE.HYPERLINK) == "HYPERLINK (7)"
 
@@ -71,7 +71,7 @@ class DescribeBaseXmlEnum:
         with pytest.raises(ValueError, match="MSO_LINE_DASH_STYLE has no XML mapping for 'wavy'"):
             MSO_LINE_DASH_STYLE.from_xml("wavy")
 
-    def and_the_empty_string_never_maps_to_a_member(self):
+    def and_it_never_maps_the_empty_string_to_a_member(self):
         with pytest.raises(ValueError, match="MSO_LINE_DASH_STYLE has no XML mapping for ''"):
             MSO_LINE_DASH_STYLE.from_xml("")
 

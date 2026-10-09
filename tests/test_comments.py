@@ -248,7 +248,7 @@ class DescribeThreadedComment:
         assert thread.author == "Alice"
         assert thread.author_initials == "AA"
 
-    def but_its_author_is_blank_when_not_in_the_authors_part(self, prs_part_):
+    def but_it_has_a_blank_author_when_not_in_the_authors_part(self, prs_part_):
         cm = _thread_element()
         cm.set("authorId", "ZZ")
         assert ThreadedComment(cm, prs_part_).author == ""

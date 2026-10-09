@@ -29,7 +29,7 @@ class DescribeParseXml:
     def it_prefers_to_parse_bytes(self, xml_bytes):
         parse_xml(xml_bytes)
 
-    def but_accepts_unicode_providing_there_is_no_encoding_declaration(self):
+    def but_it_accepts_unicode_providing_there_is_no_encoding_declaration(self):
         non_enc_decl = '<?xml version="1.0" standalone="yes"?>'
         enc_decl = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         xml_body = "<foo><bar>føøbår</bar></foo>"
