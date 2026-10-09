@@ -750,15 +750,10 @@ from pptx.oxml.slide import (  # noqa: E402
     CT_SlideLayoutIdListEntry,
     CT_SlideMaster,
     CT_SlideMasterTextStyles,
-    CT_SlideTiming,
-    CT_TimeNodeList,
-    CT_TLMediaNodeAudio,
-    CT_TLMediaNodeVideo,
 )
 
 register_element_cls("p:bg", CT_Background)
 register_element_cls("p:bgPr", CT_BackgroundProperties)
-register_element_cls("p:childTnLst", CT_TimeNodeList)
 register_element_cls("p:cSld", CT_CommonSlideData)
 register_element_cls("p:hf", CT_HeaderFooter)
 register_element_cls("p:notes", CT_NotesSlide)
@@ -769,9 +764,65 @@ register_element_cls("p:sldLayoutId", CT_SlideLayoutIdListEntry)
 register_element_cls("p:sldLayoutIdLst", CT_SlideLayoutIdList)
 register_element_cls("p:sldMaster", CT_SlideMaster)
 register_element_cls("p:txStyles", CT_SlideMasterTextStyles)
-register_element_cls("p:timing", CT_SlideTiming)
+
+
+from pptx.oxml.timing import (  # noqa: E402
+    CT_BuildList,
+    CT_IndexRange,
+    CT_SlideTiming,
+    CT_TimeNodeList,
+    CT_TLBehavior,
+    CT_TLBuildParagraph,
+    CT_TLCommonBehaviorData,
+    CT_TLCommonMediaNodeData,
+    CT_TLCommonTimeNodeData,
+    CT_TLMediaNodeAudio,
+    CT_TLMediaNodeVideo,
+    CT_TLShapeTargetElement,
+    CT_TLTextTargetElement,
+    CT_TLTimeCondition,
+    CT_TLTimeConditionList,
+    CT_TLTimeNodeContainer,
+    CT_TLTimeTargetElement,
+)
+
+register_element_cls("p:anim", CT_TLBehavior)
+register_element_cls("p:animClr", CT_TLBehavior)
+register_element_cls("p:animEffect", CT_TLBehavior)
+register_element_cls("p:animMotion", CT_TLBehavior)
+register_element_cls("p:animRot", CT_TLBehavior)
+register_element_cls("p:animScale", CT_TLBehavior)
 register_element_cls("p:audio", CT_TLMediaNodeAudio)
+register_element_cls("p:bldLst", CT_BuildList)
+register_element_cls("p:bldP", CT_TLBuildParagraph)
+register_element_cls("p:cBhvr", CT_TLCommonBehaviorData)
+register_element_cls("p:charRg", CT_IndexRange)
+register_element_cls("p:childTnLst", CT_TimeNodeList)
+register_element_cls("p:cMediaNode", CT_TLCommonMediaNodeData)
+register_element_cls("p:cmd", CT_TLBehavior)
+register_element_cls("p:cond", CT_TLTimeCondition)
+register_element_cls("p:cTn", CT_TLCommonTimeNodeData)
+register_element_cls("p:endCondLst", CT_TLTimeConditionList)
+register_element_cls("p:excl", CT_TLTimeNodeContainer)
+register_element_cls("p:nextCondLst", CT_TLTimeConditionList)
+register_element_cls("p:par", CT_TLTimeNodeContainer)
+register_element_cls("p:pRg", CT_IndexRange)
+register_element_cls("p:prevCondLst", CT_TLTimeConditionList)
+register_element_cls("p:seq", CT_TLTimeNodeContainer)
+register_element_cls("p:set", CT_TLBehavior)
+register_element_cls("p:spTgt", CT_TLShapeTargetElement)
+register_element_cls("p:stCondLst", CT_TLTimeConditionList)
+register_element_cls("p:subTnLst", CT_TimeNodeList)
+register_element_cls("p:tgtEl", CT_TLTimeTargetElement)
+register_element_cls("p:timing", CT_SlideTiming)
+register_element_cls("p:tnLst", CT_TimeNodeList)
+register_element_cls("p:txEl", CT_TLTextTargetElement)
 register_element_cls("p:video", CT_TLMediaNodeVideo)
+
+
+from pptx.oxml.transition import CT_SlideTransition  # noqa: E402
+
+register_element_cls("p:transition", CT_SlideTransition)
 
 
 from pptx.oxml.table import (  # noqa: E402

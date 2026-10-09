@@ -17,12 +17,15 @@ from __future__ import annotations
 
 import pytest
 
+from pptx.exc import InvalidValueError
 from pptx.oxml.simpletypes import (
     BaseIntType,
     BaseSimpleType,
     ST_Coordinate,
     ST_HexColorRGB,
     ST_Percentage,
+    ST_SlideLayoutId,
+    ST_TLTime,
 )
 
 from ..unitutil.mock import instance_mock, method_mock
@@ -262,6 +265,36 @@ class DescribeST_Percentage:
     def percent_fixture(self, request):
         str_value, expected_value = request.param
         return str_value, expected_value
+
+
+class DescribeST_SlideLayoutId:
+    def it_accepts_the_shared_master_and_layout_id_range(self):
+        assert ST_SlideLayoutId.to_xml(2147483648) == "2147483648"
+        assert ST_SlideLayoutId.to_xml(4294967295) == "4294967295"
+
+    @pytest.mark.parametrize("value", [2147483647, 4294967296, 256])
+    def but_it_rejects_a_value_outside_it(self, value):
+        with pytest.raises(InvalidValueError):
+            ST_SlideLayoutId.to_xml(value)
+
+
+class DescribeST_TLTime:
+    @pytest.mark.parametrize(
+        ("str_value", "expected_value"),
+        [("0", 0), ("500", 500), ("indefinite", ST_TLTime.INDEFINITE)],
+    )
+    def it_reads_milliseconds_or_indefinite(self, str_value, expected_value):
+        assert ST_TLTime.from_xml(str_value) == expected_value
+
+    @pytest.mark.parametrize(
+        ("value", "expected_str"), [(1500, "1500"), (ST_TLTime.INDEFINITE, "indefinite")]
+    )
+    def it_writes_them_back(self, value, expected_str):
+        assert ST_TLTime.to_xml(value) == expected_str
+
+    def but_it_rejects_a_negative_time(self):
+        with pytest.raises(InvalidValueError):
+            ST_TLTime.to_xml(-1)
 
 
 # --------------------------------------------------------------------

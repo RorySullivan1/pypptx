@@ -668,6 +668,17 @@ class ST_SlideId(XsdUnsignedInt):
         cls.validate_int_in_range(value, 256, 2147483647)
 
 
+class ST_SlideLayoutId(XsdUnsignedInt):
+    """Valid values for `p:sldLayoutId@id`.
+
+    Slide-master and slide-layout ids share one range, from 2147483648 to 4294967295.
+    """
+
+    @classmethod
+    def validate(cls, value):
+        cls.validate_int_in_range(value, 2147483648, 4294967295)
+
+
 class ST_SlideSizeCoordinate(BaseIntType):
     @classmethod
     def convert_from_xml(cls, str_value):
@@ -699,6 +710,71 @@ class ST_TargetMode(XsdString):
         cls.validate_string(value)
         if value not in ("External", "Internal"):
             raise InvalidValueError("must be one of 'Internal' or 'External', got '%s'" % value)
+
+
+class ST_TLTime(BaseSimpleType):
+    """Valid values for a time-node duration or condition delay, e.g. `p:cTn@dur`.
+
+    Either a number of milliseconds or the string `"indefinite"`, which reads as
+    `ST_TLTime.INDEFINITE`.
+    """
+
+    INDEFINITE = "indefinite"
+
+    @classmethod
+    def convert_from_xml(cls, str_value: str) -> int | str:
+        if str_value == cls.INDEFINITE:
+            return cls.INDEFINITE
+        return int(str_value)
+
+    @classmethod
+    def convert_to_xml(cls, value: int | str) -> str:
+        return str(value)
+
+    @classmethod
+    def validate(cls, value: Any):
+        if value == cls.INDEFINITE:
+            return
+        cls.validate_int_in_range(value, 0, 4294967295)
+
+
+class ST_TLTimeNodePresetClassType(XsdTokenEnumeration):
+    """Valid values for `p:cTn@presetClass`."""
+
+    ENTRANCE = "entr"
+    EXIT = "exit"
+    EMPHASIS = "emph"
+    PATH = "path"
+    VERB = "verb"
+    MEDIACALL = "mediacall"
+
+    _members = (ENTRANCE, EXIT, EMPHASIS, PATH, VERB, MEDIACALL)
+
+
+class ST_TLTimeNodeType(XsdTokenEnumeration):
+    """Valid values for `p:cTn@nodeType`."""
+
+    CLICK_EFFECT = "clickEffect"
+    WITH_EFFECT = "withEffect"
+    AFTER_EFFECT = "afterEffect"
+    MAIN_SEQ = "mainSeq"
+    INTERACTIVE_SEQ = "interactiveSeq"
+    CLICK_PAR = "clickPar"
+    WITH_GROUP = "withGroup"
+    AFTER_GROUP = "afterGroup"
+    TM_ROOT = "tmRoot"
+
+    _members = (
+        CLICK_EFFECT,
+        WITH_EFFECT,
+        AFTER_EFFECT,
+        MAIN_SEQ,
+        INTERACTIVE_SEQ,
+        CLICK_PAR,
+        WITH_GROUP,
+        AFTER_GROUP,
+        TM_ROOT,
+    )
 
 
 class ST_TextFontScalePercentOrPercentString(BaseFloatType):
