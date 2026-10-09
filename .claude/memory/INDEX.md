@@ -4,8 +4,8 @@
 - pypptx: pure-Python `.pptx` library (dist `pypptx`, import `pptx`); architecture + conventions in `CLAUDE.md`.
 - All Claude tooling lives in `.claude/` (inventory: `.claude/CATALOG.md`); reference docs in `.claude/context/`.
 - Package 0.4.0; v0.3.0–v0.4.0 shipped (v0.4.0 = PR #122: real-world corpus, InvalidPackageError, compatible errors).
-- Cursor v0.5.0 (transitions/animations read, custom layouts): card EXPANDED 2026-10-09 from a 511-deck pilot; 5 owner
-  decisions open (corpus +4 POI files, effect names, new-layout contents, layout shapes, layout transitions). Then v0.6.0 … v0.7.0.
+- Cursor v0.5.0 (transitions/animations read, custom layouts): card expanded 2026-10-09; 5 owner decisions open
+  (see the card). Then v0.6.0 … v0.7.0.
 - API reference: `sphinx-build -W -b html docs docs/_build/html` (docs extra). No open issues (#51 closed by PR #124).
 - No git tags or Releases yet: sessions can't push tags. Owner tags by hand from `.meta/release-tags.md` (v0.1.0–v0.4.0).
 - Sessions push only to their assigned branch, not `vX.Y.Z`; `.meta/version` records the real branch.
@@ -75,5 +75,4 @@
 - 2026-10-01 | v0.4.0 shipped (PR #122, 2c64b2d): package 0.4.0, cursor → v0.5.0 | .meta/version
 - 2026-10-01 1546 | #51: P6 getters, placeholder caching (corpus read −32%), work-count gate | sessions/2026-10-01-1546-issue-51-perf.md
 - 2026-10-01 | #51 last item: enum `from_xml` dict lookup; v0.6.0 card records the #51 outcomes | .claude/context/performance.md
-- 2026-10-09 | #51 closed: PR #124 (7535b1d) merged the enum lookup; no open issues remain | .claude/context/performance.md
-- 2026-10-09 | v0.5.0 card expanded: pilot over POI+LibreOffice decks, design + 5 owner decisions | .meta/roadmap/stages/03-hardening-and-gaps/v0.5.0.md
+- 2026-10-09 | #51 closed (PR #124); v0.5.0 card expanded from a 511-deck pilot | .meta/roadmap/stages/03-hardening-and-gaps/v0.5.0.md
